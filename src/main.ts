@@ -7,14 +7,10 @@ async function bootstrap() {
   await app.listen(3000);
   const corsOptions: CorsOptions = {
     origin: '*',
-    methods: ["GET", "POST", "PUT", "DELETE"], 
-    allowedHeaders: ['Content-Type', 'Origin', 'X-Requested-With', 'Accept', 'Authorization'] 
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ['Content-Type', 'Origin', 'X-Requested-With', 'Accept', 'Authorization']
   };
-
-
   app.enableCors(corsOptions);
-
-  
 }
 bootstrap();
 
