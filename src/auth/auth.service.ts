@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UsersService } from 'src/user/users.service';
 import * as bcrypt from 'bcrypt'
-import { User } from 'src/user/user.entity';
 import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class AuthService {
@@ -23,7 +22,6 @@ export class AuthService {
             }
 
             const payload = { username: user.username };
-            console.log(payload);
 
             const access_token = await this.jwtService.signAsync(payload);
 

@@ -18,7 +18,8 @@ import { Public } from 'src/decorators/public.decorator';
 @Controller('users')
 export class UsersController {
     constructor(private readonly userService: UsersService) { }
-    // @Public()
+
+    @Public()
     @Post()
     async createUser(@Body() createUserDto: CreateUserDto) {
         const { email, username, password } = createUserDto;
