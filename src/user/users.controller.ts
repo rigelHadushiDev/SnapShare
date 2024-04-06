@@ -9,15 +9,16 @@ import {
     Put,
     ValidationPipe,
 } from '@nestjs/common';
-import { CreateUserDto } from '../dtos/CreateUserDto';
-import { UpdateUserDto } from '../dtos/UpdateUserDto';
-import { UsersService } from '../services/users.service';
+import { CreateUserDto } from './dtos/CreateUserDto';
+import { UpdateUserDto } from './dtos/UpdateUserDto';
+import { UsersService } from './users.service';
+import { Public } from 'src/decorators/public.decorator';
 
 
 @Controller('users')
 export class UsersController {
     constructor(private readonly userService: UsersService) { }
-
+    // @Public()
     @Post()
     async createUser(@Body() createUserDto: CreateUserDto) {
         const { email, username, password } = createUserDto;
@@ -44,10 +45,7 @@ export class UsersController {
     }
 
     @Put(':id')
-    async updateUser(
-        @Param('id') id: string,
-        @Body(new ValidationPipe()) updateUserDto: UpdateUserDto,
-    ) {
+    async updateUser(@Param('id') id: string, @Body(new ValidationPipe()) updateUserDto: UpdateUserDto) {
         const updatedUser = await this.userService.updateUser(id, updateUserDto);
         if (!updatedUser) {
             throw new NotFoundException('User not found');

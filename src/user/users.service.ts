@@ -1,7 +1,7 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
-import { User } from '../entities/user.entity';
-import { UpdateUserDto } from '../dtos/UpdateUserDto';
+import { User } from './user.entity';
+import { UpdateUserDto } from './dtos/UpdateUserDto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -72,7 +72,7 @@ export class UsersService {
         return user;
     }
 
-    async findOneByEmail(email: string): Promise<User | undefined> {
-        return this.entityManager.findOneBy(User, { email });
+    async findOneByUsername(username: string): Promise<User | undefined> {
+        return this.entityManager.findOneBy(User, { username });
     }
 }

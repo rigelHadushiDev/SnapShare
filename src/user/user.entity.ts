@@ -22,7 +22,7 @@ export class User {
     @Column()
     password: string;
 
-    @Column({ default: false })
+    @Column({ default: 0 })
     deleted: boolean;
 
     @CreateDateColumn({ type: 'timestamp' })
