@@ -1,33 +1,45 @@
-import {
-    Entity,
-    Column,
-    PrimaryGeneratedColumn,
-    CreateDateColumn,
-    UpdateDateColumn,
-    ManyToMany,
-    JoinTable,
-} from 'typeorm';
+import { Like } from "src/like/like.entity";
+import { Network } from "src/network/network.entity";
+import { Post } from "src/post/post.entity";
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Comment } from "src/comment/comment.entity";
 
-@Entity('users')
+@Entity('user')
 export class User {
-    @PrimaryGeneratedColumn('uuid')
-    userid: string;
+    @PrimaryGeneratedColumn({ type: 'integer', name: 'id' })
+    userId: number;
 
-    @Column({ unique: true })
+    @Column({ name: 'email', unique: true })
     email: string;
 
-    @Column({ unique: true })
+    @Column({ name: 'username', unique: true })
     username: string;
 
-    @Column()
+    @Column({ name: 'password' })
     password: string;
 
-    @Column({ default: false })
+    @Column({ name: 'deleted', default: false })
     deleted: boolean;
 
-    @CreateDateColumn({ type: 'timestamp' })
-    createdat: Date;
+    @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+    createdAt: Date;
 
-    @UpdateDateColumn({ type: 'timestamp' })
-    updatedat: Date;
+    @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
+    updatedAt: Date;
+
+    // Defining all of the tables which have as a foregin key the userId from user Table
+    @OneToMany(() => Post, post => post.user)
+    posts: Post[];
+
+    @OneToMany(() => Network, network => network.follower)
+    follower: Network[];
+
+    @OneToMany(() => Network, network => network.followee)
+    followee: Network[];
+
+    @OneToMany(() => Like, like => like.user)
+    likes: Like[];
+
+    @OneToMany(() => Comment, comment => comment.user)
+    comments: Comment[];
 }

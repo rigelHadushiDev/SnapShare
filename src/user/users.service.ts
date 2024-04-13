@@ -38,12 +38,12 @@ export class UsersService {
         return this.entityManager.find(User);
     }
 
-    async getUserById(userid: string): Promise<User | undefined> {
-        return this.entityManager.findOneBy(User, { userid });
+    async getUserById(userId: number): Promise<User | undefined> {
+        return this.entityManager.findOneBy(User, { userId });
     }
 
     async updateUser(
-        userid: string,
+        userId: number,
         updateUserDto: UpdateUserDto,
     ): Promise<User | undefined> {
 
@@ -55,17 +55,17 @@ export class UsersService {
             updateUserDto.password = hashedPassword;
         }
 
-        await this.entityManager.update(User, userid, updateUserDto);
-        return this.entityManager.findOneBy(User, { userid });
+        await this.entityManager.update(User, userId, updateUserDto);
+        return this.entityManager.findOneBy(User, { userId });
     }
 
-    async softDeleteUser(userid: string): Promise<User | undefined> {
-        await this.entityManager.update(User, userid, { deleted: true });
-        return this.entityManager.findOneBy(User, { userid });
+    async softDeleteUser(userId: number): Promise<User | undefined> {
+        await this.entityManager.update(User, userId, { deleted: true });
+        return this.entityManager.findOneBy(User, { userId });
     }
 
-    async hardDeleteUser(userid: string): Promise<User | undefined> {
-        const user = await this.entityManager.findOneBy(User, { userid });
+    async hardDeleteUser(userId: number): Promise<User | undefined> {
+        const user = await this.entityManager.findOneBy(User, { userId });
         if (user) {
             await this.entityManager.remove(user);
         }
