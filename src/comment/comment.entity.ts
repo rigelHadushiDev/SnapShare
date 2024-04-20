@@ -4,29 +4,29 @@ import { User } from 'src/user/user.entity';
 
 @Entity('comment')
 export class Comment {
-    @PrimaryGeneratedColumn({ name: 'id', type: "integer" })
-    id: number;
+    @PrimaryGeneratedColumn({ name: 'commentId', type: "integer" })
+    commentId: number;
 
-    @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+    @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
     createdAt: Date;
 
-    @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
+    @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp' })
     updatedAt: Date;
 
-    @Column({ name: 'comment_description', type: "text" })
+    @Column({ name: 'commentDescription', type: "text" })
     commentDescription: string;
 
-    @Column({ name: 'post_id', type: "integer" })
+    @Column({ name: 'postId', type: "integer" })
     postId: number;
 
-    @Column({ name: 'user_id', type: "integer" })
+    @Column({ name: 'userId', type: "integer" })
     userId: number;
 
     @ManyToOne(() => Post, post => post.comments)
-    @JoinColumn({ name: 'post_id', referencedColumnName: 'postId' })
+    @JoinColumn({ name: 'postId', referencedColumnName: 'postId' })
     post: Post;
 
     @ManyToOne(() => User, user => user.comments)
-    @JoinColumn({ name: 'user_id', referencedColumnName: 'userId' })
+    @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
     user: User;
 }

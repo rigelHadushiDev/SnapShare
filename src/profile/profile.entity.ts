@@ -4,37 +4,37 @@ import { User } from 'src/user/user.entity';
 @Entity('profile')
 export class Profile {
 
-    @PrimaryGeneratedColumn({ name: 'id' })
+    @PrimaryGeneratedColumn({ name: 'profileId' })
     profileId: number;
 
-    @Column({ name: 'user_id', type: 'integer' })
+    @Column({ name: 'userId', type: 'integer' })
     userId: number;
 
-    @Column({ name: 'profile_img', type: 'text', nullable: true })
+    @Column({ name: 'profileImg', type: 'text', nullable: true })
     profileImg: string;
 
-    @Column({ name: 'profile_description', type: 'text', nullable: true })
+    @Column({ name: 'profileDescription', type: 'text', nullable: true })
     profileDescription: string;
 
-    @Column({ name: 'first_name', type: 'varchar', length: 50 })
+    @Column({ name: 'firstName', type: 'varchar', length: 50 })
     firstName: string;
 
-    @Column({ name: 'last_name', type: 'varchar', length: 50 })
+    @Column({ name: 'lastName', type: 'varchar', length: 50 })
     lastName: string;
 
-    @Column({ name: 'is_private', type: 'boolean', default: false })
+    @Column({ name: 'isPrivate', type: 'boolean', default: false })
     isPrivate: boolean;
 
     @Column({ name: 'deleted', type: 'boolean', default: false })
     deleted: boolean;
 
-    @OneToOne(() => User)
-    @JoinColumn({ name: 'user_id', referencedColumnName: 'userId' })
-    user: User;
-
-    @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+    @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
     createdAt: Date;
 
-    @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
+    @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp' })
     updatedAt: Date;
+
+    @OneToOne(() => User)
+    @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
+    user: User;
 }

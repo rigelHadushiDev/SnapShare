@@ -6,7 +6,8 @@ import { Comment } from "src/comment/comment.entity";
 
 @Entity('user')
 export class User {
-    @PrimaryGeneratedColumn({ type: 'integer', name: 'id' })
+
+    @PrimaryGeneratedColumn({ type: 'integer', name: 'userId' })
     userId: number;
 
     @Column({ name: 'email', unique: true })
@@ -21,13 +22,12 @@ export class User {
     @Column({ name: 'deleted', default: false })
     deleted: boolean;
 
-    @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+    @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
     createdAt: Date;
 
-    @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
+    @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp' })
     updatedAt: Date;
 
-    // Defining all of the tables which have as a foregin key the userId from user Table
     @OneToMany(() => Post, post => post.user)
     posts: Post[];
 

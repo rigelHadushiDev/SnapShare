@@ -5,19 +5,19 @@ import { Comment } from 'src/comment/comment.entity';
 
 @Entity('post')
 export class Post {
-    @PrimaryGeneratedColumn({ type: 'integer', name: 'id' })
+    @PrimaryGeneratedColumn({ type: 'integer', name: 'postId' })
     postId: number;
 
-    @Column({ name: 'user_id', type: 'integer' })
+    @Column({ name: 'userId', type: 'integer' })
     userId: number;
 
-    @Column({ name: 'likes_nr', type: 'integer', nullable: true })
+    @Column({ name: 'likesNr', type: 'integer', nullable: true })
     likesNr: number;
 
-    @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+    @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
     createdAt: Date;
 
-    @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
+    @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp' })
     updatedAt: Date;
 
     @Column({ name: 'archived', default: false })
@@ -26,17 +26,17 @@ export class Post {
     @Column({ name: 'deleted', default: false })
     deleted: boolean;
 
-    @Column({ name: 'post_description', nullable: true })
+    @Column({ name: 'postDescription', nullable: true })
     postDescription: string;
 
     @Column({ name: 'media', nullable: true })
     media: string;
 
-    @Column({ name: 'comments_nr', nullable: true })
+    @Column({ name: 'commentsNr', nullable: true })
     commentsNr: number;
 
     @ManyToOne(() => User, user => user.posts)
-    @JoinColumn({ name: 'user_id', referencedColumnName: 'userId' })
+    @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
     user: User;
 
     @OneToMany(() => Like, like => like.post)

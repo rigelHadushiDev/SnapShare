@@ -4,19 +4,19 @@ import { Post } from 'src/post/post.entity';
 
 @Entity('like')
 export class Like {
-    @PrimaryGeneratedColumn({ name: 'id' })
+    @PrimaryGeneratedColumn({ name: 'likeId' })
     likeId: number;
 
-    @Column({ name: 'user_id', type: 'integer' })
+    @Column({ name: 'userId', type: 'integer' })
     userId: number;
 
-    @Column({ name: 'post_id', type: 'integer' })
+    @Column({ name: 'postId', type: 'integer' })
     postId: number;
 
-    @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+    @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
     createdAt: Date;
 
-    @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
+    @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp' })
     updatedAt: Date;
 
     @ManyToOne(() => User)
