@@ -35,13 +35,13 @@ export class Post {
     @Column({ name: 'commentsNr', nullable: true })
     commentsNr: number;
 
-    @ManyToOne(() => User, user => user.posts)
-    @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
-    user: User;
-
     @OneToMany(() => Like, like => like.post)
     likes: Like[];
 
     @OneToMany(() => Comment, comment => comment.post)
     comments: Comment[];
+
+    @ManyToOne(() => User, user => user.posts)
+    @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
+    user: User;
 }
