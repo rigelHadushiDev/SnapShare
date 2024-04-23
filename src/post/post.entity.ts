@@ -34,7 +34,7 @@ export class Post {
 
     @Column({ name: 'commentsNr', nullable: true })
     commentsNr: number;
-
+    //--------------------------------------------
     @OneToMany(() => Like, like => like.post)
     likes: Like[];
 
