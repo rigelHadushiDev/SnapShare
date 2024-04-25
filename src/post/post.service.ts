@@ -11,19 +11,15 @@ export class PostService {
 
     constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) { }
 
+    async postFile(file) {
 
-    getStorage() {
-        return diskStorage({
-            destination: './uploads/posts',
-            filename: (req, file, cb) => {
-                const filename: string = uuidv4() + format(new Date(), '_yyyy_MM_dd_HH_mm_ss');
-                const extension: string = path.extname(file.originalname); // Extract extension from original filename
-                cb(null, `${filename}${extension}`);
-            }
-        });
-    }
-
-    async postFile(dat) { };
+        const filePath: string = file.path;
+        console.log('File Path:', filePath);
+        // i can not get the id analyzise why
+        //when youfind it you can store the user file path based on the id 
+        const userId = this.userProvider.getCurrentUser().id;
+        console.log(userId);
+    };
 
 
 
@@ -45,7 +41,5 @@ export class PostService {
 
 
 }
-function uuidv4() {
-    throw new Error('Function not implemented.');
-}
+
 
