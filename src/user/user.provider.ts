@@ -11,11 +11,7 @@ export class UserProvider {
         let user = this.request['user'];
         return user;
     }
-    async getCurrUserId() {
-        let username = this.request['user'].username;
-        const userID = (await this.entityManager.findOneBy(User, { username })).userId;
-        return userID;
-    }
+
 
 
 }

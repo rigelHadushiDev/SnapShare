@@ -11,7 +11,7 @@ export class Post {
     @Column({ name: 'userId', type: 'integer' })
     userId: number;
 
-    @Column({ name: 'likesNr', type: 'integer', nullable: true })
+    @Column({ name: 'likesNr', type: 'integer', nullable: true, default: 0 })
     likesNr: number;
 
     @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
@@ -32,7 +32,7 @@ export class Post {
     @Column({ name: 'media', nullable: true })
     media: string;
 
-    @Column({ name: 'commentsNr', nullable: true })
+    @Column({ name: 'commentsNr', nullable: true, default: 0 })
     commentsNr: number;
     //--------------------------------------------
     @OneToMany(() => Like, like => like.post)
