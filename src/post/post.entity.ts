@@ -8,7 +8,7 @@ export class Post {
     @PrimaryGeneratedColumn({ type: 'integer', name: 'postId' })
     postId: number;
 
-    @Column({ name: 'userId', type: 'integer' })
+    @Column({ name: 'userId' })
     userId: number;
 
     @Column({ name: 'likesNr', type: 'integer', nullable: true, default: 0 })

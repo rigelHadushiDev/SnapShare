@@ -19,6 +19,7 @@ import { CommentModule } from './comment/comment.module';
 import { Comment } from './comment/comment.entity';
 import { Like } from './like/like.entity';
 import * as dotenv from 'dotenv';
+import { Network } from './network/network.entity';
 dotenv.config();
 
 @Module({
@@ -34,9 +35,9 @@ dotenv.config();
         username: process.env.DB_USERNAME,
         password: process.env.DB_PASSW,
         database: process.env.DB_NAME,
-        entities: [User, Profile, Post, Comment, Like],
+        entities: [User, Profile, Post, Comment, Like, Network],
         synchronize: false,
-        autoLoadEntities: true
+        autoLoadEntities: false
       }),
     UsersModule,
     AuthModule,

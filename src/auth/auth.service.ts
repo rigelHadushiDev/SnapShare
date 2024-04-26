@@ -21,7 +21,7 @@ export class AuthService {
                 throw new NotFoundException('Invalid Password or Username');
             }
 
-            const payload = { username: user.username };
+            const payload = { username: user.username, userId: user.userId, };
 
             const access_token = await this.jwtService.signAsync(payload);
 
