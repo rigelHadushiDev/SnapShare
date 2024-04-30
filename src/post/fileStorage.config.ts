@@ -5,6 +5,30 @@ import { extname } from 'path';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import * as fs from 'fs';
 import * as path from 'path';
+import { BadRequestException } from '@nestjs/common';
+
+
+const allowedMimeTypes = [
+    // Image MIME types
+    'image/jpeg', // JPEG images
+    'image/png', // PNG images
+    'image/gif', // GIF images
+    'image/bmp', // BMP images
+    'image/webp', // WEBP images
+    'image/tiff', // TIFF images
+    'image/x-icon', // ICO images
+
+    // Video MIME types
+    'video/mp4', // MP4 videos
+    'video/mpeg', // MPEG videos
+    'video/quicktime', // QuickTime videos
+    'video/x-msvideo', // AVI videos
+    'video/x-flv', // FLV videos
+    'video/x-matroska', // MKV videos
+    'video/webm', // WEBM videos
+    'video/3gpp', // 3GP videos
+    'video/3gpp2', // 3G2 videos
+];
 
 export const storage: MulterOptions = {
     storage: diskStorage({
@@ -20,5 +44,12 @@ export const storage: MulterOptions = {
             const extension = extname(file.originalname);
             cb(null, `${filename}${extension}`);
         }
-    })
+    }),
+    fileFilter: (req, file, cb) => {
+        if (allowedMimeTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new BadRequestException('invalidFileType'), false);
+        }
+    }
 };

@@ -32,6 +32,26 @@ export class PostService {
         return resp;
     };
 
+    async getUserPosts() {
+        let resp: any
+        try {
+            const userId = this.userProvider.getCurrentUserId();
+            const queryBuilder = this.entityManager.createQueryBuilder(Post, 'post');
+
+            const posts = await this.entityManager
+                .createQueryBuilder(Post, 'post')
+                .where('post."userId" = :userId', { userId }) // Ensure to use double quotes for column names
+                .getMany();
+
+            console.log(posts);
+            // now fi\nd a way to show to read the media and also send their description
+
+        } catch (error) {
+            throw error;
+        };
+        return resp;
+    };
+
 
 
 

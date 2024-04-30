@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, HttpCode, HttpStatus, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Observable, of } from 'rxjs';
 import { diskStorage } from 'multer';
@@ -19,8 +19,14 @@ export class PostController {
     @Post('upload')
     @HttpCode(HttpStatus.OK)
     @UseInterceptors(FileInterceptor('file', storage))
-    postFile(@UploadedFile() file, @Body() postData) {
+    postFile(@UploadedFile() file, @Body() postData: string) {
         return this.PostService.postFile(file, postData);
+    }
+
+
+    @Get('getUserPosts')
+    getUserPosts() {
+        return this.PostService.getUserPosts();
     }
 
 
