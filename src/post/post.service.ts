@@ -34,6 +34,7 @@ export class PostService {
         return resp;
     };
 
+    // look up on how to test it hippie or curl or leave it later when you create the client side
     async getUserPosts() {
         let resp: any;
         try {
@@ -59,14 +60,13 @@ export class PostService {
                             userPostsDto.archived = post.archived;
                             userPostsDto.deleted = post.deleted;
                             userPostsDto.postDescription = post.postDescription;
-                            userPostsDto.media = post.media;
                             userPostsDto.commentsNr = post.commentsNr;
                             userPostsDto.mediaContent = mediaContent;
                             readableStream.push(userPostsDto);
                         }
-                        readableStream.push(null);// Signal the end of the stream
+                        readableStream.push(null);
                     } catch (error) {
-                        readableStream.emit('error', error); // Emit any errors that occur during processing
+                        readableStream.emit('error', error);
                     }
                 }
 
