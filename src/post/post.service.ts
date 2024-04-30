@@ -44,7 +44,8 @@ export class PostService {
                 .getMany();
 
             console.log(posts);
-            // now fi\nd a way to show to read the media and also send their description
+            // now find a way to show to read the media and also send their description
+            // You need to use streaming learn how to use streaming and 
 
         } catch (error) {
             throw error;
