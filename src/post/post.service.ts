@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { UserProvider } from 'src/user/user.provider';
 import { EntityManager, Transaction } from 'typeorm';
 import { Post } from './post.entity';
-
+import { Readable } from 'stream';
+import { UserPostsDto } from './dtos/userPosts.dto';
+import * as fs from 'fs/promises'
 @Injectable()
 export class PostService {
     constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) { }
@@ -33,30 +35,63 @@ export class PostService {
     };
 
     async getUserPosts() {
-        let resp: any
+        let resp: any;
         try {
             const userId = this.userProvider.getCurrentUserId();
-            const queryBuilder = this.entityManager.createQueryBuilder(Post, 'post');
 
             const posts = await this.entityManager
                 .createQueryBuilder(Post, 'post')
-                .where('post."userId" = :userId', { userId }) // Ensure to use double quotes for column names
+                .where('post."userId" = :userId', { userId })
                 .getMany();
 
-            console.log(posts);
-            // now find a way to show to read the media and also send their description
-            // You need to use streaming learn how to use streaming and 
+            const readableStream = new Readable({
+                objectMode: true,
+                read: async () => {
+                    try {
+                        for (const post of posts) {
+                            const mediaContent = await this.fetchMedia(post.media);
+                            const userPostsDto = new UserPostsDto();
+                            userPostsDto.postId = post.postId;
+                            userPostsDto.userId = post.userId;
+                            userPostsDto.likesNr = post.likesNr;
+                            userPostsDto.createdAt = post.createdAt;
+                            userPostsDto.updatedAt = post.updatedAt;
+                            userPostsDto.archived = post.archived;
+                            userPostsDto.deleted = post.deleted;
+                            userPostsDto.postDescription = post.postDescription;
+                            userPostsDto.media = post.media;
+                            userPostsDto.commentsNr = post.commentsNr;
+                            userPostsDto.mediaContent = mediaContent;
+                            readableStream.push(userPostsDto);
+                        }
+                        readableStream.push(null);// Signal the end of the stream
+                    } catch (error) {
+                        readableStream.emit('error', error); // Emit any errors that occur during processing
+                    }
+                }
 
+            })
+
+            resp = readableStream;
         } catch (error) {
             throw error;
-        };
+        }
         return resp;
     };
 
+    async fetchMedia(mediaReference: string) {
+        let resp: any;
 
+        try {
 
+            const mediaContent = await fs.readFile(mediaReference);
+            resp = mediaContent;
 
-
+        } catch (error) {
+            throw new InternalServerErrorException('errorFetchingMedia');
+        }
+        return resp;
+    }
 
 
 
