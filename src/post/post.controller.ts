@@ -1,14 +1,10 @@
-import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Observable, of } from 'rxjs';
-import { diskStorage } from 'multer';
-import { v4 as uuuidv4 } from 'uuid';
 const path = require('path');
-import { format } from 'date-fns';
 import { PostService } from './post.service';
-import { extname } from 'path';
 const fs = require('fs');
 import { storage } from './fileStorage.config';
+
 
 
 @Controller('post')
@@ -27,6 +23,12 @@ export class PostController {
     @Get('getUserPosts')
     getUserPosts() {
         return this.PostService.getUserPosts();
+    }
+
+
+    @Get('post/media/users/:userId/posts/:filename')
+    getUserMedia(@Param('userId') userId: string, @Param('filename') filename: string) {
+        return this.PostService.getUserMedia(userId, filename);
     }
 
 

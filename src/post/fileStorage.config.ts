@@ -6,7 +6,7 @@ import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer
 import * as fs from 'fs';
 import * as path from 'path';
 import { BadRequestException } from '@nestjs/common';
-
+import * as crypto from 'crypto';
 
 const allowedMimeTypes = [
     // Image MIME types
@@ -33,7 +33,7 @@ const allowedMimeTypes = [
 export const storage: MulterOptions = {
     storage: diskStorage({
         destination: (req, file, cb) => {
-            const destinationPath = path.join(process.cwd(), 'media', 'users', `${req['user'].username}`, 'posts');
+            const destinationPath = path.join(process.cwd(), 'media', 'users', crypto.createHash('sha256').update(req['user'].username).digest('hex'), 'posts');
             if (!fs.existsSync(destinationPath)) {
                 fs.mkdirSync(destinationPath, { recursive: true });
             }

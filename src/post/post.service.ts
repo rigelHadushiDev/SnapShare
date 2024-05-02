@@ -5,6 +5,7 @@ import { Post } from './post.entity';
 import { Readable } from 'stream';
 import { UserPostsDto } from './dtos/userPosts.dto';
 import * as fs from 'fs/promises'
+import path from 'path';
 @Injectable()
 export class PostService {
     constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) { }
@@ -45,53 +46,38 @@ export class PostService {
                 .where('post."userId" = :userId', { userId })
                 .getMany();
 
-            const readableStream = new Readable({
-                objectMode: true,
-                read: async () => {
-                    try {
-                        for (const post of posts) {
-                            const mediaContent = await this.fetchMedia(post.media);
-                            const userPostsDto = new UserPostsDto();
-                            userPostsDto.postId = post.postId;
-                            userPostsDto.userId = post.userId;
-                            userPostsDto.likesNr = post.likesNr;
-                            userPostsDto.createdAt = post.createdAt;
-                            userPostsDto.updatedAt = post.updatedAt;
-                            userPostsDto.archived = post.archived;
-                            userPostsDto.deleted = post.deleted;
-                            userPostsDto.postDescription = post.postDescription;
-                            userPostsDto.commentsNr = post.commentsNr;
-                            userPostsDto.mediaContent = mediaContent;
-                            readableStream.push(userPostsDto);
-                        }
-                        readableStream.push(null);
-                    } catch (error) {
-                        readableStream.emit('error', error);
-                    }
-                }
+            resp = posts;
 
-            })
-
-            resp = readableStream;
         } catch (error) {
             throw error;
         }
         return resp;
     };
 
+    async getUserMedia(userId, filename) {
+
+        const filePath = path.join(__dirname, 'media', 'users', userId, 'posts', `${filename}`);
+        console.log(filePath);
+
+        //open wp to see the link related on how to send the url as param or queryParam 
+
+    }
+
+    // this can be deleted // keep it as a reference to read the file
     async fetchMedia(mediaReference: string) {
         let resp: any;
 
         try {
-
             const mediaContent = await fs.readFile(mediaReference);
-            resp = mediaContent;
+            //then send the file with the refernce in express res.sendFile() 
+            //see how can you send it
 
         } catch (error) {
             throw new InternalServerErrorException('errorFetchingMedia');
         }
         return resp;
     }
+
 
 
 

@@ -26,9 +26,6 @@ export class UserPostsDto {
     postDescription: string;
 
     @ApiProperty()
-    media: string;
-
-    @ApiProperty()
     commentsNr: number;
 
     @ApiProperty()
