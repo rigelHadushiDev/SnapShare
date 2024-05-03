@@ -1,9 +1,10 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 const path = require('path');
 import { PostService } from './post.service';
 const fs = require('fs');
 import { storage } from './fileStorage.config';
+import { Response } from 'express';
 
 
 
@@ -26,9 +27,9 @@ export class PostController {
     }
 
 
-    @Get('post/media/users/:userId/posts/:filename')
-    getUserMedia(@Param('userId') userId: string, @Param('filename') filename: string) {
-        return this.PostService.getUserMedia(userId, filename);
+    @Get('display/:userId/:filename')
+    getUserMedia(@Param('userId') userId: string, @Param('filename') filename: string, @Res() res: Response) {
+        return this.PostService.getUserMedia(userId, filename, res);
     }
 
 

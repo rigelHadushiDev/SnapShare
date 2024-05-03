@@ -5,7 +5,8 @@ import { Post } from './post.entity';
 import { Readable } from 'stream';
 import { UserPostsDto } from './dtos/userPosts.dto';
 import * as fs from 'fs/promises'
-import path from 'path';
+import * as path from 'path';
+import { Response } from 'express';
 @Injectable()
 export class PostService {
     constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) { }
@@ -19,7 +20,7 @@ export class PostService {
             let postDescription = postData.postDescription.replace(/^'(.*)'$/, '$1');
 
             await this.entityManager.transaction(async transactionalEntityManager => {
-
+                // you should send the url 
                 post.userId = userId;
                 post.postDescription = postDescription;
                 post.media = filePath;
@@ -35,7 +36,6 @@ export class PostService {
         return resp;
     };
 
-    // look up on how to test it hippie or curl or leave it later when you create the client side
     async getUserPosts() {
         let resp: any;
         try {
@@ -54,13 +54,9 @@ export class PostService {
         return resp;
     };
 
-    async getUserMedia(userId, filename) {
-
-        const filePath = path.join(__dirname, 'media', 'users', userId, 'posts', `${filename}`);
-        console.log(filePath);
-
-        //open wp to see the link related on how to send the url as param or queryParam 
-
+    async getUserMedia(userId: string, filename: string, res: Response) {
+        const filePath = `${path.join(process.cwd(), 'media', 'users', userId, 'posts', `${filename}`)}`;
+        res.sendFile(filePath);
     }
 
     // this can be deleted // keep it as a reference to read the file
@@ -69,8 +65,8 @@ export class PostService {
 
         try {
             const mediaContent = await fs.readFile(mediaReference);
-            //then send the file with the refernce in express res.sendFile() 
-            //see how can you send it
+
+
 
         } catch (error) {
             throw new InternalServerErrorException('errorFetchingMedia');
