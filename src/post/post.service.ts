@@ -1,12 +1,10 @@
-import { HttpException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserProvider } from 'src/user/user.provider';
 import { EntityManager, Transaction } from 'typeorm';
 import { Post } from './post.entity';
-import { Readable } from 'stream';
-import { UserPostsDto } from './dtos/userPosts.dto';
-import * as fs from 'fs/promises'
 import * as path from 'path';
 import { Response } from 'express';
+
 @Injectable()
 export class PostService {
     constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) { }
@@ -20,7 +18,6 @@ export class PostService {
             let postDescription = postData.postDescription.replace(/^'(.*)'$/, '$1');
 
             await this.entityManager.transaction(async transactionalEntityManager => {
-                // you should send the url 
                 post.userId = userId;
                 post.postDescription = postDescription;
                 post.media = filePath;
@@ -46,6 +43,11 @@ export class PostService {
                 .where('post."userId" = :userId', { userId })
                 .getMany();
 
+            for (const post of posts) {
+                const pathParts = post.media.split(/[\/\\]/);
+                post.media = `${process.env.DOMAIN_NAME}/post/display/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
+            }
+
             resp = posts;
 
         } catch (error) {
@@ -59,20 +61,7 @@ export class PostService {
         res.sendFile(filePath);
     }
 
-    // this can be deleted // keep it as a reference to read the file
-    async fetchMedia(mediaReference: string) {
-        let resp: any;
 
-        try {
-            const mediaContent = await fs.readFile(mediaReference);
-
-
-
-        } catch (error) {
-            throw new InternalServerErrorException('errorFetchingMedia');
-        }
-        return resp;
-    }
 
 
 

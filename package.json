@@ -38,6 +38,7 @@
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.0",
     "typeorm": "^0.3.20",
+    "url-join": "^5.0.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
