@@ -22,6 +22,24 @@ export class User {
     @Column({ name: 'deleted', default: false })
     deleted: boolean;
 
+    @Column({ name: 'profileImg', type: 'text', nullable: true })
+    profileImg: string;
+
+    @Column({ name: 'profileDescription', type: 'text', nullable: true })
+    profileDescription: string;
+
+    @Column({ name: 'firstName', type: 'varchar', length: 50 })
+    firstName: string;
+
+    @Column({ name: 'lastName', type: 'varchar', length: 50 })
+    lastName: string;
+
+    @Column({ name: 'isPrivate', type: 'boolean', default: false })
+    isPrivate: boolean;
+
+    @Column({ name: 'archive', type: 'boolean', default: false })
+    archive: boolean;
+
     @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
     createdAt: Date;
 
