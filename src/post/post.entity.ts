@@ -23,9 +23,6 @@ export class Post {
     @Column({ name: 'archived', default: false })
     archived: boolean;
 
-    @Column({ name: 'deleted', default: false })
-    deleted: boolean;
-
     @Column({ name: 'postDescription', nullable: true })
     postDescription: string;
 

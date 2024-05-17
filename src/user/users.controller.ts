@@ -37,7 +37,7 @@ export class UsersController {
     }
 
     @Get(':id')
-    async getUserById(@Param('id') id: number) {
+    async getUserById(@Param('id') id: string) {
         const user = await this.userService.getUserById(id);
         if (!user) {
             throw new NotFoundException('User not found');
@@ -46,7 +46,7 @@ export class UsersController {
     }
 
     @Put(':id')
-    async updateUser(@Param('id') id: number, @Body(new ValidationPipe()) updateUserDto: UpdateUserDto) {
+    async updateUser(@Param('id') id: string, @Body(new ValidationPipe()) updateUserDto: UpdateUserDto) {
         const updatedUser = await this.userService.updateUser(id, updateUserDto);
         if (!updatedUser) {
             throw new NotFoundException('User not found');
@@ -55,7 +55,7 @@ export class UsersController {
     }
 
     @Delete(':id')
-    async softDeleteUser(@Param('id') id: number) {
+    async softDeleteUser(@Param('id') id: string) {
         const deletedUser = await this.userService.softDeleteUser(id);
         if (!deletedUser) {
             throw new NotFoundException('User not found');
@@ -64,7 +64,7 @@ export class UsersController {
     }
 
     @Delete(':id/hard')
-    async hardDeleteUser(@Param('id') id: number) {
+    async hardDeleteUser(@Param('id') id: string) {
         const deletedUser = await this.userService.hardDeleteUser(id);
         if (!deletedUser) {
             throw new NotFoundException('User not found');

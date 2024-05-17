@@ -9,9 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { JwtService } from '@nestjs/jwt';
-import { ProfileModule } from './profile/profile.module';
 import { PostModule } from './post/post.module';
-import { Profile } from './profile/profile.entity';
 import { Post } from './post/post.entity';
 import { NetworkModule } from './network/network.module';
 import { LikeModule } from './like/like.module';
@@ -35,13 +33,12 @@ dotenv.config();
         username: process.env.DB_USERNAME,
         password: process.env.DB_PASSW,
         database: process.env.DB_NAME,
-        entities: [User, Profile, Post, Comment, Like, Network],
+        entities: [User, Post, Comment, Like, Network],
         synchronize: false,
         autoLoadEntities: false
       }),
     UsersModule,
     AuthModule,
-    ProfileModule,
     PostModule,
     NetworkModule,
     CommentModule,

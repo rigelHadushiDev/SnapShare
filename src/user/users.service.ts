@@ -38,12 +38,12 @@ export class UsersService {
         return this.entityManager.find(User);
     }
 
-    async getUserById(userId: number): Promise<User | undefined> {
+    async getUserById(userId: string): Promise<User | undefined> {
         return this.entityManager.findOneBy(User, { userId });
     }
 
     async updateUser(
-        userId: number,
+        userId: string,
         updateUserDto: UpdateUserDto,
     ): Promise<User | undefined> {
 
@@ -59,12 +59,12 @@ export class UsersService {
         return this.entityManager.findOneBy(User, { userId });
     }
 
-    async softDeleteUser(userId: number): Promise<User | undefined> {
+    async softDeleteUser(userId: string): Promise<User | undefined> {
         await this.entityManager.update(User, userId, { deleted: true });
         return this.entityManager.findOneBy(User, { userId });
     }
 
-    async hardDeleteUser(userId: number): Promise<User | undefined> {
+    async hardDeleteUser(userId: string): Promise<User | undefined> {
         const user = await this.entityManager.findOneBy(User, { userId });
         if (user) {
             await this.entityManager.remove(user);

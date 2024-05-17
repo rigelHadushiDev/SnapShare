@@ -7,7 +7,6 @@ import { storage } from './fileStorage.config';
 import { Response } from 'express';
 
 
-
 @Controller('post')
 export class PostController {
 
@@ -20,17 +19,24 @@ export class PostController {
         return this.PostService.postFile(file, postData);
     }
 
-
     @Get('getUserPosts')
     getUserPosts() {
         return this.PostService.getUserPosts();
     }
 
-
-    @Get('display/:userId/:filename')
-    getUserMedia(@Param('userId') userId: string, @Param('filename') filename: string, @Res() res: Response) {
-        return this.PostService.getUserMedia(userId, filename, res);
+    @Get('display/:userName/:filename')
+    getUserMedia(@Param('userName') userName: string, @Param('filename') filename: string, @Res() res: Response) {
+        return this.PostService.getUserMedia(userName, filename, res);
     }
 
+    @Get(':postId')
+    archivePost(@Param('postId') postId: number) {
+        return this.PostService.archivePost(postId);
+    }
+
+    @Get('delete/:postId')
+    deletePost(@Param('postId') postId: number) {
+        return this.PostService.deletePost(postId);
+    }
 
 }
