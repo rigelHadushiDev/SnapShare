@@ -8,10 +8,10 @@ export class Post {
     @PrimaryGeneratedColumn({ type: 'integer', name: 'postId' })
     postId: number;
 
-    @Column({ name: 'userId', type: 'integer' })
+    @Column({ name: 'userId' })
     userId: number;
 
-    @Column({ name: 'likesNr', type: 'integer', nullable: true })
+    @Column({ name: 'likesNr', type: 'integer', nullable: true, default: 0 })
     likesNr: number;
 
     @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
@@ -23,25 +23,22 @@ export class Post {
     @Column({ name: 'archived', default: false })
     archived: boolean;
 
-    @Column({ name: 'deleted', default: false })
-    deleted: boolean;
-
     @Column({ name: 'postDescription', nullable: true })
     postDescription: string;
 
     @Column({ name: 'media', nullable: true })
     media: string;
 
-    @Column({ name: 'commentsNr', nullable: true })
+    @Column({ name: 'commentsNr', nullable: true, default: 0 })
     commentsNr: number;
-
-    @ManyToOne(() => User, user => user.posts)
-    @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
-    user: User;
-
+    //--------------------------------------------
     @OneToMany(() => Like, like => like.post)
     likes: Like[];
 
     @OneToMany(() => Comment, comment => comment.post)
     comments: Comment[];
+
+    @ManyToOne(() => User, user => user.posts)
+    @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
+    user: User;
 }

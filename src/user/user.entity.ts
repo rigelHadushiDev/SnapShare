@@ -7,8 +7,8 @@ import { Comment } from "src/comment/comment.entity";
 @Entity('user')
 export class User {
 
-    @PrimaryGeneratedColumn({ type: 'integer', name: 'userId' })
-    userId: number;
+    @PrimaryGeneratedColumn("uuid", { name: 'userId' })
+    userId: string;
 
     @Column({ name: 'email', unique: true })
     email: string;
@@ -21,6 +21,24 @@ export class User {
 
     @Column({ name: 'deleted', default: false })
     deleted: boolean;
+
+    @Column({ name: 'profileImg', type: 'text', nullable: true })
+    profileImg: string;
+
+    @Column({ name: 'profileDescription', type: 'text', nullable: true })
+    profileDescription: string;
+
+    @Column({ name: 'firstName', type: 'varchar', length: 50, nullable: true })
+    firstName: string;
+
+    @Column({ name: 'lastName', type: 'varchar', length: 50, nullable: true })
+    lastName: string;
+
+    @Column({ name: 'isPrivate', type: 'boolean', default: false })
+    isPrivate: boolean;
+
+    @Column({ name: 'archive', type: 'boolean', default: false })
+    archive: boolean;
 
     @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
     createdAt: Date;
