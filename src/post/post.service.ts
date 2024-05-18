@@ -1,9 +1,10 @@
-import { HttpCode, HttpStatus, Injectable, InternalServerErrorException, Scope } from '@nestjs/common';
+import { BadRequestException, HttpCode, HttpStatus, Injectable, InternalServerErrorException, Scope } from '@nestjs/common';
 import { UserProvider } from 'src/user/user.provider';
 import { EntityManager, Transaction } from 'typeorm';
 import { Post } from './post.entity';
 import * as path from 'path';
 import { Response, response } from 'express';
+import { EditPostDto } from './dtos/editPost.dto';
 const fs = require('fs');
 
 @Injectable()
@@ -30,7 +31,7 @@ export class PostService {
             resp = post;
 
         } catch (error) {
-            console.log(error);
+            throw error;
         };
         return resp;
     };
@@ -56,7 +57,7 @@ export class PostService {
             resp = posts;
 
         } catch (error) {
-            console.log(error);
+            throw error;
         }
         return resp;
     };
@@ -89,7 +90,7 @@ export class PostService {
             }
 
         } catch (error) {
-            console.log(error);
+            throw error;
         }
         return resp;
     }
@@ -132,13 +133,51 @@ export class PostService {
             }
 
         } catch (error) {
-            console.log(error);
+            throw error;
         }
         return resp;
     }
 
-    // think about the update post and you are done 
+    async editPost(postId: number, postData: EditPostDto): Promise<{ message: string; status: number }> {
 
+        let resp: { message: string; status: number };
+        try {
+            const userId: string = this.userProvider.getCurrentUser()?.userId;
+
+            const post = await this.entityManager
+                .createQueryBuilder(Post, 'post')
+                .where('post.userId = :userId', { userId })
+                .where('post.postId = :postId', { postId })
+                .getOne();
+
+            const { currPostDesc } = postData;
+
+            if (currPostDesc === post?.postDescription) {
+                throw new BadRequestException('newDescriptionShouldBeAdded')
+            }
+
+            // for the moment in Post only one description can be edited
+
+            const editPost = await this.entityManager
+                .createQueryBuilder()
+                .update(Post)
+                .set({ postDescription: currPostDesc })
+                .where('postId = :postId', { postId })
+                .andWhere('userId = :userId', { userId })
+                .execute();
+
+
+            if (editPost?.affected === 1) {
+                resp = { message: 'postSuccessfullyEdited', status: HttpStatus.OK };
+            } else {
+                throw new InternalServerErrorException('issueFacedUpdatingPost')
+            }
+
+        } catch (error) {
+            throw error;
+        }
+        return resp;
+    }
 }
 
 
