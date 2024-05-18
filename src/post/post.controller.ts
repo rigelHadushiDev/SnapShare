@@ -1,10 +1,11 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 const path = require('path');
 import { PostService } from './post.service';
 const fs = require('fs');
 import { storage } from './fileStorage.config';
 import { Response } from 'express';
+import { EditPostDto } from './dtos/editPost.dto';
 
 
 @Controller('post')
@@ -29,7 +30,7 @@ export class PostController {
         return this.PostService.getUserMedia(userName, filename, res);
     }
 
-    @Get(':postId')
+    @Put('archive/:postId')
     archivePost(@Param('postId') postId: number) {
         return this.PostService.archivePost(postId);
     }
@@ -39,4 +40,8 @@ export class PostController {
         return this.PostService.deletePost(postId);
     }
 
+    @Put('edit/:postId')
+    editPost(@Param('postId') postId: number, @Body() postData: EditPostDto) {
+        return this.PostService.editPost(postId, postData);
+    }
 }
