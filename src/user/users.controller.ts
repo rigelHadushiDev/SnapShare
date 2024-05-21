@@ -12,7 +12,7 @@ import {
 import { CreateUserDto } from './dtos/CreateUserDto';
 import { UpdateUserDto } from './dtos/UpdateUserDto';
 import { UsersService } from './users.service';
-import { Public } from 'src/decorators/public.decorator';
+import { Public } from 'src/common/decorators/public.decorator';
 
 
 @Controller('users')

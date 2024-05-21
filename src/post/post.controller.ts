@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Res, UploadedFile, UseFilters, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 const path = require('path');
 import { PostService } from './post.service';
@@ -6,8 +6,9 @@ const fs = require('fs');
 import { storage } from './fileStorage.config';
 import { Response } from 'express';
 import { EditPostDto } from './dtos/editPost.dto';
+import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
 
-
+@UseFilters(HttpExceptionFilter)
 @Controller('post')
 export class PostController {
 
