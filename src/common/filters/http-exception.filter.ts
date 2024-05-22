@@ -11,27 +11,39 @@ export class HttpExceptionFilter implements ExceptionFilter {
         let status: number;
         let message: any;
         let error: any;
+        let errorResponse: any;
+
         if (exception instanceof HttpException) {
             status = exception.getStatus();
-            message = exception.getResponse();
-            message = message.message;
-            error = message.error;
+            errorResponse = exception.getResponse();
 
+            if (typeof errorResponse === 'string') {
+                message = errorResponse;
+            } else if (typeof errorResponse === 'object' && errorResponse !== null) {
+                message = errorResponse.message;
+                error = errorResponse.error;
+            }
         } else {
+
             console.error('Unexpected error:', exception);
             const internalServerErrorException = new InternalServerErrorException('unexpectedErrorOccurred');
             status = internalServerErrorException.getStatus();
-            message = internalServerErrorException.getResponse();
-            message = message.message;
-            error = message.error;
+            errorResponse = internalServerErrorException.getResponse();
+
+            if (typeof errorResponse === 'string') {
+                message = errorResponse;
+            } else if (typeof errorResponse === 'object' && errorResponse !== null) {
+                message = errorResponse.message;
+                error = errorResponse.error;
+            }
         }
 
         response.status(status).json({
             statusCode: status,
             error: error,
             message,
-            timestamp: new Date().toISOString(),
-            path: request.url,  // Include the path in the payload
+            timestamp: new Date().toString(),
+            path: request.url,
         });
     }
 }
