@@ -31,11 +31,6 @@ export class UsersController {
         return { message: 'UserCreatedSuccessfully', user: newUser };
     }
 
-    @Get()
-    async getAllUsers() {
-        return await this.userService.getAllUsers();
-    }
-
     @Get(':id')
     async getUserById(@Param('id') id: string) {
         const user = await this.userService.getUserById(id);
@@ -46,7 +41,7 @@ export class UsersController {
     }
 
     @Put(':id')
-    async updateUser(@Param('id') id: string, @Body(new ValidationPipe()) updateUserDto: UpdateUserDto) {
+    async updateUser(@Param('id',) id: string, @Body(new ValidationPipe()) updateUserDto: UpdateUserDto) {
         const updatedUser = await this.userService.updateUser(id, updateUserDto);
         if (!updatedUser) {
             throw new NotFoundException('User not found');
