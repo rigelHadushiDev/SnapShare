@@ -38,7 +38,7 @@ export class Post {
     @OneToMany(() => Comment, comment => comment.post)
     comments: Comment[];
 
-    @ManyToOne(() => User, user => user.posts)
+    @ManyToOne(() => User, user => user.posts, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
     user: User;
 }

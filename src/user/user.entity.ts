@@ -19,9 +19,6 @@ export class User {
     @Column({ name: 'password' })
     password: string;
 
-    @Column({ name: 'deleted', default: false })
-    deleted: boolean;
-
     @Column({ name: 'profileImg', type: 'text', nullable: true })
     profileImg: string;
 
@@ -45,8 +42,8 @@ export class User {
 
     @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp' })
     updatedAt: Date;
-
-    @OneToMany(() => Post, post => post.user)
+    // add castcated aslo to other tables later :)
+    @OneToMany(() => Post, post => post.user, { cascade: true })
     posts: Post[];
 
     @OneToMany(() => Network, network => network.follower)

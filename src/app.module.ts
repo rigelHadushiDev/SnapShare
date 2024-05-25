@@ -34,8 +34,8 @@ dotenv.config();
         password: process.env.DB_PASSW,
         database: process.env.DB_NAME,
         entities: [User, Post, Comment, Like, Network],
-        synchronize: false,
-        autoLoadEntities: false
+        synchronize: true,
+        autoLoadEntities: true
       }),
     UsersModule,
     AuthModule,
