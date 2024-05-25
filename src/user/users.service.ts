@@ -1,12 +1,17 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException, InternalServerErrorException, ConflictException, BadRequestException } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { User } from './user.entity';
-import { UpdateUserDto } from './dtos/UpdateUserDto';
+import { Post } from 'src/post/post.entity';
+import { UserProvider } from './user.provider';
 import * as bcrypt from 'bcrypt';
+import * as path from 'path';
+import { UpdateUserDto } from './dtos/UpdateUserDto';
+const fs = require('fs');
 
 @Injectable()
 export class UsersService {
-    constructor(private readonly entityManager: EntityManager) { }
+
+    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) { }
 
     async createUser(email: string, username: string, password: string): Promise<User> {
         // Check if the user with the given email already exists
@@ -111,21 +116,50 @@ export class UsersService {
     async archiveUser(userId: string): Promise<{ user: User, message: string }> {
         await this.entityManager.update(User, userId, { archive: true });
 
+        const currUser = this.userProvider.getCurrentUser()?.userId;
+
         const user: any = await this.entityManager.findOne(User, { where: { userId } });
         if (!user) {
             throw new NotFoundException('userNotFound');
+        } else if (user.userId !== currUser) {
+            throw new UnauthorizedException('notAuthorizedUser');
         }
         return { message: "userArchivedSucesfully", user: user };
     }
 
     async hardDeleteUser(userId: string): Promise<{ user: User, message: string }> {
+
+        const currUser = this.userProvider.getCurrentUser()?.userId;
         const user = await this.entityManager.findOneBy(User, { userId });
-        if (user) {
-            await this.entityManager.remove(user);
-        } else {
+
+        if (!user) {
             throw new NotFoundException('userNotFound');
         }
-        return { message: 'UserDeletedSuccessfully', user: user };
+        else if (user.userId !== currUser) {
+            throw new UnauthorizedException('notAuthorizedUser');
+        }
+
+        return await this.entityManager.transaction(async (transactionalEntityManager: EntityManager) => {
+            const posts: Post[] = await transactionalEntityManager
+                .createQueryBuilder(Post, 'post')
+                .where('post.userId = :userId', { userId: user.userId })
+                .getMany();
+
+            await transactionalEntityManager.remove(User, user);
+
+            for (const post of posts) {
+                if (post?.media) {
+                    const filePath = path.resolve(post.media);
+                    try {
+                        await fs.promises.unlink(filePath);
+                    } catch (err) {
+                        throw new InternalServerErrorException('issueDeletingPost');
+                    }
+                }
+            }
+
+            return { message: 'UserDeletedSuccessfully', user: user };
+        });
     }
 
 
