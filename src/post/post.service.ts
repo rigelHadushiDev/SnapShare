@@ -13,6 +13,7 @@ export class PostService {
 
     constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) { }
 
+    // this is done only add the type of the method <> promise
     async postFile(file: any, postData: any) {
         let resp: any
 
@@ -34,7 +35,7 @@ export class PostService {
         return resp;
     };
 
-
+    // this is an example with pagination , query should change so you can get the friends posts and not your posts
     async getUserPosts(take: number = 10, skip: number = 0) {
 
         let resp: any;
@@ -61,6 +62,7 @@ export class PostService {
         return resp;
     };
 
+    // fileProvider can be named
     async getUserMedia(hashedUser: string, type: string, filename: string, res: Response) {
         const filePath: string = `${path.join(process.cwd(), 'media', 'users', hashedUser, `${type}`, `${filename}`)}`;
         res.sendFile(filePath);
