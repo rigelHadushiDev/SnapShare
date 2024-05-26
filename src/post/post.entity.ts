@@ -9,7 +9,7 @@ export class Post {
     postId: number;
 
     @Column({ name: 'userId' })
-    userId: number;
+    userId: string;
 
     @Column({ name: 'likesNr', type: 'integer', nullable: true, default: 0 })
     likesNr: number;

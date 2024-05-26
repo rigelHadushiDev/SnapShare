@@ -19,7 +19,7 @@ export class User {
     @Column({ name: 'password' })
     password: string;
 
-    @Column({ name: 'profileImg', type: 'text', nullable: true })
+    @Column({ name: 'profileImg', type: 'varchar', nullable: true })
     profileImg: string;
 
     @Column({ name: 'profileDescription', type: 'text', nullable: true })

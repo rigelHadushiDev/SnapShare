@@ -58,6 +58,7 @@ export class UsersService {
         return user;
     }
 
+    // this can be refactored with a switch later
     async updateUser(userId: string, updateUserDto: UpdateUserDto): Promise<{ user: User, message: string }> {
 
         const user = await this.getUserById(userId);
@@ -101,6 +102,12 @@ export class UsersService {
 
                 if (count > 1)
                     throw new ConflictException("usernameIsTaken");
+            }
+            if (updateUserDto[key] !== undefined && key === "password") {
+
+                const saltOrRounds = 10;
+                const hashedPassword = await bcrypt.hash(updateUserDto[key], saltOrRounds);
+                user[key] = hashedPassword;
             }
 
             if (updateUserDto[key] !== undefined) {
@@ -161,6 +168,73 @@ export class UsersService {
             return { message: 'UserDeletedSuccessfully', user: user };
         });
     }
+
+
+
+    async postProfilePic(file: any) {
+        let resp: any
+
+        const userId = this.userProvider.getCurrentUser().userId;
+        const filePath: string = file.path;
+        let user = new User();
+
+        await this.entityManager.transaction(async transactionalEntityManager => {
+            user.userId = userId;
+            user.profileImg = filePath;
+
+            await transactionalEntityManager.save(User, user);
+        });
+
+        resp = user;
+        return resp;
+    };
+
+    // this doesnt work 
+    async getProfilePic() {
+
+        let resp: any;
+
+        const userId = this.userProvider.getCurrentUser().userId;
+
+        const user = await this.entityManager
+            .createQueryBuilder(User, 'user')
+            .where('user.userId = :userId', { userId: userId })
+            .getOne();
+
+
+        if (user && user.profileImg) {
+            const pathParts = user.profileImg.split(/[\/\\]/);
+            user.profileImg = `${process.env.DOMAIN_NAME}/users/display/profileImg/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
+        }
+
+        resp = user;
+
+        return resp;
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
