@@ -3,18 +3,26 @@ import {
     Controller,
     Delete,
     Get,
+    HttpCode,
+    HttpStatus,
     NotFoundException,
     Param,
     Post,
     Put,
+    UploadedFile,
+    UseFilters,
+    UseInterceptors,
     ValidationPipe,
 } from '@nestjs/common';
 import { CreateUserDto } from './dtos/CreateUserDto';
 import { UpdateUserDto } from './dtos/UpdateUserDto';
 import { UsersService } from './users.service';
 import { Public } from 'src/common/decorators/public.decorator';
+import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { profileStorage } from './fileStorage.config';
 
-
+@UseFilters(HttpExceptionFilter)
 @Controller('users')
 export class UsersController {
     constructor(private readonly userService: UsersService) { }
@@ -31,44 +39,43 @@ export class UsersController {
         return { message: 'UserCreatedSuccessfully', user: newUser };
     }
 
-    @Get()
-    async getAllUsers() {
-        return await this.userService.getAllUsers();
+    @Post('upload')
+    @HttpCode(HttpStatus.OK)
+    @UseInterceptors(FileInterceptor('file', profileStorage))
+    postProfilePic(@UploadedFile() file) {
+        return this.userService.postProfilePic(file);
+    }
+
+    @Get('profileImg')
+    getUserProfile() {
+        return this.userService.getProfilePic();
     }
 
     @Get(':id')
     async getUserById(@Param('id') id: string) {
-        const user = await this.userService.getUserById(id);
-        if (!user) {
-            throw new NotFoundException('User not found');
-        }
-        return user;
+        return await this.userService.getUserById(id);
+    }
+
+    @Get(':userName')
+    async getUserByUsername(@Param('userName') username: string) {
+        return await this.userService.getUserByUsername(username);
+    }
+
+    @Put('update/:id')
+    async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+        return await this.userService.updateUser(id, updateUserDto);
     }
 
     @Put(':id')
-    async updateUser(@Param('id') id: string, @Body(new ValidationPipe()) updateUserDto: UpdateUserDto) {
-        const updatedUser = await this.userService.updateUser(id, updateUserDto);
-        if (!updatedUser) {
-            throw new NotFoundException('User not found');
-        }
-        return { message: 'User updated successfully', user: updatedUser };
-    }
-
-    @Delete(':id')
-    async softDeleteUser(@Param('id') id: string) {
-        const deletedUser = await this.userService.softDeleteUser(id);
-        if (!deletedUser) {
-            throw new NotFoundException('User not found');
-        }
-        return { message: 'User soft-deleted successfully', user: deletedUser };
+    async archiveUser(@Param('id') id: string) {
+        return await this.userService.archiveUser(id);
     }
 
     @Delete(':id/hard')
     async hardDeleteUser(@Param('id') id: string) {
-        const deletedUser = await this.userService.hardDeleteUser(id);
-        if (!deletedUser) {
-            throw new NotFoundException('User not found');
-        }
-        return { message: 'User hard-deleted successfully', user: deletedUser };
+        return await this.userService.hardDeleteUser(id);
     }
+
+
+
 }

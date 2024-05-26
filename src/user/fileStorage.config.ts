@@ -17,30 +17,19 @@ const allowedMimeTypes = [
     'image/webp', // WEBP images
     'image/tiff', // TIFF images
     'image/x-icon', // ICO images
-
-    // Video MIME types
-    'video/mp4', // MP4 videos
-    'video/mpeg', // MPEG videos
-    'video/quicktime', // QuickTime videos
-    'video/x-msvideo', // AVI videos
-    'video/x-flv', // FLV videos
-    'video/x-matroska', // MKV videos
-    'video/webm', // WEBM videos
-    'video/3gpp', // 3GP videos
-    'video/3gpp2', // 3G2 videos
 ];
 
-export const postStorage: MulterOptions = {
+export const profileStorage: MulterOptions = {
     storage: diskStorage({
         destination: (req, file, cb) => {
-            const destinationPath = path.join(process.cwd(), 'media', 'users', crypto.createHash('sha256').update(req['user'].username).digest('hex'), 'posts');
+            const destinationPath = path.join(process.cwd(), 'media', 'users', crypto.createHash('sha256').update(req['user'].username).digest('hex'), 'profileImg');
             if (!fs.existsSync(destinationPath)) {
                 fs.mkdirSync(destinationPath, { recursive: true });
             }
             cb(null, destinationPath);
         },
         filename: (req, file, cb) => {
-            const filename: string = uuuidv4() + format(new Date(), '_yyyy_MM_dd_HH_mm_ss');
+            const filename: string = `${uuuidv4()}${format(new Date(), '_yyyy_MM_dd_HH_mm_ss')}`;
             const extension = extname(file.originalname);
             cb(null, `${filename}${extension}`);
         }

@@ -6,10 +6,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserProvider } from 'src/user/user.provider';
 import { UsersModule } from 'src/user/user.module';
 import { UsersService } from 'src/user/users.service';
+import { IsCreatorGuard } from './guards/IsCreator.guard';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Post]), UsersModule],
-  providers: [PostService, UserProvider, UsersService],
+  providers: [PostService, UserProvider, UsersService, IsCreatorGuard],
   controllers: [PostController]
 })
 export class PostModule { }

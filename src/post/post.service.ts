@@ -5,6 +5,7 @@ import { Post } from './post.entity';
 import * as path from 'path';
 import { Response, response } from 'express';
 import { EditPostDto } from './dtos/editPost.dto';
+import { Observable } from 'rxjs';
 const fs = require('fs');
 
 @Injectable()
@@ -33,7 +34,9 @@ export class PostService {
         return resp;
     };
 
-    async getUserPosts() {
+
+    async getUserPosts(take: number = 10, skip: number = 0) {
+
         let resp: any;
 
         const userId = this.userProvider.getCurrentUser().userId;
@@ -42,13 +45,15 @@ export class PostService {
             .createQueryBuilder(Post, 'post')
             .where('post.userId = :userId', { userId })
             .andWhere('post.archived = :archived', { archived: false })
+            .take(take)
+            .skip(skip)
             .getMany();
 
 
         for (const post of posts) {
             const pathParts = post.media.split(/[\/\\]/);
             // this needs to be changed later so we use only one controller
-            post.media = `${process.env.DOMAIN_NAME}/post/display/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
+            post.media = `${process.env.DOMAIN_NAME}/post/display/posts/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
         }
 
         resp = posts;
@@ -56,9 +61,8 @@ export class PostService {
         return resp;
     };
 
-    async getUserMedia(userName: string, filename: string, res: Response) {
-        // posts  need to be changed later and be dynamic beacuse it can be a story, profile pic , jo archieve se do futesh nrabbit hole shife mbase ne fund kur tkesh bo 90 perqind te projektit
-        const filePath: string = `${path.join(process.cwd(), 'media', 'users', userName, 'posts', `${filename}`)}`;
+    async getUserMedia(hashedUser: string, type: string, filename: string, res: Response) {
+        const filePath: string = `${path.join(process.cwd(), 'media', 'users', hashedUser, `${type}`, `${filename}`)}`;
         res.sendFile(filePath);
     }
 
@@ -164,6 +168,17 @@ export class PostService {
         }
 
         return resp;
+    }
+
+
+
+    async findPostById(postId: number): Promise<Post> {
+        const post = await this.entityManager.findOne(Post, { where: { postId: postId } })
+
+        if (!post) {
+            throw new NotFoundException(`Post with ID ${postId} not found`);
+        }
+        return post
     }
 }
 

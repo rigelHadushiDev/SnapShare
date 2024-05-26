@@ -8,7 +8,7 @@ export class AuthService {
     constructor(private readonly usersService: UsersService, private readonly jwtService: JwtService) { }
 
     async login(username: string, password: string) {
-        const user = await this.usersService.findOneByUsername(username);
+        const user = await this.usersService.getUserByUsername(username);
 
         if (!user) {
             throw new NotFoundException('No user found with this username');
