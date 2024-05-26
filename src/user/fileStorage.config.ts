@@ -29,7 +29,7 @@ export const profileStorage: MulterOptions = {
             cb(null, destinationPath);
         },
         filename: (req, file, cb) => {
-            const filename: string = uuuidv4() + format(new Date(), '_yyyy_MM_dd_HH_mm_ss');
+            const filename: string = `${uuuidv4()}${format(new Date(), '_yyyy_MM_dd_HH_mm_ss')}`;
             const extension = extname(file.originalname);
             cb(null, `${filename}${extension}`);
         }

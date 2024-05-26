@@ -39,6 +39,18 @@ export class UsersController {
         return { message: 'UserCreatedSuccessfully', user: newUser };
     }
 
+    @Post('upload')
+    @HttpCode(HttpStatus.OK)
+    @UseInterceptors(FileInterceptor('file', profileStorage))
+    postProfilePic(@UploadedFile() file) {
+        return this.userService.postProfilePic(file);
+    }
+
+    @Get('profileImg')
+    getUserProfile() {
+        return this.userService.getProfilePic();
+    }
+
     @Get(':id')
     async getUserById(@Param('id') id: string) {
         return await this.userService.getUserById(id);
@@ -64,15 +76,6 @@ export class UsersController {
         return await this.userService.hardDeleteUser(id);
     }
 
-    @Post('upload')
-    @HttpCode(HttpStatus.OK)
-    @UseInterceptors(FileInterceptor('file', profileStorage))
-    postProfilePic(@UploadedFile() file) {
-        return this.userService.postProfilePic(file);
-    }
 
-    @Get('profileImg')
-    getUserProfile() {
-        return this.userService.getProfilePic();
-    }
+
 }

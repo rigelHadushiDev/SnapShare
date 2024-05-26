@@ -32,8 +32,8 @@ export class PostController {
     }
 
     @Get('display/:type/:userName/:filename')
-    getUserMedia(@Param('type') type: string, @Param('userName') userName: string, @Param('filename') filename: string, @Res() res: Response) {
-        return this.PostService.getUserMedia(type, userName, filename, res);
+    getUserMedia(@Param('userName') userName: string, @Param('type') type: string, @Param('filename') filename: string, @Res() res: Response) {
+        return this.PostService.getUserMedia(userName, type, filename, res);
     }
 
     @Put('archive/:postId')

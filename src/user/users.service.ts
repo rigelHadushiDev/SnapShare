@@ -41,6 +41,42 @@ export class UsersService {
 
         return createdUser;
     }
+    async postProfilePic(file: any) {
+        let resp: any
+
+        const userId = this.userProvider.getCurrentUser().userId;
+        const filePath: string = file.path;
+        let user = new User();
+
+        await this.entityManager.transaction(async transactionalEntityManager => {
+            user.userId = userId;
+            user.profileImg = filePath;
+
+            await transactionalEntityManager.save(User, user);
+        });
+
+        resp = user;
+        return resp;
+    };
+
+
+    async getProfilePic() {
+        const currUser: { userId: string } = this.userProvider.getCurrentUser();
+
+        const user = await this.entityManager
+            .createQueryBuilder()
+            .select()
+            .from(User, 'user')
+            .where('user.userId = :userId', { userId: currUser.userId })
+            .getRawOne();
+
+        if (user && user.profileImg) {
+            const pathParts = user.profileImg.split(/[\/\\]/);
+            user.profileImg = `${process.env.DOMAIN_NAME}/post/display/profileImg/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
+        }
+
+        return user;
+    }
 
     async getUserById(userId: string): Promise<User | undefined> {
         const user = this.entityManager.findOneBy(User, { userId });
@@ -170,47 +206,6 @@ export class UsersService {
     }
 
 
-
-    async postProfilePic(file: any) {
-        let resp: any
-
-        const userId = this.userProvider.getCurrentUser().userId;
-        const filePath: string = file.path;
-        let user = new User();
-
-        await this.entityManager.transaction(async transactionalEntityManager => {
-            user.userId = userId;
-            user.profileImg = filePath;
-
-            await transactionalEntityManager.save(User, user);
-        });
-
-        resp = user;
-        return resp;
-    };
-
-    // this doesnt work 
-    async getProfilePic() {
-
-        let resp: any;
-
-        const userId = this.userProvider.getCurrentUser().userId;
-
-        const user = await this.entityManager
-            .createQueryBuilder(User, 'user')
-            .where('user.userId = :userId', { userId: userId })
-            .getOne();
-
-
-        if (user && user.profileImg) {
-            const pathParts = user.profileImg.split(/[\/\\]/);
-            user.profileImg = `${process.env.DOMAIN_NAME}/users/display/profileImg/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
-        }
-
-        resp = user;
-
-        return resp;
-    };
 
 
 

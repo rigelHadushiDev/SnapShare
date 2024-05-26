@@ -61,8 +61,8 @@ export class PostService {
         return resp;
     };
 
-    async getUserMedia(hashedUser: string, filename: string, type: string, res: Response) {
-        const filePath: string = `${path.join(process.cwd(), 'media', 'users', hashedUser, type, `${filename}`)}`;
+    async getUserMedia(hashedUser: string, type: string, filename: string, res: Response) {
+        const filePath: string = `${path.join(process.cwd(), 'media', 'users', hashedUser, `${type}`, `${filename}`)}`;
         res.sendFile(filePath);
     }
 
