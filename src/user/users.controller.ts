@@ -51,29 +51,24 @@ export class UsersController {
         return this.userService.getProfilePic();
     }
 
-    @Get(':id')
-    async getUserById(@Param('id') id: string) {
-        return await this.userService.getUserById(id);
-    }
-
     @Get(':userName')
     async getUserByUsername(@Param('userName') username: string) {
         return await this.userService.getUserByUsername(username);
     }
 
-    @Put('update/:id')
-    async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-        return await this.userService.updateUser(id, updateUserDto);
+    @Put('update')
+    async updateUser(@Body() updateUserDto: UpdateUserDto) {
+        return await this.userService.updateUser(updateUserDto);
     }
 
-    @Put(':id')
-    async archiveUser(@Param('id') id: string) {
-        return await this.userService.archiveUser(id);
+    @Put()
+    async archiveUser() {
+        return await this.userService.archiveUser();
     }
 
-    @Delete(':id/hard')
-    async hardDeleteUser(@Param('id') id: string) {
-        return await this.userService.hardDeleteUser(id);
+    @Delete('/hard')
+    async hardDeleteUser() {
+        return await this.userService.hardDeleteUser();
     }
 
 

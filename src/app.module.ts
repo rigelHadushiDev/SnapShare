@@ -18,6 +18,7 @@ import { Comment } from './comment/comment.entity';
 import { Like } from './like/like.entity';
 import * as dotenv from 'dotenv';
 import { Network } from './network/network.entity';
+import { FetchUserMiddleware } from './auth/fetchUser.middleware';
 dotenv.config();
 
 @Module({

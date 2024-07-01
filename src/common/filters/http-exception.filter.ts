@@ -24,18 +24,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
                 error = errorResponse.error;
             }
         } else {
-
+            // log the error in here 
             console.error('Unexpected error:', exception);
             const internalServerErrorException = new InternalServerErrorException('unexpectedErrorOccurred');
             status = internalServerErrorException.getStatus();
-            errorResponse = internalServerErrorException.getResponse();
+            message = internalServerErrorException.getResponse();
 
-            if (typeof errorResponse === 'string') {
-                message = errorResponse;
-            } else if (typeof errorResponse === 'object' && errorResponse !== null) {
-                message = errorResponse.message;
-                error = errorResponse.error;
-            }
         }
 
         response.status(status).json({

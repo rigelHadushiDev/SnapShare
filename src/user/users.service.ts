@@ -2,18 +2,26 @@ import { Injectable, NotFoundException, UnauthorizedException, InternalServerErr
 import { EntityManager } from 'typeorm';
 import { User } from './user.entity';
 import { Post } from 'src/post/post.entity';
-import { UserProvider } from './user.provider';
 import * as bcrypt from 'bcrypt';
 import * as path from 'path';
 import { UpdateUserDto } from './dtos/UpdateUserDto';
+import { UserProvider } from './user.provider';
 const fs = require('fs');
 
 @Injectable()
 export class UsersService {
 
-    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) { }
+    public UserID: string;
+    public UserName: string;
+
+    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) {
+        this.UserID = this.userProvider.getCurrentUser()?.userId;
+        this.UserName = this.userProvider.getCurrentUser()?.username;
+    }
+
 
     async createUser(email: string, username: string, password: string): Promise<User> {
+
         // Check if the user with the given email already exists
         const existingUser = await this.entityManager.findOne(User, {
             where: [{ email }, { username }],
@@ -45,7 +53,7 @@ export class UsersService {
     async postProfilePic(file: any) {
         let resp: any
 
-        const userId = this.userProvider.getCurrentUser().userId;
+        const userId: string = this.UserID;
         const filePath: string = file.path;
         let user = new User();
 
@@ -62,14 +70,20 @@ export class UsersService {
 
 
     async getProfilePic() {
-        const currUser: { userId: string } = this.userProvider.getCurrentUser();
+
+        const userId: string = this.UserID;
 
         const user = await this.entityManager
             .createQueryBuilder()
-            .select()
+            .select([
+                'user.profileDescription', 'user.firstName', 'user.lastName',
+                'user.isPrivate', 'user.archive', 'user.createdAt',
+                'user.updatedAt', 'user.profileImg',
+                'user.username',
+            ])
             .from(User, 'user')
-            .where('user.userId = :userId', { userId: currUser.userId })
-            .getRawOne();
+            .where('user.userId = :userId', { userId: userId })
+            .getOne();
 
         if (user && user.profileImg) {
             const pathParts = user.profileImg.split(/[\/\\]/);
@@ -80,29 +94,32 @@ export class UsersService {
     }
 
     async getUserById(userId: string): Promise<User | undefined> {
+
         const user = this.entityManager.findOneBy(User, { userId });
+
         if (!user) {
             throw new NotFoundException("userNotFound");
         }
+
         return user;
     }
 
     async getUserByUsername(username: string): Promise<User | undefined> {
         const user = this.entityManager.findOneBy(User, { username });
+
         if (!user) {
             throw new NotFoundException("userNotFound");
         }
+
         return user;
     }
 
     // this can be refactored with a switch later
-    async updateUser(userId: string, updateUserDto: UpdateUserDto): Promise<{ user: User, message: string }> {
+    async updateUser(updateUserDto: UpdateUserDto): Promise<{ user: User, message: string }> {
+
+        const userId: string = this.UserID;
 
         const user = await this.getUserById(userId);
-
-        if (!user) {
-            throw new BadRequestException("userNotFound")
-        }
 
         const { ...updateFields } = updateUserDto;
 
@@ -157,31 +174,22 @@ export class UsersService {
         return { message: 'UserModifiedSucesfully', user: updatedUser };
     }
 
-    async archiveUser(userId: string): Promise<{ user: User, message: string }> {
+    async archiveUser(): Promise<{ user: User, message: string }> {
+
+        const userId: string = this.UserID;
+
+        const user = await this.getUserById(userId);
+
         await this.entityManager.update(User, userId, { archive: true });
 
-        const currUser = this.userProvider.getCurrentUser()?.userId;
-
-        const user: any = await this.entityManager.findOne(User, { where: { userId } });
-        if (!user) {
-            throw new NotFoundException('userNotFound');
-        } else if (user.userId !== currUser) {
-            throw new UnauthorizedException('notAuthorizedUser');
-        }
         return { message: "userArchivedSucesfully", user: user };
     }
 
-    async hardDeleteUser(userId: string): Promise<{ user: User, message: string }> {
+    async hardDeleteUser(): Promise<{ user: User, message: string }> {
 
-        const currUser = this.userProvider.getCurrentUser()?.userId;
-        const user = await this.entityManager.findOneBy(User, { userId });
+        const userId: string = this.UserID;
 
-        if (!user) {
-            throw new NotFoundException('userNotFound');
-        }
-        else if (user.userId !== currUser) {
-            throw new UnauthorizedException('notAuthorizedUser');
-        }
+        const user = await this.getUserById(userId);
 
         return await this.entityManager.transaction(async (transactionalEntityManager: EntityManager) => {
             const posts: Post[] = await transactionalEntityManager
@@ -197,7 +205,7 @@ export class UsersService {
                     try {
                         await fs.promises.unlink(filePath);
                     } catch (err) {
-                        throw new InternalServerErrorException('issueDeletingPost');
+                        throw new InternalServerErrorException('errorDeletingPost');
                     }
                 }
             }

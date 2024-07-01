@@ -11,13 +11,17 @@ const fs = require('fs');
 @Injectable()
 export class PostService {
 
-    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) { }
+    public UserID: string;
+    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) {
+        this.UserID = this.userProvider.getCurrentUser()?.userId;
+    }
 
     // this is done only add the type of the method <> promise
     async postFile(file: any, postData: any) {
         let resp: any
 
-        const userId = this.userProvider.getCurrentUser().userId;
+        const userId = this.UserID;
+
         const filePath: string = file.path;
         let post = new Post();
         let postDescription = postData.postDescription.replace(/^'(.*)'$/, '$1');
@@ -35,18 +39,19 @@ export class PostService {
         return resp;
     };
 
-    // this is an example with pagination , query should change so you can get the friends posts and not your posts
-    async getUserPosts(take: number = 10, skip: number = 0) {
+    async getUserPosts(postsByPage: number = 10, page: number = 1) {
 
         let resp: any;
 
-        const userId = this.userProvider.getCurrentUser().userId;
+        const userId = this.UserID;
+
+        let skip: number = (page - 1) * postsByPage
 
         const posts = await this.entityManager
             .createQueryBuilder(Post, 'post')
             .where('post.userId = :userId', { userId })
             .andWhere('post.archived = :archived', { archived: false })
-            .take(take)
+            .take(postsByPage)
             .skip(skip)
             .getMany();
 
@@ -71,7 +76,7 @@ export class PostService {
     async archivePost(postId: number): Promise<{ message: string; status: number }> {
         let resp: { message: string; status: number };
 
-        const userId: string = this.userProvider.getCurrentUser()?.userId;
+        const userId = this.UserID;
 
         const result = await this.entityManager
             .createQueryBuilder()
@@ -95,7 +100,7 @@ export class PostService {
         let resp: { message: string; status: number };
 
 
-        const userId: string = this.userProvider.getCurrentUser()?.userId;
+        const userId = this.UserID;
 
         const post = await this.entityManager
             .createQueryBuilder(Post, 'post')
@@ -136,7 +141,7 @@ export class PostService {
 
         let resp: { message: string; status: number };
 
-        const userId: string = this.userProvider.getCurrentUser()?.userId;
+        const userId = this.UserID;
 
         const post = await this.entityManager
             .createQueryBuilder(Post, 'post')
@@ -172,9 +177,8 @@ export class PostService {
         return resp;
     }
 
-
-
     async findPostById(postId: number): Promise<Post> {
+
         const post = await this.entityManager.findOne(Post, { where: { postId: postId } })
 
         if (!post) {
