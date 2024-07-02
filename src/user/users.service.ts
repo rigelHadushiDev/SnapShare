@@ -30,9 +30,9 @@ export class UsersService {
         if (existingUser) {
             // Determine which field(s) caused the conflict
             if (existingUser.email === email) {
-                throw new ConflictException('User with this email already exists');
+                throw new ConflictException('emailTaken');
             } else if (existingUser.username === username) {
-                throw new ConflictException('User with this username already exists');
+                throw new ConflictException('usernameTaken');
             }
         }
 

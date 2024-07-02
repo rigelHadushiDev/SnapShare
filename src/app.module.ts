@@ -54,4 +54,8 @@ dotenv.config();
 
     }]
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(FetchUserMiddleware).forRoutes('*');
+  }
+}

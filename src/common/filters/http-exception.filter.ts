@@ -1,40 +1,49 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, InternalServerErrorException } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils'
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-    catch(exception: unknown, host: ArgumentsHost) {
+    catch(error: any, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
         const request = ctx.getRequest<Request>();
 
         let status: number;
         let message: any;
-        let error: any;
+        let errorName: any;
         let errorResponse: any;
 
-        if (exception instanceof HttpException) {
-            status = exception.getStatus();
-            errorResponse = exception.getResponse();
+        if (error instanceof HttpException) {
+            status = error.getStatus();
+            errorResponse = error.getResponse();
 
             if (typeof errorResponse === 'string') {
                 message = errorResponse;
             } else if (typeof errorResponse === 'object' && errorResponse !== null) {
                 message = errorResponse.message;
-                error = errorResponse.error;
+                errorName = errorResponse.error;
             }
         } else {
-            // log the error in here 
-            console.error('Unexpected error:', exception);
+            SnapShareUtility.printToFile(error.stack || error, 'unexpectedError');
+            console.log('Unexpected error:', error);
+
             const internalServerErrorException = new InternalServerErrorException('unexpectedErrorOccurred');
             status = internalServerErrorException.getStatus();
-            message = internalServerErrorException.getResponse();
+            errorResponse = internalServerErrorException.getResponse();
+
+            if (typeof errorResponse === 'string') {
+                message = errorResponse;
+            } else if (typeof errorResponse === 'object' && errorResponse !== null) {
+                message = errorResponse.message;
+                errorName = errorResponse.error;
+            }
 
         }
 
         response.status(status).json({
             statusCode: status,
-            error: error,
+            error: errorName,
             message,
             timestamp: new Date().toString(),
             path: request.url,

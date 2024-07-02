@@ -14,7 +14,7 @@ export class FetchUserMiddleware implements NestMiddleware {
 
         if (token) {
             const payload = await this.jwtService.verifyAsync(token, {
-                secret: process.env.secret,
+                secret: process.env.JWT_SECRET,
             });
             const userId: number = payload.userId;
             const username: string = payload.username;
