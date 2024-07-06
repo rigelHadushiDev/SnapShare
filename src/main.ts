@@ -8,25 +8,25 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
-  await app.listen(3000);
+
   const corsOptions: CorsOptions = {
     origin: '*',
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ['Content-Type', 'Origin', 'X-Requested-With', 'Accept', 'Authorization']
   };
+  app.enableCors(corsOptions);
 
   const config = new DocumentBuilder()
-    .setTitle('MobiRead')
-    .addTag('MobiRead API Documentation')
-    .setDescription('MobiRead API Documentation')
-    .addServer(process.env.TEST_DOMAIN_API)
+    .setTitle('SnapShare')
+    .setDescription('SnapShare API Documentation')
+    //  .addServer(process.env.TEST_DOMAIN_API)
     .setVersion('1.0')
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("/api", app, document);
+  SwaggerModule.setup("api", app, document);
 
-  app.enableCors(corsOptions);
+  await app.listen(3000);
 }
 bootstrap();
 

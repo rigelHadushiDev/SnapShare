@@ -6,22 +6,24 @@ import * as bcrypt from 'bcrypt';
 import * as path from 'path';
 import { UpdateUserDto } from './dtos/UpdateUserDto';
 import { UserProvider } from './user.provider';
+import { CreateUserReq, UserInfoDto } from './dtos/CreateUser.dto';
 const fs = require('fs');
 
 @Injectable()
 export class UsersService {
 
-    public UserID: string;
-    public UserName: string;
+    public currUserID: string;
+    public currUserName: string;
 
     constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) {
-        this.UserID = this.userProvider.getCurrentUser()?.userId;
-        this.UserName = this.userProvider.getCurrentUser()?.username;
+        this.currUserID = this.userProvider.getCurrentUser()?.userId;
+        this.currUserName = this.userProvider.getCurrentUser()?.username;
     }
 
 
-    async createUser(email: string, username: string, password: string): Promise<User> {
+    async createUser(createUserDto: CreateUserReq) {
 
+        let { email, username, password } = createUserDto;
         // Check if the user with the given email already exists
         const existingUser = await this.entityManager.findOne(User, {
             where: [{ email }, { username }],
@@ -45,61 +47,50 @@ export class UsersService {
             password,
         });
 
-        let createdUser = this.entityManager.save(newUser);
+        let createdUser = await this.entityManager.save(newUser);
 
-        return createdUser;
+        const { password: excludedPassword, userId: excludedUserId, ...userInfo } = createdUser;
+
+        return { message: "userCreatedSuccessfully", userInfo };
     }
 
-    async postProfilePic(file: any) {
-        let resp: any
+    async postProfilePic(file: Express.Multer.File) {
 
-        const userId: string = this.UserID;
+        const userId: string = this.currUserID;
+
+        if (!file)
+            throw new BadRequestException('pleaseUploadImg');
+
         const filePath: string = file.path;
+
         let user = new User();
 
         await this.entityManager.transaction(async transactionalEntityManager => {
+
             user.userId = userId;
             user.profileImg = filePath;
 
             await transactionalEntityManager.save(User, user);
         });
 
-        resp = user;
-        return resp;
-    };
-
-
-    async getProfilePic() {
-
-        const userId: string = this.UserID;
-
-        const user = await this.entityManager
-            .createQueryBuilder()
-            .select([
-                'user.profileDescription', 'user.firstName', 'user.lastName',
-                'user.isPrivate', 'user.archive', 'user.createdAt',
-                'user.updatedAt', 'user.profileImg',
-                'user.username',
-            ])
-            .from(User, 'user')
-            .where('user.userId = :userId', { userId: userId })
-            .getOne();
-
         if (user && user.profileImg) {
             const pathParts = user.profileImg.split(/[\/\\]/);
             user.profileImg = `${process.env.DOMAIN_NAME}/post/display/profileImg/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
         }
 
-        return user;
-    }
+        let { userId: _, ...resp } = user;
+
+        return resp;
+
+    };
+
 
     async getUserById(userId: string): Promise<User | undefined> {
 
         const user = this.entityManager.findOneBy(User, { userId });
 
-        if (!user) {
+        if (!user)
             throw new NotFoundException("userNotFound");
-        }
 
         return user;
     }
@@ -107,17 +98,27 @@ export class UsersService {
     async getUserByUsername(username: string): Promise<User | undefined> {
         const user = this.entityManager.findOneBy(User, { username });
 
-        if (!user) {
+        if (!user)
             throw new NotFoundException("userNotFound");
-        }
 
         return user;
     }
 
-    // this can be refactored with a switch later
-    async updateUser(updateUserDto: UpdateUserDto): Promise<{ user: User, message: string }> {
+    async getUserData(): Promise<{ user: UserInfoDto, message: string }> {
 
-        const userId: string = this.UserID;
+        const userId = this.currUserID;
+
+        let user = await this.getUserById(userId);
+
+        const { password: excludedPassword, userId: excludedUserId, ...userInfo } = user;
+
+        return { message: 'UserArchivedSuccessfully', user: userInfo };
+    }
+
+
+    async updateUser(updateUserDto: UpdateUserDto): Promise<{ user: UserInfoDto, message: string }> {
+
+        const userId: string = this.currUserID;
 
         const user = await this.getUserById(userId);
 
@@ -171,27 +172,31 @@ export class UsersService {
 
         const updatedUser = await this.entityManager.save(User, user);
 
-        return { message: 'UserModifiedSucesfully', user: updatedUser };
+        const { userId: _, password: __, ...userWithoutSensitiveInfo } = updatedUser;
+
+        return { message: 'userModifiedSucesfully', user: updatedUser };
     }
 
-    async archiveUser(): Promise<{ user: User, message: string }> {
+    async archiveUser(): Promise<{ user: UserInfoDto, message: string }> {
 
-        const userId: string = this.UserID;
+        const userId: string = this.currUserID;
 
         const user = await this.getUserById(userId);
 
         await this.entityManager.update(User, userId, { archive: true });
 
-        return { message: "userArchivedSucesfully", user: user };
+        const { password: excludedPassword, userId: excludedUserId, ...userInfo } = user;
+
+        return { message: 'UserArchivedSuccessfully', user: userInfo };
     }
 
-    async hardDeleteUser(): Promise<{ user: User, message: string }> {
+    async hardDeleteUser(): Promise<{ user: UserInfoDto, message: string }> {
 
-        const userId: string = this.UserID;
+        const userId: string = this.currUserID;
 
         const user = await this.getUserById(userId);
 
-        return await this.entityManager.transaction(async (transactionalEntityManager: EntityManager) => {
+        await this.entityManager.transaction(async (transactionalEntityManager: EntityManager) => {
             const posts: Post[] = await transactionalEntityManager
                 .createQueryBuilder(Post, 'post')
                 .where('post.userId = :userId', { userId: user.userId })
@@ -209,9 +214,11 @@ export class UsersService {
                     }
                 }
             }
-
-            return { message: 'UserDeletedSuccessfully', user: user };
         });
+
+        const { password: excludedPassword, userId: excludedUserId, ...userInfo } = user;
+
+        return { message: 'userDeletedSuccessfully', user: userInfo };
     }
 
 

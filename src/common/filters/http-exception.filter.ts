@@ -25,7 +25,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
                 errorName = errorResponse.error;
             }
         } else {
-            SnapShareUtility.printToFile(error.stack || error, 'unexpectedError');
+            SnapShareUtility.printToFile(error?.stack || error, 'unexpectedError');
             console.log('Unexpected error:', error);
 
             const internalServerErrorException = new InternalServerErrorException('unexpectedErrorOccurred');

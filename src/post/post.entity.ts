@@ -32,10 +32,10 @@ export class Post {
     @Column({ name: 'commentsNr', nullable: true, default: 0 })
     commentsNr: number;
     //--------------------------------------------
-    @OneToMany(() => Like, like => like.post)
+    @OneToMany(() => Like, like => like.post, { cascade: true })
     likes: Like[];
 
-    @OneToMany(() => Comment, comment => comment.post)
+    @OneToMany(() => Comment, comment => comment.post, { cascade: true })
     comments: Comment[];
 
     @ManyToOne(() => User, user => user.posts, { onDelete: 'CASCADE' })
