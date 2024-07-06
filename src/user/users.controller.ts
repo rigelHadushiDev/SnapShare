@@ -19,7 +19,7 @@ import { UsersService } from './users.service';
 import { Public } from 'src/common/decorators/public.decorator';
 import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { profileStorage } from './fileStorage.config';
+import { fileStorage, configureStorageOptions, imgFilters } from './fileStorage.config';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
 
@@ -28,7 +28,9 @@ import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator
 @ApiBearerAuth()
 @Controller('users')
 export class UsersController {
-    constructor(private readonly userService: UsersService) { }
+    constructor(private readonly userService: UsersService) {
+        configureStorageOptions('profileImg', imgFilters);
+    }
 
     @Public()
     @Post()
@@ -51,7 +53,7 @@ export class UsersController {
 
     @Post('upload')
     @HttpCode(HttpStatus.OK)
-    @UseInterceptors(FileInterceptor('file', profileStorage))
+    @UseInterceptors(FileInterceptor('file', fileStorage))
     postProfilePic(@UploadedFile() file) {
         return this.userService.postProfilePic(file);
     }

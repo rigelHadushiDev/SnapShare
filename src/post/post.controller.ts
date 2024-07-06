@@ -3,7 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 const path = require('path');
 import { PostService } from './post.service';
 const fs = require('fs');
-import { postStorage } from './fileStorage.config';
+import { configureStorageOptions, fileStorage, imgVideoFilters } from 'src/user/fileStorage.config';
 import { Response } from 'express';
 import { EditPostDto } from './dtos/editPost.dto';
 import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
@@ -16,11 +16,13 @@ import { IsCreatorGuard } from './guards/IsCreator.guard';
 @Controller('post')
 export class PostController {
 
-    constructor(private readonly PostService: PostService) { }
+    constructor(private readonly PostService: PostService) {
+        configureStorageOptions('posts', imgVideoFilters);
+    }
 
     @Post('upload')
     @HttpCode(HttpStatus.OK)
-    @UseInterceptors(FileInterceptor('file', postStorage))
+    @UseInterceptors(FileInterceptor('file', fileStorage))
     postFile(@UploadedFile() file, @Body() postData: string) {
         return this.PostService.postFile(file, postData);
     }
