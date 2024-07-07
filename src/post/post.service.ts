@@ -16,7 +16,6 @@ export class PostService {
         this.UserID = this.userProvider.getCurrentUser()?.userId;
     }
 
-    // this is done only add the type of the method <> promise
     async postFile(file: any, postData: any) {
         let resp: any
 
@@ -39,40 +38,12 @@ export class PostService {
         return resp;
     };
 
-    async getUserPosts(postsByPage: number = 10, page: number = 1) {
-
-        let resp: any;
-
-        const userId = this.UserID;
-
-        let skip: number = (page - 1) * postsByPage
-
-        const posts = await this.entityManager
-            .createQueryBuilder(Post, 'post')
-            .where('post.userId = :userId', { userId })
-            .andWhere('post.archived = :archived', { archived: false })
-            .take(postsByPage)
-            .skip(skip)
-            .getMany();
-
-
-        for (const post of posts) {
-            const pathParts = post.media.split(/[\/\\]/);
-            // this needs to be changed later so we use only one controller
-            post.media = `${process.env.DOMAIN_NAME}/post/display/posts/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
-        }
-
-        resp = posts;
-
-        return resp;
-    };
-
-    // fileProvider can be named
-    async getUserMedia(hashedUser: string, type: string, filename: string, res: Response) {
+    async getMedia(hashedUser: string, type: string, filename: string, res: Response) {
         const filePath: string = `${path.join(process.cwd(), 'media', 'users', hashedUser, `${type}`, `${filename}`)}`;
         res.sendFile(filePath);
     }
 
+    // this needs to be checked
     async archivePost(postId: number): Promise<{ message: string; status: number }> {
         let resp: { message: string; status: number };
 

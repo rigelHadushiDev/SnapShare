@@ -10,9 +10,11 @@ import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
 import { Observable } from 'rxjs';
 import { Post as PostEntity } from './post.entity';
 import { IsCreatorGuard } from './guards/IsCreator.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 
-@UseFilters(HttpExceptionFilter)
+@ApiBearerAuth()
+@ApiTags("Post Module")
 @Controller('post')
 export class PostController {
 
@@ -27,17 +29,12 @@ export class PostController {
         return this.PostService.postFile(file, postData);
     }
 
-    @Get('getUserPosts')
-    getUserPosts(@Query('take') take: number = 1, @Query('skip') skip: number = 1) {
-        take = take > 20 ? 20 : take;
-        return this.PostService.getUserPosts(take, skip);
-    }
-
     @Get('display/:type/:userName/:filename')
-    getUserMedia(@Param('userName') userName: string, @Param('type') type: string, @Param('filename') filename: string, @Res() res: Response) {
-        return this.PostService.getUserMedia(userName, type, filename, res);
+    getMedia(@Param('userName') userName: string, @Param('type') type: string, @Param('filename') filename: string, @Res() res: Response) {
+        return this.PostService.getMedia(userName, type, filename, res);
     }
 
+    @UseGuards(IsCreatorGuard)
     @Put('archive/:postId')
     archivePost(@Param('postId') postId: number) {
         return this.PostService.archivePost(postId);

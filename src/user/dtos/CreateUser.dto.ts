@@ -41,7 +41,7 @@ export class UserInfoDto {
     updatedAt: Date;
 }
 
-export class CreateUserRes {
+export class UserResDto {
 
     @ApiProperty({ example: 'userCreatedSuccessfully', description: 'Message indicating the result of the user module operation' })
     message: string;

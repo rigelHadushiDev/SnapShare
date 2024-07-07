@@ -222,7 +222,39 @@ export class UsersService {
     }
 
 
+    async getUserPosts(postsByPage: number = 10, page: number = 1) {
 
+        let resp: any;
+
+        const userId = this.currUserID;
+
+        let skip: number = (page - 1) * postsByPage
+
+        const posts = await this.entityManager
+            .createQueryBuilder(Post, 'post')
+            .where('post.userId = :userId', { userId })
+            .andWhere('post.archived = :archived', { archived: false })
+            .andWhere('post.deleted = :deleted', { deleted: false })
+            .take(postsByPage)
+            .skip(skip)
+            .getMany();
+
+
+        const formattedPosts = posts.map(post => {
+            const { userId, ...rest } = post;
+            return { ...rest };
+        });
+
+
+        for (const post of formattedPosts) {
+            const pathParts = post.media.split(/[\/\\]/);
+            post.media = `${process.env.DOMAIN_NAME}/post/display/posts/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
+        }
+
+        resp = formattedPosts;
+
+        return resp;
+    };
 
 
 

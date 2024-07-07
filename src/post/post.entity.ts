@@ -31,6 +31,11 @@ export class Post {
 
     @Column({ name: 'commentsNr', nullable: true, default: 0 })
     commentsNr: number;
+
+    @Column({ name: 'deleted', default: false })
+    deleted: boolean;
+
+
     //--------------------------------------------
     @OneToMany(() => Like, like => like.post, { cascade: true })
     likes: Like[];
