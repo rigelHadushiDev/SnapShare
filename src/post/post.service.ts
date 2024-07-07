@@ -4,8 +4,9 @@ import { EntityManager, Transaction } from 'typeorm';
 import { Post } from './post.entity';
 import * as path from 'path';
 import { Response, response } from 'express';
-import { EditPostDto } from './dtos/editPost.dto';
+import { EditPostDto } from './dtos/EditPost.dto';
 import { Observable } from 'rxjs';
+import { DescriptionDto } from './dtos/CreatePost.dto';
 const fs = require('fs');
 
 @Injectable()
@@ -16,24 +17,33 @@ export class PostService {
         this.UserID = this.userProvider.getCurrentUser()?.userId;
     }
 
-    async postFile(file: any, postData: any) {
+    async createPost(media: Express.Multer.File, postDataDto: DescriptionDto) {
         let resp: any
 
         const userId = this.UserID;
 
-        const filePath: string = file.path;
+        if (!media) {
+            throw new BadRequestException('mediaFileRequired')
+        }
+
+        const filePath: string = media.path;
         let post = new Post();
-        let postDescription = postData.postDescription.replace(/^'(.*)'$/, '$1');
+
+        let createdPost;
 
         await this.entityManager.transaction(async transactionalEntityManager => {
+
             post.userId = userId;
-            post.postDescription = postDescription;
+            post.postDescription = postDataDto?.description || null;
             post.media = filePath;
 
-            await transactionalEntityManager.save(Post, post);
+            createdPost = await transactionalEntityManager.save(Post, post);
         });
 
-        resp = post;
+        const pathParts = createdPost.media.split(/[\/\\]/);
+        createdPost.media = `${process.env.DOMAIN_NAME}/post/display/posts/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
+
+        resp = createdPost;
 
         return resp;
     };
@@ -43,11 +53,21 @@ export class PostService {
         res.sendFile(filePath);
     }
 
-    // this needs to be checked
-    async archivePost(postId: number): Promise<{ message: string; status: number }> {
+
+    async toggleArchivePost(postId: number): Promise<{ message: string; status: number }> {
+
         let resp: { message: string; status: number };
 
         const userId = this.UserID;
+
+        let postStatus = await await this.entityManager
+            .createQueryBuilder()
+            .from(Post, 'post')
+            .select('post.archived')
+            .where('post.postId = :postId', { postId })
+            .getOne();
+
+        postStatus.archived === true ? false : true;
 
         const result = await this.entityManager
             .createQueryBuilder()
@@ -55,14 +75,11 @@ export class PostService {
             .set({ archived: true })
             .where('postId = :postId', { postId })
             .andWhere('userId = :userId', { userId })
-            .andWhere('archived = :archived', { archived: false })
+            .andWhere('archived = :archived', { archived: postStatus.archived })
             .execute();
 
-        if (result.affected === 1) {
-            resp = { message: 'postSuccessfullyArchived', status: HttpStatus.OK };
-        } else {
-            resp = { message: 'postIsAlreadyArchivedOrNotExist', status: HttpStatus.OK };
-        }
+        resp = { message: 'archiveToggleSuccessful', status: HttpStatus.OK };
+
         return resp;
     }
 
@@ -78,10 +95,6 @@ export class PostService {
             .where('post.userId = :userId', { userId })
             .where('post.postId = :postId', { postId })
             .getOne();
-
-        if (!post) {
-            throw new NotFoundException('postNotFound');
-        }
 
         if (post?.media) {
             const filePath = path.resolve(post.media);
@@ -153,9 +166,10 @@ export class PostService {
         const post = await this.entityManager.findOne(Post, { where: { postId: postId } })
 
         if (!post) {
-            throw new NotFoundException(`Post with ID ${postId} not found`);
+            throw new NotFoundException(`postNotFound`);
         }
-        return post
+
+        return post;
     }
 }
 

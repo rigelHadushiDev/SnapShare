@@ -49,12 +49,14 @@ export class UsersService {
 
         let createdUser = await this.entityManager.save(newUser);
 
-        const { password: excludedPassword, userId: excludedUserId, ...userInfo } = createdUser;
+        const { password: excludedPassword, ...userInfo } = createdUser;
 
         return { message: "userCreatedSuccessfully", userInfo };
     }
 
     async postProfilePic(file: Express.Multer.File) {
+
+        let resp: any;
 
         const userId: string = this.currUserID;
 
@@ -78,7 +80,7 @@ export class UsersService {
             user.profileImg = `${process.env.DOMAIN_NAME}/post/display/profileImg/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
         }
 
-        let { userId: _, ...resp } = user;
+        resp = user;
 
         return resp;
 
@@ -110,7 +112,7 @@ export class UsersService {
 
         let user = await this.getUserById(userId);
 
-        const { password: excludedPassword, userId: excludedUserId, ...userInfo } = user;
+        const { password: excludedPassword, ...userInfo } = user;
 
         return { message: 'UserArchivedSuccessfully', user: userInfo };
     }
@@ -172,9 +174,9 @@ export class UsersService {
 
         const updatedUser = await this.entityManager.save(User, user);
 
-        const { userId: _, password: __, ...userWithoutSensitiveInfo } = updatedUser;
+        const { password: __, ...userInfo } = updatedUser;
 
-        return { message: 'userModifiedSucesfully', user: updatedUser };
+        return { message: 'userModifiedSucesfully', user: userInfo };
     }
 
     async archiveUser(): Promise<{ user: UserInfoDto, message: string }> {
@@ -185,7 +187,7 @@ export class UsersService {
 
         await this.entityManager.update(User, userId, { archive: true });
 
-        const { password: excludedPassword, userId: excludedUserId, ...userInfo } = user;
+        const { password: excludedPassword, ...userInfo } = user;
 
         return { message: 'UserArchivedSuccessfully', user: userInfo };
     }
@@ -216,7 +218,7 @@ export class UsersService {
             }
         });
 
-        const { password: excludedPassword, userId: excludedUserId, ...userInfo } = user;
+        const { password: excludedPassword, ...userInfo } = user;
 
         return { message: 'userDeletedSuccessfully', user: userInfo };
     }
@@ -239,19 +241,12 @@ export class UsersService {
             .skip(skip)
             .getMany();
 
-
-        const formattedPosts = posts.map(post => {
-            const { userId, ...rest } = post;
-            return { ...rest };
-        });
-
-
-        for (const post of formattedPosts) {
+        for (const post of posts) {
             const pathParts = post.media.split(/[\/\\]/);
             post.media = `${process.env.DOMAIN_NAME}/post/display/posts/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
         }
 
-        resp = formattedPosts;
+        resp = posts;
 
         return resp;
     };

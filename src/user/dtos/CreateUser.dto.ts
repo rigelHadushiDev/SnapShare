@@ -10,6 +10,12 @@ import {
 
 export class UserInfoDto {
 
+    @ApiProperty({
+        description: 'Unique identifier of the user',
+        uniqueItems: true
+    })
+    userId: string;
+
     @ApiProperty({ example: 'example@example.com', description: 'Email address of the user', uniqueItems: true })
     email: string;
 
