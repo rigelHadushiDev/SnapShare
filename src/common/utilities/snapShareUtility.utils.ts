@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
 import * as path from 'path';
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 
 
 @Injectable()
@@ -31,7 +31,17 @@ export class SnapShareUtility {
     }
 
 
-    escapeString(str) {
+    static urlConverter(media: string) {
+
+        const pathParts = media.split(/[\/\\]/);
+        const result = `${process.env.DOMAIN_NAME}/post/display/posts/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
+        return result;
+    }
+
+
+
+
+    static escapeString(str) {
         if (!str)
             return str;
 

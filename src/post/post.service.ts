@@ -7,6 +7,7 @@ import { Response, response } from 'express';
 import { EditPostDto } from './dtos/EditPost.dto';
 import { Observable } from 'rxjs';
 import { DescriptionDto } from './dtos/CreatePost.dto';
+import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 const fs = require('fs');
 
 @Injectable()
@@ -27,6 +28,7 @@ export class PostService {
         }
 
         const filePath: string = media.path;
+
         let post = new Post();
 
         let createdPost;
@@ -40,8 +42,8 @@ export class PostService {
             createdPost = await transactionalEntityManager.save(Post, post);
         });
 
-        const pathParts = createdPost.media.split(/[\/\\]/);
-        createdPost.media = `${process.env.DOMAIN_NAME}/post/display/posts/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
+        if (createdPost.media)
+            SnapShareUtility.urlConverter(createdPost.media);
 
         resp = createdPost;
 
@@ -69,7 +71,7 @@ export class PostService {
 
         postStatus.archived === true ? false : true;
 
-        const result = await this.entityManager
+        await this.entityManager
             .createQueryBuilder()
             .update(Post)
             .set({ archived: true })
@@ -85,16 +87,12 @@ export class PostService {
 
 
     async deletePost(postId: number): Promise<{ message: string; status: number }> {
-        let resp: { message: string; status: number };
 
+        let resp: { message: string; status: number };
 
         const userId = this.UserID;
 
-        const post = await this.entityManager
-            .createQueryBuilder(Post, 'post')
-            .where('post.userId = :userId', { userId })
-            .where('post.postId = :postId', { postId })
-            .getOne();
+        const post = await this.findPostById(postId);
 
         if (post?.media) {
             const filePath = path.resolve(post.media);
@@ -113,11 +111,11 @@ export class PostService {
             .andWhere('userId = :userId', { userId })
             .execute();
 
-        if (deleteQuery.affected === 1 && post.media) {
+        if (deleteQuery.affected === 1 && post.media)
             resp = { message: 'postSuccessfullyDeleted', status: HttpStatus.OK };
-        } else {
+        else
             resp = { message: 'postIsAlreadyDeleted', status: HttpStatus.OK };
-        }
+
         return resp;
     }
 
@@ -133,14 +131,10 @@ export class PostService {
             .where('post.postId = :postId', { postId })
             .getOne();
 
-        if (!post) {
-            throw new NotFoundException('postNotFound');
-        }
-
         const { currPostDesc } = postData;
 
         if (currPostDesc === post?.postDescription) {
-            throw new NotFoundException('newDescriptionShouldBeAdded')
+            throw new NotFoundException('newDescriptionShouldBeAdded');
         }
 
         const editPost = await this.entityManager
@@ -151,11 +145,10 @@ export class PostService {
             .andWhere('userId = :userId', { userId })
             .execute();
 
-
         if (editPost?.affected === 1) {
             resp = { message: 'postSuccessfullyEdited', status: HttpStatus.OK };
         } else {
-            throw new InternalServerErrorException('issueFacedUpdatingPost')
+            throw new InternalServerErrorException('issueUpdatingPost');
         }
 
         return resp;

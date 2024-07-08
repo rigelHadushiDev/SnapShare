@@ -77,21 +77,23 @@ export class PostController {
     @ApiException(() => ForbiddenException, { description: 'Post is not found. [key: "postNotFound" ]' })
     @ApiException(() => InternalServerErrorException, { description: 'Issue deleting post. [key: "issueDeletingPost" ]' })
     @ApiParam({ name: 'postId', description: 'ID of the post to be deleted' })
-    @ApiResponse({
-        status: HttpStatus.OK, description: 'Successfully deleted the post. [key: "postIsAlreadyDeleted" || key: "postSuccessfullyDeleted"]',
-        type: GeneralResponse
-    })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Successfully deleted the post.', type: GeneralResponse })
     @ApiOperation({ summary: 'Toggle archive status of a post by ID' })
     deletePost(@Param('postId') postId: number) {
         return this.PostService.deletePost(postId);
     }
 
 
-    // add response and req documenation and exception
     @UseGuards(IsCreatorGuard)
     @Put('edit/:postId')
     @ApiOperation({ summary: 'Edit a post by ID' })
     @ApiParam({ name: 'postId', description: 'ID of the post that will get edited' })
+    @ApiException(() => InternalServerErrorException, { description: 'Issue updating post. [key: "issueUpdatingPost" ]' })
+    @ApiException(() => InternalServerErrorException, { description: 'Post description should not be the same with the current description. [key: "newDescriptionShouldBeAdded" ]' })
+    @ApiException(() => ForbiddenException, { description: 'Forbidden. Only the post creator can archive the post. [key: "forbiddenResource" ]' })
+    @ApiException(() => ForbiddenException, { description: 'Post is not found. [key: "postNotFound" ]' })
+    @ApiBody({ type: EditPostDto, description: 'Updated post data', required: true })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Successfully edited the post.', type: GeneralResponse })
     editPost(@Param('postId') postId: number, @Body() postData: EditPostDto) {
         return this.PostService.editPost(postId, postData);
     }

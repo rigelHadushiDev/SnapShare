@@ -7,6 +7,7 @@ import * as path from 'path';
 import { UpdateUserDto } from './dtos/UpdateUserDto';
 import { UserProvider } from './user.provider';
 import { CreateUserReq, UserInfoDto } from './dtos/CreateUser.dto';
+import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 const fs = require('fs');
 
 @Injectable()
@@ -242,8 +243,8 @@ export class UsersService {
             .getMany();
 
         for (const post of posts) {
-            const pathParts = post.media.split(/[\/\\]/);
-            post.media = `${process.env.DOMAIN_NAME}/post/display/posts/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
+            if (post.media)
+                SnapShareUtility.urlConverter(post.media);
         }
 
         resp = posts;
