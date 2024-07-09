@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
     IsEmail,
     IsNotEmpty,
@@ -6,10 +7,17 @@ import {
     MinLength,
 } from 'class-validator';
 
-export class LogInDto {
+export class LogInReq {
     @IsString()
     username: string;
+
     @IsString()
     @MinLength(8, { message: 'Password must be at least 8 characters long' })
     password: string;
+}
+
+export class LogInRes {
+
+    @ApiProperty({ description: 'JWT access token' })
+    access_token: string;
 }

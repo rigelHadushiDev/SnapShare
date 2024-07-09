@@ -6,7 +6,7 @@ import { UsersModule } from './user/user.module';
 import { User } from './user/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { JwtService } from '@nestjs/jwt';
 import { PostModule } from './post/post.module';
@@ -18,6 +18,8 @@ import { Comment } from './comment/comment.entity';
 import { Like } from './like/like.entity';
 import * as dotenv from 'dotenv';
 import { Network } from './network/network.entity';
+import { FetchUserMiddleware } from './auth/fetchUser.middleware';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 dotenv.config();
 
 @Module({
@@ -51,6 +53,13 @@ dotenv.config();
       provide: APP_GUARD,
       useClass: AuthGuard,
 
+    }, {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
     }]
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(FetchUserMiddleware).forRoutes('*');
+  }
+}

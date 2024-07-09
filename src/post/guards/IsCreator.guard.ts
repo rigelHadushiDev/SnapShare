@@ -1,6 +1,6 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, ForbiddenException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { Observable, from, of } from 'rxjs';
-import { map, switchMap, catchError } from 'rxjs/operators';
+import { switchMap, catchError } from 'rxjs/operators';
 import { Post } from 'src/post/post.entity';
 import { PostService } from 'src/post/post.service';
 import { User } from 'src/user/user.entity';
@@ -19,7 +19,9 @@ export class IsCreatorGuard implements CanActivate {
         const request = context.switchToHttp().getRequest();
         const { user, params }: { user: User; params: { postId: number } } = request;
 
-        if (!user || !params) return false;
+        if (!user || !params) {
+            throw new ForbiddenException('Unauthorized access');
+        }
 
         const userId = user.userId;
         const postId = params.postId;
@@ -27,13 +29,14 @@ export class IsCreatorGuard implements CanActivate {
         return from(this.userService.getUserById(userId)).pipe(
             switchMap((user: User) =>
                 from(this.postService.findPostById(postId)).pipe(
-                    map((post: Post) => {
-                        let isAuthor = user.userId === post.userId;
-                        return isAuthor;
-                    }),
-                    catchError(error => {
-                        console.error('Error:', error);
-                        return of(false);
+                    switchMap((post: Post) => {
+                        if (!post) {
+                            throw new NotFoundException('Post not found');
+                        }
+                        if (user.userId !== post.userId) {
+                            throw new ForbiddenException('forbiddenResource');
+                        }
+                        return of(true);
                     })
                 ),
             ),

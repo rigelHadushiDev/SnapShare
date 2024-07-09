@@ -4,108 +4,95 @@ import { EntityManager, Transaction } from 'typeorm';
 import { Post } from './post.entity';
 import * as path from 'path';
 import { Response, response } from 'express';
-import { EditPostDto } from './dtos/editPost.dto';
+import { EditPostDto } from './dtos/EditPost.dto';
 import { Observable } from 'rxjs';
+import { DescriptionDto } from './dtos/CreatePost.dto';
+import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 const fs = require('fs');
 
 @Injectable()
 export class PostService {
 
-    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) { }
+    public UserID: string;
+    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) {
+        this.UserID = this.userProvider.getCurrentUser()?.userId;
+    }
 
-    // this is done only add the type of the method <> promise
-    async postFile(file: any, postData: any) {
+    async createPost(media: Express.Multer.File, postDataDto: DescriptionDto) {
         let resp: any
 
-        const userId = this.userProvider.getCurrentUser().userId;
-        const filePath: string = file.path;
-        let post = new Post();
-        let postDescription = postData.postDescription.replace(/^'(.*)'$/, '$1');
+        const userId = this.UserID;
 
-        await this.entityManager.transaction(async transactionalEntityManager => {
-            post.userId = userId;
-            post.postDescription = postDescription;
-            post.media = filePath;
-
-            await transactionalEntityManager.save(Post, post);
-        });
-
-        resp = post;
-
-        return resp;
-    };
-
-    // this is an example with pagination , query should change so you can get the friends posts and not your posts
-    async getUserPosts(take: number = 10, skip: number = 0) {
-
-        let resp: any;
-
-        const userId = this.userProvider.getCurrentUser().userId;
-
-        const posts = await this.entityManager
-            .createQueryBuilder(Post, 'post')
-            .where('post.userId = :userId', { userId })
-            .andWhere('post.archived = :archived', { archived: false })
-            .take(take)
-            .skip(skip)
-            .getMany();
-
-
-        for (const post of posts) {
-            const pathParts = post.media.split(/[\/\\]/);
-            // this needs to be changed later so we use only one controller
-            post.media = `${process.env.DOMAIN_NAME}/post/display/posts/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
+        if (!media) {
+            throw new BadRequestException('mediaFileRequired')
         }
 
-        resp = posts;
+        const filePath: string = media.path;
+
+        let post = new Post();
+
+        let createdPost;
+
+        await this.entityManager.transaction(async transactionalEntityManager => {
+
+            post.userId = userId;
+            post.postDescription = postDataDto?.description || null;
+            post.media = filePath;
+
+            createdPost = await transactionalEntityManager.save(Post, post);
+        });
+
+        if (createdPost.media)
+            SnapShareUtility.urlConverter(createdPost.media);
+
+        resp = createdPost;
 
         return resp;
     };
 
-    // fileProvider can be named
-    async getUserMedia(hashedUser: string, type: string, filename: string, res: Response) {
+    async getMedia(hashedUser: string, type: string, filename: string, res: Response) {
         const filePath: string = `${path.join(process.cwd(), 'media', 'users', hashedUser, `${type}`, `${filename}`)}`;
         res.sendFile(filePath);
     }
 
-    async archivePost(postId: number): Promise<{ message: string; status: number }> {
+
+    async toggleArchivePost(postId: number): Promise<{ message: string; status: number }> {
+
         let resp: { message: string; status: number };
 
-        const userId: string = this.userProvider.getCurrentUser()?.userId;
+        const userId = this.UserID;
 
-        const result = await this.entityManager
+        let postStatus = await await this.entityManager
+            .createQueryBuilder()
+            .from(Post, 'post')
+            .select('post.archived')
+            .where('post.postId = :postId', { postId })
+            .getOne();
+
+        postStatus.archived === true ? false : true;
+
+        await this.entityManager
             .createQueryBuilder()
             .update(Post)
             .set({ archived: true })
             .where('postId = :postId', { postId })
             .andWhere('userId = :userId', { userId })
-            .andWhere('archived = :archived', { archived: false })
+            .andWhere('archived = :archived', { archived: postStatus.archived })
             .execute();
 
-        if (result.affected === 1) {
-            resp = { message: 'postSuccessfullyArchived', status: HttpStatus.OK };
-        } else {
-            resp = { message: 'postIsAlreadyArchivedOrNotExist', status: HttpStatus.OK };
-        }
+        resp = { message: 'archiveToggleSuccessful', status: HttpStatus.OK };
+
         return resp;
     }
 
 
     async deletePost(postId: number): Promise<{ message: string; status: number }> {
+
         let resp: { message: string; status: number };
 
+        const userId = this.UserID;
 
-        const userId: string = this.userProvider.getCurrentUser()?.userId;
-
-        const post = await this.entityManager
-            .createQueryBuilder(Post, 'post')
-            .where('post.userId = :userId', { userId })
-            .where('post.postId = :postId', { postId })
-            .getOne();
-
-        if (!post) {
-            throw new NotFoundException('postNotFound');
-        }
+        const post = await this.findPostById(postId);
 
         if (post?.media) {
             const filePath = path.resolve(post.media);
@@ -124,11 +111,11 @@ export class PostService {
             .andWhere('userId = :userId', { userId })
             .execute();
 
-        if (deleteQuery.affected === 1 && post.media) {
+        if (deleteQuery.affected === 1 && post.media)
             resp = { message: 'postSuccessfullyDeleted', status: HttpStatus.OK };
-        } else {
+        else
             resp = { message: 'postIsAlreadyDeleted', status: HttpStatus.OK };
-        }
+
         return resp;
     }
 
@@ -136,7 +123,7 @@ export class PostService {
 
         let resp: { message: string; status: number };
 
-        const userId: string = this.userProvider.getCurrentUser()?.userId;
+        const userId = this.UserID;
 
         const post = await this.entityManager
             .createQueryBuilder(Post, 'post')
@@ -144,14 +131,10 @@ export class PostService {
             .where('post.postId = :postId', { postId })
             .getOne();
 
-        if (!post) {
-            throw new NotFoundException('postNotFound');
-        }
-
         const { currPostDesc } = postData;
 
         if (currPostDesc === post?.postDescription) {
-            throw new NotFoundException('newDescriptionShouldBeAdded')
+            throw new NotFoundException('newDescriptionShouldBeAdded');
         }
 
         const editPost = await this.entityManager
@@ -162,25 +145,24 @@ export class PostService {
             .andWhere('userId = :userId', { userId })
             .execute();
 
-
         if (editPost?.affected === 1) {
             resp = { message: 'postSuccessfullyEdited', status: HttpStatus.OK };
         } else {
-            throw new InternalServerErrorException('issueFacedUpdatingPost')
+            throw new InternalServerErrorException('issueUpdatingPost');
         }
 
         return resp;
     }
 
-
-
     async findPostById(postId: number): Promise<Post> {
+
         const post = await this.entityManager.findOne(Post, { where: { postId: postId } })
 
         if (!post) {
-            throw new NotFoundException(`Post with ID ${postId} not found`);
+            throw new NotFoundException(`postNotFound`);
         }
-        return post
+
+        return post;
     }
 }
 
