@@ -40,8 +40,8 @@ dotenv.config();
       database: process.env.DB_NAME,
       entities: [User, Post, Comment, Like, Network, Notification, NotificationType
       ],
-      synchronize: true,
-      autoLoadEntities: true
+      synchronize: false,
+      autoLoadEntities: false
     }),
     UsersModule,
     AuthModule,
