@@ -76,9 +76,8 @@ export class UsersService {
             await transactionalEntityManager.save(User, user);
         });
 
-        if (user && user.profileImg) {
-            const pathParts = user.profileImg.split(/[\/\\]/);
-            user.profileImg = `${process.env.DOMAIN_NAME}/post/display/profileImg/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
+        if (user && user?.profileImg) {
+            user.profileImg = SnapShareUtility.urlConverter(user.profileImg);
         }
 
         resp = user;

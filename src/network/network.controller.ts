@@ -1,10 +1,11 @@
-import { BadRequestException, Controller, Get, HttpCode, HttpStatus, NotFoundException, Param, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { BadRequestException, Controller, ForbiddenException, Get, HttpCode, HttpStatus, NotFoundException, Param, Post, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { NetworkService } from './network.service';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
 import { GeneralResponse } from 'src/post/dtos/GeneralResponse';
-import { ConnectionsCntRes } from './connectionsCntRes';
-import { GetUserPostsReq } from 'src/user/dtos/GetUserPosts.dto';
+import { ConnectionsCntRes } from './responses/connectionsCntRes';
+import { PaginationDto } from 'src/user/dtos/GetUserPosts.dto';
+import { UserListRes } from './responses/UserListRes';
 
 
 @ApiBearerAuth()
@@ -73,10 +74,24 @@ export class NetworkController {
         return await this.networkService.handleFollowRequest(senderId, inviteAction);
     }
 
-    // ndryshoji emrin dto qe te jete me e pergjithsme si psh PaginationQueryParam
+
     @Get('getFollowersList/:userId')
-    async getFollowersList(@Param('userId') userId: number, @Query() query: GetUserPostsReq) {
+    @ApiParam({ name: 'userId', description: 'Id of the user you want to see the folloers List' })
+    @ApiException(() => NotFoundException, { description: 'User with this Id not found.  [key: "userNotFound" ]' })
+    @ApiException(() => ForbiddenException, { description: 'You are not a follower of this private user account.  [key: "nonFriendPrivateAccList" ]' })
+    @ApiResponse({ type: UserListRes, status: HttpStatus.OK, description: 'Successfully retrieved users followers list ' })
+    async getFollowersList(@Param('userId') userId: number, @Query() query: PaginationDto) {
         const { postsByPage, page } = query;
         return await this.networkService.getFollowersList(userId, postsByPage, page);
+    }
+
+    @Get('getFollowersList/:userId')
+    @ApiParam({ name: 'userId', description: 'Id of the user you want to see the folloers List' })
+    @ApiException(() => NotFoundException, { description: 'User with this Id not found.  [key: "userNotFound" ]' })
+    @ApiException(() => ForbiddenException, { description: 'You are not a follower of this private user account.  [key: "nonFriendPrivateAccList" ]' })
+    @ApiResponse({ type: UserListRes, status: HttpStatus.OK, description: 'Successfully retrieved users followers list ' })
+    async getFolloweringList(@Param('userId') userId: number, @Query() query: PaginationDto) {
+        const { postsByPage, page } = query;
+        return await this.networkService.getFollowingList(userId, postsByPage, page);
     }
 }

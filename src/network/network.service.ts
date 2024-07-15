@@ -4,9 +4,10 @@ import { Network } from './entities/network.entity';
 import { EntityManager } from 'typeorm';
 import { User } from 'src/user/user.entity';
 import { GeneralResponse } from 'src/post/dtos/GeneralResponse';
-import { ConnectionsCntRes } from './connectionsCntRes';
+import { ConnectionsCntRes } from './responses/connectionsCntRes';
 import { Post } from 'src/post/post.entity';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
+import { UserListRes } from './responses/UserListRes';
 
 @Injectable()
 export class NetworkService {
@@ -222,15 +223,9 @@ export class NetworkService {
         return resp;
     }
 
-
-    // metodat getFolloers/getFollowing me pagination getFollowing 
-    //shiko nese jan public/vs privat nese jane privat athere nqs i ke connection mund ti shikosh
-    // shiko nese useri i ka follow dhe nqs i ka follow do te jete followed true nese jo followed false 
-
-    // this two need work
     async getFollowersList(userId: number, postsByPage: number = 10, page: number = 1) {
 
-        let resp: any;
+        let resp = new UserListRes;
 
         const currUserId = this.UserID;
 
@@ -255,12 +250,10 @@ export class NetworkService {
             .andWhere('network.followeeId = :followeeId', { followeeId: userId })
             .getRawOne();
 
-        if (user?.isPrivate && !currUserFriend) {
+        if (user?.isPrivate && !currUserFriend)
+            throw new ForbiddenException(`nonFriendPrivateAccList`);
 
-            throw new ForbiddenException(`NonFriendPrivateAccList`);
-
-        } else {
-            const query = `SELECT
+        const query = `SELECT
             u."userId",
             u."username",
             u."profileImg",
@@ -286,51 +279,85 @@ export class NetworkService {
         LIMIT $3 OFFSET $4;`;
 
 
-            const followersList = await this.entityManager.query(query, [currUserId, userId, postsByPage, skip]);
+        const followersList = await this.entityManager.query(query, [currUserId, userId, postsByPage, skip]);
 
-            for (const follower of followersList) {
-                if (follower?.profileImg)
-                    SnapShareUtility.urlConverter(follower.profileImg);
-            }
-
-
-        }
-        // document followersList as a repsonse object  and pass it as response object 
-        // return followersList;
-
-
-
-
-    };
-
-    async getFollowingsList(postsByPage: number = 10, page: number = 1) {
-
-        let resp: any;
-
-        const userId = this.UserID;
-
-        let skip: number = (page - 1) * postsByPage
-
-        const posts = await this.entityManager
-            .createQueryBuilder(Post, 'post')
-            .where('post.userId = :userId', { userId })
-            .andWhere('post.archived = :archived', { archived: false })
-            .andWhere('post.deleted = :deleted', { deleted: false })
-            .take(postsByPage)
-            .skip(skip)
-            .getMany();
-
-        for (const post of posts) {
-            if (post.media)
-                SnapShareUtility.urlConverter(post.media);
+        for (const follower of followersList) {
+            if (follower?.profileImg)
+                follower.profileImg = SnapShareUtility.urlConverter(follower.profileImg);
         }
 
-        resp = posts;
 
+        resp = { userId: userId, username: followersList.username, profileImg: followersList.profileImg, isFollowedbyCurrUser: followersList.isFollowedbyCurrUser }
         return resp;
     };
 
-    // these two controllers need a bit of work
+    async getFollowingList(userId: number, postsByPage: number = 10, page: number = 1) {
+
+        let resp = new UserListRes;
+
+        const currUserId = this.UserID;
+
+        let skip: number = (page - 1) * postsByPage
+
+        const user = await this.entityManager
+            .createQueryBuilder(User, 'user')
+            .select('*')
+            .where('user.userId = :userId', { userId })
+            .andWhere('user.archive = :archiveStatus', { archiveStatus: false })
+            .getRawOne();
+
+        if (!user)
+            throw new NotFoundException(`userNotFound`);
+
+
+        const currUserFriend = await this.entityManager
+            .createQueryBuilder(Network, 'network')
+            .select('*')
+            .where('network.followerId = :currUserId', { currUserId })
+            .andWhere('network.pending = :pendingStatus', { pendingStatus: false })
+            .andWhere('network.followeeId = :followeeId', { followeeId: userId })
+            .getRawOne();
+
+        if (user?.isPrivate && !currUserFriend)
+            throw new ForbiddenException(`nonFriendPrivateAccList`);
+
+        const query = `SELECT
+            u."userId",
+            u."username",
+            u."profileImg",
+            CASE 
+                WHEN EXISTS(
+                    SELECT 1 
+                    FROM network n2 
+                    WHERE n2."followerId" = $1
+                      AND n2."followeeId" = u."userId" 
+                      AND n2."pending" = false 
+                      AND n2."deleted" = false
+                ) THEN true 
+                ELSE false 
+            END AS "isFollowedbyCurrUser"
+        FROM 
+            network n
+        JOIN
+            "user" u ON n."followeeId" = u."userId"
+        WHERE
+            n."followerId" = $2
+            AND n."pending" = false 
+            AND n."deleted" = false
+        LIMIT $3 OFFSET $4;`;
+
+
+        const followeeList = await this.entityManager.query(query, [currUserId, userId, postsByPage, skip]);
+
+        for (const followee of followeeList) {
+            if (followee?.profileImg)
+                followee.profileImg = SnapShareUtility.urlConverter(followeeList.profileImg);
+        }
+
+
+        resp = { userId: userId, username: followeeList.username, profileImg: followeeList.profileImg, isFollowedbyCurrUser: followeeList.isFollowedbyCurrUser }
+        return resp;
+    };
 
     async handleFollowRequest(senderId: number, inviteAction: boolean) {
 
@@ -390,12 +417,4 @@ export class NetworkService {
         return resp;
     }
 
-
-
-    formatQuery(query, values) {
-        return query.replace(/\$(\d+)/g, (match, index) => {
-            const value = values[index - 1]; // Adjust for zero-based index
-            return typeof value === 'string' ? `'${value}'` : value; // Handle strings by adding quotes
-        });
-    }
 }

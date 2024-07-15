@@ -43,7 +43,7 @@ export class PostService {
         });
 
         if (createdPost.media)
-            SnapShareUtility.urlConverter(createdPost.media);
+            createdPost.media = SnapShareUtility.urlConverter(createdPost.media);
 
         resp = createdPost;
 
