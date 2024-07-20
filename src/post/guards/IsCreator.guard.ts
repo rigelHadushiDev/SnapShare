@@ -1,10 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable, ForbiddenException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Observable, from, of } from 'rxjs';
-import { switchMap, catchError } from 'rxjs/operators';
+import { switchMap } from 'rxjs/operators';
 import { Post } from 'src/post/post.entity';
-import { PostService } from 'src/post/post.service';
+import { PostService } from '../services/post.service';
 import { User } from 'src/user/user.entity';
-import { UsersService } from 'src/user/users.service';
+import { UsersService } from 'src/user/services/users.service';
 
 @Injectable()
 export class IsCreatorGuard implements CanActivate {

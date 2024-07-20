@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { UserProvider } from 'src/user/user.provider';
+import { UserProvider } from 'src/user/services/user.provider';
 import { Network } from './entities/network.entity';
 import { EntityManager } from 'typeorm';
 import { User } from 'src/user/user.entity';
