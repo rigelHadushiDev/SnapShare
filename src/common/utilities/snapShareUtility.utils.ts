@@ -34,7 +34,7 @@ export class SnapShareUtility {
     static urlConverter(media: string) {
 
         const pathParts = media.split(/[\/\\]/);
-        const result = `${process.env.DOMAIN_NAME}/post/display/${pathParts[pathParts.length - 2]}/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
+        const result = `${process.env.DOMAIN_NAME}/contentMedia/display/${pathParts[pathParts.length - 2]}/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
         return result;
     }
 
