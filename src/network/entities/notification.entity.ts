@@ -5,8 +5,7 @@ import {
     Column,
     ManyToOne,
     JoinColumn,
-    CreateDateColumn,
-    ManyToMany,
+    CreateDateColumn
 } from 'typeorm';
 import { NotificationType } from './notificationType.entity';
 
