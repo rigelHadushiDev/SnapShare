@@ -18,15 +18,13 @@ import { GeneralResponse } from './dtos/GeneralResponse';
 
 
 @ApiBearerAuth()
-@ApiTags("Post Module")
+@ApiTags("Post APIs")
 @Controller('post')
 export class PostController {
 
     constructor(private readonly PostService: PostService) {
         configureStorageOptions('posts', imgVideoFilters);
     }
-
-
 
     @Post('upload')
     @ApiOperation({ summary: "Create a post.", description: "Create a post for the current logged-in user. \n Both properties are form datas : \n description: application/x-www-form-urlencoded \n  media:  'multipart/ form - data'  " })
@@ -40,8 +38,6 @@ export class PostController {
     createPost(@UploadedFile() media, @Body() description: DescriptionDto) {
         return this.PostService.createPost(media, description);
     }
-
-
 
     @Get('display/:type/:userName/:filename')
     @ApiOperation({ summary: 'Retrieve a media file by type, username, and filename' })

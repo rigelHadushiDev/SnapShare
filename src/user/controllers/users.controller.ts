@@ -1,5 +1,4 @@
 import {
-    BadRequestException,
     Body,
     ConflictException,
     Controller,
@@ -9,33 +8,22 @@ import {
     HttpStatus,
     InternalServerErrorException,
     NotFoundException,
-    Param,
     Post,
-    Put,
-    Query,
-    UploadedFile,
-    UseFilters,
-    UseInterceptors,
+    Put
 } from '@nestjs/common';
-import { CreateUserReq, UserResDto, UserInfoDto } from './dtos/CreateUser.dto';
-import { UpdateUserDto } from './dtos/UpdateUserDto';
-import { UsersService } from './users.service';
+import { CreateUserReq, UserResDto, UserInfoDto } from '../dtos/CreateUser.dto';
+import { UpdateUserDto } from '../dtos/UpdateUserDto';
+import { UsersService } from '../services/users.service';
 import { Public } from 'src/common/decorators/public.decorator';
-import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { fileStorage, configureStorageOptions, imgFilters } from './fileStorage.config';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
-import { ProfileImgReq, ProfileImgRes } from './dtos/UploadProfileImg.dto';
-import { PaginationDto } from './dtos/GetUserPosts.dto';
+
 
 @ApiBearerAuth()
-@ApiTags("User Module")
+@ApiTags("User APIs")
 @Controller('user')
 export class UsersController {
-    constructor(private readonly userService: UsersService) {
-        configureStorageOptions('profileImg', imgFilters);
-    }
+    constructor(private readonly userService: UsersService) { }
 
     @Public()
     @Post()
@@ -47,18 +35,6 @@ export class UsersController {
     @ApiResponse({ status: HttpStatus.OK, description: 'The user has been successfully created.', type: UserResDto })
     async createUser(@Body() createUserDto: CreateUserReq) {
         return await this.userService.createUser(createUserDto);
-    }
-
-    @Post('upload')
-    @HttpCode(HttpStatus.OK)
-    @UseInterceptors(FileInterceptor('file', fileStorage))
-    @ApiOperation({ summary: 'Upload a profile picture', description: 'Uploads a profile picture for the current user.' })
-    @ApiConsumes('multipart/form-data')
-    @ApiBody({ type: ProfileImgReq, description: 'Profile image upload data', required: true })
-    @ApiResponse({ status: HttpStatus.OK, description: 'The profile picture has been uploaded successfully.', type: ProfileImgRes })
-    @ApiException(() => BadRequestException, { description: 'User has not uploaded the profile Image [key: "pleaseUploadImg" ]' })
-    async postProfilePic(@UploadedFile() file: Express.Multer.File) {
-        return this.userService.postProfilePic(file);
     }
 
     @Get('userData')
@@ -95,14 +71,6 @@ export class UsersController {
     @ApiException(() => NotFoundException, { description: 'The loged in user has not been found. [key: "userNotFound" ]' })
     async hardDeleteUser() {
         return await this.userService.hardDeleteUser();
-    }
-
-    @Get('getUserPosts')
-    @ApiOperation({ summary: 'Get user posts.', description: 'Get the current  logged-in user all its posts that are not archieved or deleted. ' })
-    @ApiQuery({ type: PaginationDto, required: false })
-    async getUserPosts(@Query() query: PaginationDto) {
-        const { postsByPage, page } = query;
-        return await this.userService.getUserPosts(postsByPage, page);
     }
 
 }

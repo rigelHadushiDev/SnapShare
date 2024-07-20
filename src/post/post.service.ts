@@ -1,5 +1,5 @@
 import { BadRequestException, HttpCode, HttpStatus, Injectable, InternalServerErrorException, NotFoundException, Scope } from '@nestjs/common';
-import { UserProvider } from 'src/user/user.provider';
+import { UserProvider } from 'src/user/services/user.provider';
 import { EntityManager, Transaction } from 'typeorm';
 import { Post } from './post.entity';
 import * as path from 'path';

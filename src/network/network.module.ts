@@ -3,7 +3,7 @@ import { NetworkService } from './network.service';
 import { NetworkController } from './network.controller';
 import { Network } from './entities/network.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserProvider } from 'src/user/user.provider';
+import { UserProvider } from 'src/user/services/user.provider';
 import { Notification } from './entities/notification.entity';
 import { NotificationType } from './entities/notificationType.entity';
 

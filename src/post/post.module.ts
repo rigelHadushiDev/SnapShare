@@ -3,9 +3,9 @@ import { PostService } from './post.service';
 import { PostController } from './post.controller';
 import { Post } from './post.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserProvider } from 'src/user/user.provider';
+import { UserProvider } from 'src/user/services/user.provider';
 import { UsersModule } from 'src/user/user.module';
-import { UsersService } from 'src/user/users.service';
+import { UsersService } from 'src/user/services/users.service';
 import { IsCreatorGuard } from './guards/IsCreator.guard';
 
 @Module({
