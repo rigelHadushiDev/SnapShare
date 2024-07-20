@@ -22,11 +22,11 @@ export class Comment {
     @Column({ name: 'userId', type: "integer" })
     userId: number;
 
-    @ManyToOne(() => Post, post => post.comments)
+    @ManyToOne(() => Post, post => post.comments, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'postId', referencedColumnName: 'postId' })
     post: Post;
 
-    @ManyToOne(() => User, user => user.comments)
+    @ManyToOne(() => User, user => user.comments, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
     user: User;
 }

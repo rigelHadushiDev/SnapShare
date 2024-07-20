@@ -1,10 +1,11 @@
-import { Like } from "src/like/like.entity";
+import { PostLike } from "src/like/postLike.entity";
 import { Network } from "src/network/entities/network.entity";
 import { Post } from "src/post/post.entity";
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Comment } from "src/comment/comment.entity";
 import { ApiProperty } from "@nestjs/swagger";
 import { Notification } from "src/network/entities/notification.entity";
+import { Story } from "src/story/story.entity";
 
 @Entity('user')
 export class User {
@@ -55,25 +56,28 @@ export class User {
     @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp' })
     updatedAt: Date;
 
-    @OneToMany(() => Post, post => post.user, { cascade: true })
+    @OneToMany(() => Post, post => post.user)
     posts: Post[];
 
-    @OneToMany(() => Network, network => network.follower, { cascade: true })
+    @OneToMany(() => Network, network => network.follower)
     follower: Network[];
 
-    @OneToMany(() => Network, network => network.followee, { cascade: true })
+    @OneToMany(() => Network, network => network.followee)
     followee: Network[];
 
-    @OneToMany(() => Like, like => like.user, { cascade: true })
-    likes: Like[];
+    @OneToMany(() => PostLike, postLike => postLike.user)
+    postLikes: PostLike[];
 
-    @OneToMany(() => Comment, comment => comment.user, { cascade: true })
+    @OneToMany(() => Comment, comment => comment.user)
     comments: Comment[];
 
-    @OneToMany(() => Notification, notification => notification.createdUser, { cascade: true })
+    @OneToMany(() => Notification, notification => notification.createdUser)
     createdNotifications: Notification[];
 
-    @OneToMany(() => Notification, notification => notification.receivedUser, { cascade: true })
+    @OneToMany(() => Notification, notification => notification.receivedUser)
     receivedNotifications: Notification[];
+
+    @OneToMany(() => Story, story => story.user)
+    stories: Story[];
 
 }

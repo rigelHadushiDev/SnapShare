@@ -3,12 +3,15 @@ import { User } from 'src/user/user.entity';
 import { PostLike } from 'src/like/postLike.entity';
 import { Comment } from 'src/comment/comment.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { StoryLike } from 'src/like/StoryLike.entity';
 
-@Entity('post')
-export class Post {
+
+@Entity('story')
+export class Story {
+
     @PrimaryGeneratedColumn({ type: 'integer', name: 'postId' })
     @ApiProperty({ description: 'The unique ID of the post.' })
-    postId: number;
+    storyId: number;
 
     @Column({ name: 'userId' })
     @ApiProperty({ description: 'The ID of the user who created the post.' })
@@ -38,21 +41,14 @@ export class Post {
     @ApiProperty({ description: 'The media content associated with the post (e.g., image URL).', nullable: true })
     media: string;
 
-    @Column({ name: 'commentsNr', nullable: true, default: 0 })
-    @ApiProperty({ description: 'The number of comments the post has.', nullable: true })
-    commentsNr: number;
-
     @Column({ name: 'deleted', default: false })
     @ApiProperty({ description: 'Indicates whether the post is marked as deleted.', default: false })
     deleted: boolean;
 
-    @OneToMany(() => PostLike, postLike => postLike.post)
-    postLikes: PostLike[];
+    @OneToMany(() => StoryLike, storyLike => storyLike.story)
+    storyLikes: StoryLike[];
 
-    @OneToMany(() => Comment, comment => comment.post)
-    comments: Comment[];
-
-    @ManyToOne(() => User, user => user.posts, { onDelete: 'CASCADE' })
+    @ManyToOne(() => User, user => user.stories, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
     user: User;
 }

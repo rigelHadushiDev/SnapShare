@@ -24,11 +24,11 @@ export class Network {
     @Column({ type: 'timestamp', nullable: true })
     createdAt: Date;
 
-    @ManyToOne(() => User, user => user.follower)
+    @ManyToOne(() => User, user => user.follower, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'followerId', referencedColumnName: 'userId' })
     follower: User;
 
-    @ManyToOne(() => User, user => user.followee)
+    @ManyToOne(() => User, user => user.followee, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'followeeId', referencedColumnName: 'userId' })
     followee: User;
 }

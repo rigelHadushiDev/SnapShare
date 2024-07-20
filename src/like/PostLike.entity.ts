@@ -2,8 +2,8 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDa
 import { User } from 'src/user/user.entity';
 import { Post } from 'src/post/post.entity';
 
-@Entity('like')
-export class Like {
+@Entity('postLike')
+export class PostLike {
     @PrimaryGeneratedColumn({ name: 'likeId' })
     likeId: number;
 
@@ -19,11 +19,14 @@ export class Like {
     @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp' })
     updatedAt: Date;
 
-    @ManyToOne(() => User)
+    @Column({ name: 'deleted', default: false })
+    deleted: boolean;
+
+    @ManyToOne(() => User, user => user.postLikes, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
     user: User;
 
-    @ManyToOne(() => Post)
+    @ManyToOne(() => Post, post => post.postLikes, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'postId', referencedColumnName: 'postId' })
     post: Post;
 }

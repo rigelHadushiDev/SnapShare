@@ -22,22 +22,10 @@ import { ContentMediaService } from '../services/contentMedia.service';
 @Controller('contentMedia')
 export class ContentMediaController {
 
-    constructor(private readonly ContentMediaService: ContentMediaService) {
-        configureStorageOptions('posts', imgVideoFilters);
-    }
+    constructor(private readonly ContentMediaService: ContentMediaService) { }
 
-    @Post('upload')
-    @ApiOperation({ summary: "Create a post.", description: "Create a post for the current logged-in user. \n Both properties are form datas : \n description: application/x-www-form-urlencoded \n  media:  'multipart/ form - data'  " })
-    @HttpCode(HttpStatus.OK)
-    @UseInterceptors(FileInterceptor('media', fileStorage))
-    @ApiImplicitFormData({ name: 'imageData', required: true, type: 'file' })
-    @ApiResponse({ status: HttpStatus.OK, description: 'The user has been successfully created.', type: CreatePostRes })
-    @ApiException(() => BadRequestException, {
-        description: 'A media file is required to create a post. Please upload a media file. [key: "mediaFileRequired" ]'
-    })
-    createPost(@UploadedFile() media, @Body() description: DescriptionDto) {
-        return this.ContentMediaService.createPost(media, description);
-    }
+
+
 
     @Get('display/:type/:userName/:filename')
     @ApiOperation({ summary: 'Retrieve a media file by type, username, and filename' })
@@ -50,4 +38,7 @@ export class ContentMediaController {
     getMedia(@Param('userName') userName: string, @Param('type') type: string, @Param('filename') filename: string, @Res() res: Response) {
         return this.ContentMediaService.getMedia(userName, type, filename, res);
     }
+
+
+
 }

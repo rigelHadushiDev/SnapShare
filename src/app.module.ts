@@ -15,7 +15,7 @@ import { NetworkModule } from './network/network.module';
 import { LikeModule } from './like/like.module';
 import { CommentModule } from './comment/comment.module';
 import { Comment } from './comment/comment.entity';
-import { Like } from './like/like.entity';
+import { PostLike } from './like/postLike.entity';
 import * as dotenv from 'dotenv';
 import { Network } from './network/entities/network.entity';
 import { FetchUserMiddleware } from './auth/fetchUser.middleware';
@@ -23,6 +23,9 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { SSEModule } from './sse/sse.module';
 import { Notification } from './network/entities/notification.entity';
 import { NotificationType } from './network/entities/notificationType.entity';
+import { StoryModule } from './story/story.module';
+import { Story } from './story/story.entity';
+import { StoryLike } from './like/StoryLike.entity';
 
 dotenv.config();
 
@@ -38,10 +41,9 @@ dotenv.config();
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSW,
       database: process.env.DB_NAME,
-      entities: [User, Post, Comment, Like, Network, Notification, NotificationType
-      ],
-      synchronize: false,
-      autoLoadEntities: false
+      entities: [User, Post, Comment, PostLike, Network, Notification, NotificationType, Story, StoryLike],
+      synchronize: true,
+      autoLoadEntities: true
     }),
     UsersModule,
     AuthModule,
@@ -49,7 +51,8 @@ dotenv.config();
     NetworkModule,
     CommentModule,
     LikeModule,
-    SSEModule
+    SSEModule,
+    StoryModule
   ],
   controllers: [AppController],
   providers: [

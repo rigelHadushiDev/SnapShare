@@ -22,7 +22,22 @@ import { GeneralResponse } from '../dtos/GeneralResponse';
 @Controller('post')
 export class PostController {
 
-    constructor(private readonly PostService: PostService) { }
+    constructor(private readonly PostService: PostService) {
+        configureStorageOptions('posts', imgVideoFilters)
+    }
+
+    @Post('upload')
+    @ApiOperation({ summary: "Create a post.", description: "Create a post for the current logged-in user. \n Both properties are form datas : \n description: application/x-www-form-urlencoded \n  media:  'multipart/ form - data'  " })
+    @HttpCode(HttpStatus.OK)
+    @UseInterceptors(FileInterceptor('media', fileStorage))
+    @ApiImplicitFormData({ name: 'imageData', required: true, type: 'file' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'The user has been successfully created.', type: CreatePostRes })
+    @ApiException(() => BadRequestException, {
+        description: 'A media file is required to create a post. Please upload a media file. [key: "mediaFileRequired" ]'
+    })
+    createPost(@UploadedFile() media, @Body() description: DescriptionDto) {
+        return this.PostService.createPost(media, description);
+    }
 
 
     @UseGuards(IsCreatorGuard)
