@@ -31,7 +31,7 @@ import { PaginationDto } from './dtos/GetUserPosts.dto';
 
 @ApiBearerAuth()
 @ApiTags("User Module")
-@Controller('users')
+@Controller('user')
 export class UsersController {
     constructor(private readonly userService: UsersService) {
         configureStorageOptions('profileImg', imgFilters);
