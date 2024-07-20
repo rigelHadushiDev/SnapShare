@@ -17,9 +17,13 @@ import { CommentModule } from './comment/comment.module';
 import { Comment } from './comment/comment.entity';
 import { Like } from './like/like.entity';
 import * as dotenv from 'dotenv';
-import { Network } from './network/network.entity';
+import { Network } from './network/entities/network.entity';
 import { FetchUserMiddleware } from './auth/fetchUser.middleware';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { SSEModule } from './sse/sse.module';
+import { Notification } from './network/entities/notification.entity';
+import { NotificationType } from './network/entities/notificationType.entity';
+
 dotenv.config();
 
 @Module({
@@ -27,36 +31,39 @@ dotenv.config();
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    TypeOrmModule.forRoot(
-      {
-        type: 'postgres',
-        host: 'localhost',
-        port: 5432,
-        username: process.env.DB_USERNAME,
-        password: process.env.DB_PASSW,
-        database: process.env.DB_NAME,
-        entities: [User, Post, Comment, Like, Network],
-        synchronize: false,
-        autoLoadEntities: false
-      }),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSW,
+      database: process.env.DB_NAME,
+      entities: [User, Post, Comment, Like, Network, Notification, NotificationType
+      ],
+      synchronize: false,
+      autoLoadEntities: false
+    }),
     UsersModule,
     AuthModule,
     PostModule,
     NetworkModule,
     CommentModule,
     LikeModule,
+    SSEModule
   ],
   controllers: [AppController],
-  providers: [AppService,
+  providers: [
+    AppService,
     JwtService,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
-
-    }, {
+    },
+    {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
-    }]
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

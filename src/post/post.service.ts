@@ -13,7 +13,7 @@ const fs = require('fs');
 @Injectable()
 export class PostService {
 
-    public UserID: string;
+    public UserID: number;
     constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) {
         this.UserID = this.userProvider.getCurrentUser()?.userId;
     }
@@ -43,7 +43,7 @@ export class PostService {
         });
 
         if (createdPost.media)
-            SnapShareUtility.urlConverter(createdPost.media);
+            createdPost.media = SnapShareUtility.urlConverter(createdPost.media);
 
         resp = createdPost;
 

@@ -11,10 +11,10 @@ import {
 export class UserInfoDto {
 
     @ApiProperty({
-        description: 'Unique identifier of the user',
+        description: 'userId',
         uniqueItems: true
     })
-    userId: string;
+    userId: number;
 
     @ApiProperty({ example: 'example@example.com', description: 'Email address of the user', uniqueItems: true })
     email: string;

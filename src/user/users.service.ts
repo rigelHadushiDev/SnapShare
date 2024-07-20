@@ -13,7 +13,7 @@ const fs = require('fs');
 @Injectable()
 export class UsersService {
 
-    public currUserID: string;
+    public currUserID: number;
     public currUserName: string;
 
     constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) {
@@ -59,7 +59,7 @@ export class UsersService {
 
         let resp: any;
 
-        const userId: string = this.currUserID;
+        const userId: number = this.currUserID;
 
         if (!file)
             throw new BadRequestException('pleaseUploadImg');
@@ -76,9 +76,8 @@ export class UsersService {
             await transactionalEntityManager.save(User, user);
         });
 
-        if (user && user.profileImg) {
-            const pathParts = user.profileImg.split(/[\/\\]/);
-            user.profileImg = `${process.env.DOMAIN_NAME}/post/display/profileImg/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
+        if (user && user?.profileImg) {
+            user.profileImg = SnapShareUtility.urlConverter(user.profileImg);
         }
 
         resp = user;
@@ -88,7 +87,7 @@ export class UsersService {
     };
 
 
-    async getUserById(userId: string): Promise<User | undefined> {
+    async getUserById(userId: number): Promise<User | undefined> {
 
         const user = this.entityManager.findOneBy(User, { userId });
 
@@ -107,9 +106,11 @@ export class UsersService {
         return user;
     }
 
-    async getUserData(): Promise<{ user: UserInfoDto, message: string }> {
+    // edhe kete beje me if(currUserId === userId) nqs eshte useri i loguar jepi me shum te dhena nese eshte other user jepi aq data sa duhet
 
-        const userId = this.currUserID;
+    async getCurrUserData(): Promise<{ user: UserInfoDto, message: string }> {
+
+        const userId: number = this.currUserID;
 
         let user = await this.getUserById(userId);
 
@@ -121,7 +122,7 @@ export class UsersService {
 
     async updateUser(updateUserDto: UpdateUserDto): Promise<{ user: UserInfoDto, message: string }> {
 
-        const userId: string = this.currUserID;
+        const userId: number = this.currUserID;
 
         const user = await this.getUserById(userId);
 
@@ -182,7 +183,7 @@ export class UsersService {
 
     async archiveUser(): Promise<{ user: UserInfoDto, message: string }> {
 
-        const userId: string = this.currUserID;
+        const userId: number = this.currUserID;
 
         const user = await this.getUserById(userId);
 
@@ -195,7 +196,7 @@ export class UsersService {
 
     async hardDeleteUser(): Promise<{ user: UserInfoDto, message: string }> {
 
-        const userId: string = this.currUserID;
+        const userId: number = this.currUserID;
 
         const user = await this.getUserById(userId);
 
@@ -224,7 +225,10 @@ export class UsersService {
         return { message: 'userDeletedSuccessfully', user: userInfo };
     }
 
-
+    // edhe ketu beje me if(currUserId === userId) nqs eshte useri i loguar ti i ben skip dhe i jep direkt postet
+    // nqs jo ti shikon nqs eshte te connectionat e tua dhe ta ka pranuar, nese jo athere return message qe duhet ti besh follow / ose duhet te ta pronoj follow request-in;
+    // nqs po i dergon  te gjitah postet me pagination
+    //shto si req param dhe user
     async getUserPosts(postsByPage: number = 10, page: number = 1) {
 
         let resp: any;
@@ -251,30 +255,5 @@ export class UsersService {
 
         return resp;
     };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }

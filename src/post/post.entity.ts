@@ -14,7 +14,7 @@ export class Post {
 
     @Column({ name: 'userId' })
     @ApiProperty({ description: 'The ID of the user who created the post.' })
-    userId: string;
+    userId: number;
 
     @Column({ name: 'likesNr', type: 'integer', nullable: true, default: 0 })
     @ApiProperty({ description: 'The number of likes the post has.', nullable: true })

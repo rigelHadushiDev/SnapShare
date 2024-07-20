@@ -27,11 +27,11 @@ import { fileStorage, configureStorageOptions, imgFilters } from './fileStorage.
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
 import { ProfileImgReq, ProfileImgRes } from './dtos/UploadProfileImg.dto';
-import { GetUserPostsReq } from './dtos/GetUserPosts.dto';
+import { PaginationDto } from './dtos/GetUserPosts.dto';
 
 @ApiBearerAuth()
 @ApiTags("User Module")
-@Controller('users')
+@Controller('user')
 export class UsersController {
     constructor(private readonly userService: UsersService) {
         configureStorageOptions('profileImg', imgFilters);
@@ -65,8 +65,8 @@ export class UsersController {
     @ApiOperation({ summary: 'Retrieve user data.', description: 'Retrieve current loged in user data.' })
     @ApiResponse({ status: HttpStatus.OK, description: 'The profile picture has been uploaded successfully.', type: UserResDto })
     @ApiException(() => NotFoundException, { description: 'The loged in user has not been found. [key: "userNotFound" ]' })
-    async getUserData() {
-        return await this.userService.getUserData();
+    async getCurrUserData() {
+        return await this.userService.getCurrUserData();
     }
 
     @Put('update')
@@ -99,8 +99,8 @@ export class UsersController {
 
     @Get('getUserPosts')
     @ApiOperation({ summary: 'Get user posts.', description: 'Get the current  logged-in user all its posts that are not archieved or deleted. ' })
-    @ApiQuery({ type: GetUserPostsReq, required: false })
-    async getUserPosts(@Query() query: GetUserPostsReq) {
+    @ApiQuery({ type: PaginationDto, required: false })
+    async getUserPosts(@Query() query: PaginationDto) {
         const { postsByPage, page } = query;
         return await this.userService.getUserPosts(postsByPage, page);
     }

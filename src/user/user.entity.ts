@@ -1,15 +1,16 @@
 import { Like } from "src/like/like.entity";
-import { Network } from "src/network/network.entity";
+import { Network } from "src/network/entities/network.entity";
 import { Post } from "src/post/post.entity";
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Comment } from "src/comment/comment.entity";
 import { ApiProperty } from "@nestjs/swagger";
+import { Notification } from "src/network/entities/notification.entity";
 
 @Entity('user')
 export class User {
 
-    @PrimaryGeneratedColumn("uuid", { name: 'userId' })
-    userId: string;
+    @PrimaryGeneratedColumn({ type: 'integer', name: 'userId' })
+    userId: number;
 
     @ApiProperty({ example: 'example@example.com', description: 'Email address of the user', uniqueItems: true })
     @Column({ name: 'email', unique: true })
@@ -53,7 +54,7 @@ export class User {
     @ApiProperty({ example: '2023-01-02T15:30:00Z', description: 'Date and time when the user was last updated' })
     @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp' })
     updatedAt: Date;
-    // add castcated aslo to other tables later :)
+
     @OneToMany(() => Post, post => post.user, { cascade: true })
     posts: Post[];
 
@@ -68,4 +69,11 @@ export class User {
 
     @OneToMany(() => Comment, comment => comment.user, { cascade: true })
     comments: Comment[];
+
+    @OneToMany(() => Notification, notification => notification.createdUser, { cascade: true })
+    createdNotifications: Notification[];
+
+    @OneToMany(() => Notification, notification => notification.receivedUser, { cascade: true })
+    receivedNotifications: Notification[];
+
 }

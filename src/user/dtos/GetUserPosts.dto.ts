@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, Min } from 'class-validator';
 
 
-export class GetUserPostsReq {
+export class PaginationDto {
     @ApiProperty({ description: 'Number of posts per page', example: 10 })
     @IsInt()
     @Min(1)
