@@ -31,17 +31,9 @@ export class Story {
     @ApiProperty({ description: 'Indicates whether the post is archived.', default: false })
     archived: boolean;
 
-    @Column({ name: 'postDescription', nullable: true })
-    @ApiProperty({ description: 'The description or content of the post.', nullable: true })
-    postDescription: string;
-
     @Column({ name: 'media', nullable: true })
     @ApiProperty({ description: 'The media content associated with the post (e.g., image URL).', nullable: true })
     media: string;
-
-    @Column({ name: 'deleted', default: false })
-    @ApiProperty({ description: 'Indicates whether the post is marked as deleted.', default: false })
-    deleted: boolean;
 
     @OneToMany(() => StoryLike, storyLike => storyLike.story)
     storyLikes: StoryLike[];
