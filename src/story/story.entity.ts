@@ -7,7 +7,7 @@ import { StoryLike } from 'src/like/StoryLike.entity';
 @Entity('story')
 export class Story {
 
-    @PrimaryGeneratedColumn({ type: 'integer', name: 'postId' })
+    @PrimaryGeneratedColumn({ type: 'integer', name: 'storyId' })
     @ApiProperty({ description: 'The unique ID of the post.' })
     storyId: number;
 
