@@ -89,5 +89,15 @@ export class StoryService {
         return resp;
     }
 
+    async findStoryById(storyId: number): Promise<Story> {
+
+        const story = await this.entityManager.findOne(Story, { where: { storyId: storyId } })
+
+        if (!story) {
+            throw new NotFoundException(`storyNotFound`);
+        }
+
+        return story;
+    }
 
 }

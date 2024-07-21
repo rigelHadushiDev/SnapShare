@@ -151,7 +151,12 @@ export class PostService {
 
     async findPostById(postId: number): Promise<Post> {
 
-        const post = await this.entityManager.findOne(Post, { where: { postId: postId } })
+        const post = await this.entityManager.findOne(Post, {
+            where: {
+                postId: postId,
+                archived: false
+            }
+        });
 
         if (!post) {
             throw new NotFoundException(`postNotFound`);

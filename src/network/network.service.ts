@@ -417,4 +417,21 @@ export class NetworkService {
         return resp;
     }
 
+
+    async isfollowedBy(followeeId: number) {
+        let resp = { message: 'isntConnectedTo' }
+
+        const story = await this.entityManager
+            .createQueryBuilder()
+            .from(Network, 'network')
+            .select('*')
+            .where('network.followerId = :followerId', { followerId: this.UserID })
+            .andWhere('network.followeeId = :followeeId', { followeeId: followeeId })
+            .getOne();
+
+        if (story)
+            resp.message = 'isConnectedTo';
+
+        return resp;
+    }
 }
