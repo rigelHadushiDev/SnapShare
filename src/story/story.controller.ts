@@ -1,11 +1,13 @@
-import { BadRequestException, Controller, HttpCode, HttpStatus, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { BadRequestException, Controller, Delete, ForbiddenException, HttpCode, HttpStatus, InternalServerErrorException, NotFoundException, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { configureStorageOptions, fileStorage, imgVideoFilters } from 'src/user/fileStorage.config';
 import { EntityManager } from 'typeorm';
 import { StoryService } from './story.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
 import { StoryMediaReq } from './UploadStory.dto';
+import { Story } from './story.entity';
+import { GeneralResponse } from 'src/post/dtos/GeneralResponse';
 
 @ApiBearerAuth()
 @ApiTags('Story APIs')
@@ -22,21 +24,22 @@ export class StoryController {
     @HttpCode(HttpStatus.OK)
     @UseInterceptors(FileInterceptor('media', fileStorage))
     @ApiResponse({
-        status: HttpStatus.OK, description: 'The story has been successfully uploaded.', //type:
+        status: HttpStatus.OK, description: 'The story has been successfully uploaded.', type: Story
     })
     @ApiBody({ type: StoryMediaReq, description: 'Story Media upload data', required: true })
-    @ApiException(() => BadRequestException, {
-        description: 'A  media file is required to create a story. Please upload a media file. [key: "pleaseUploadStoryData" ]'
-    })
-    async uploadStory(@UploadedFile() file: Express.Multer.File) {
-        return await this.StoryService.uploadStory(file);
+    uploadStory(@UploadedFile() file: Express.Multer.File) {
+        return this.StoryService.uploadStory(file);
     }
 
 
-    //toggleArchieve
-
-
-    //delete
-
+    @Delete('delete/:storyId')
+    @ApiParam({ name: 'storyId', description: 'Id of the story y ou want to archive' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'The story has been successfully deleted.', type: GeneralResponse })
+    @ApiException(() => InternalServerErrorException, { description: 'An issue occured on removing this story. [key: "issueDeletingStory" ]' })
+    @ApiException(() => ForbiddenException, { description: 'Forbidden. Only the story creator can delete the story. [key: "isntStoryCreator" ]' })
+    @ApiException(() => NotFoundException, { description: 'Story is not found. [key: "noStoryFound" ]' })
+    deleteStory(@Param('storyId') storyId: number) {
+        return this.StoryService.deleteStory(storyId);
+    }
 
 }

@@ -27,10 +27,6 @@ export class Story {
     @ApiProperty({ description: 'The date and time when the post was last updated.' })
     updatedAt: Date;
 
-    @Column({ name: 'archived', default: false })
-    @ApiProperty({ description: 'Indicates whether the post is archived.', default: false })
-    archived: boolean;
-
     @Column({ name: 'media', nullable: true })
     @ApiProperty({ description: 'The media content associated with the post (e.g., image URL).', nullable: true })
     media: string;

@@ -20,9 +20,6 @@ export class UserPostsDto {
     archived: boolean;
 
     @ApiProperty()
-    deleted: boolean;
-
-    @ApiProperty()
     postDescription: string;
 
     @ApiProperty()

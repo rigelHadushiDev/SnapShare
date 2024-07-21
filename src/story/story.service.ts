@@ -1,9 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { UserProvider } from 'src/user/services/user.provider';
-import { User } from 'src/user/user.entity';
+const fs = require('fs');
 import { EntityManager } from 'typeorm';
 import { Story } from './story.entity';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
+import * as path from 'path';
 
 @Injectable()
 export class StoryService {
@@ -23,9 +24,6 @@ export class StoryService {
         let resp: any;
 
         const userId: number = this.currUserID;
-
-        if (!file)
-            throw new BadRequestException('pleaseUploadStoryData');
 
         const filePath: string = file.path;
 
@@ -50,12 +48,46 @@ export class StoryService {
     };
 
 
+    async deleteStory(storyId: number): Promise<{ message: string; status: number }> {
 
+        let resp: { message: string; status: number };
 
+        const userId = this.currUserID;
 
+        const story = await this.entityManager
+            .createQueryBuilder(Story, 'story')
+            .select('*')
+            .where('story.storyId = :storyId', { storyId })
+            .getRawOne();
 
+        if (!story)
+            throw new NotFoundException('noStoryFound');
+        else if (story?.userId != userId)
+            throw new ForbiddenException('isntStoryCreator');
 
+        if (story?.media) {
+            const filePath = path.resolve(story.media);
+            fs.unlink(filePath, (err) => {
+                if (err) {
+                    throw new InternalServerErrorException("issueDeletingStory");
+                }
+            });
+        }
 
+        const deleteQuery = await this.entityManager
+            .createQueryBuilder()
+            .delete()
+            .from(Story)
+            .where('storyId = :storyId', { storyId })
+            .execute();
+
+        if (deleteQuery.affected === 1 && story.media)
+            resp = { message: 'postSuccessfullyDeleted', status: HttpStatus.OK };
+        else
+            resp = { message: 'postIsAlreadyDeleted', status: HttpStatus.OK };
+
+        return resp;
+    }
 
 
 }

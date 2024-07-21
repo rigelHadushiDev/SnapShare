@@ -42,10 +42,6 @@ export class Post {
     @ApiProperty({ description: 'The number of comments the post has.', nullable: true })
     commentsNr: number;
 
-    @Column({ name: 'deleted', default: false })
-    @ApiProperty({ description: 'Indicates whether the post is marked as deleted.', default: false })
-    deleted: boolean;
-
     @OneToMany(() => PostLike, postLike => postLike.post)
     postLikes: PostLike[];
 

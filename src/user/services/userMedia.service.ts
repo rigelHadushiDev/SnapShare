@@ -63,7 +63,6 @@ export class UserMediaService {
             .createQueryBuilder(Post, 'post')
             .where('post.userId = :userId', { userId })
             .andWhere('post.archived = :archived', { archived: true })
-            .andWhere('post.deleted = :deleted', { deleted: false })
             .take(postsByPage)
             .skip(skip)
             .getMany();

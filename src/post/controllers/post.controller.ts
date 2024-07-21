@@ -42,7 +42,7 @@ export class PostController {
 
     @UseGuards(IsCreatorGuard)
     @ApiException(() => ForbiddenException, { description: 'Forbidden. Only the post creator can archive the post. [key: "forbiddenResource" ]' })
-    @ApiException(() => ForbiddenException, { description: 'Post is not found . [key: "postNotFound" ]' })
+    @ApiException(() => NotFoundException, { description: 'Post is not found . [key: "postNotFound" ]' })
     @ApiParam({ name: 'postId', description: 'ID of the post to be archived' })
     @ApiResponse({
         status: HttpStatus.OK, description: 'Successfully toggled archive status. [key: "archiveToggleSuccessful"]', type: GeneralResponse
@@ -55,7 +55,7 @@ export class PostController {
     @UseGuards(IsCreatorGuard)
     @Delete('delete/:postId')
     @ApiException(() => ForbiddenException, { description: 'Forbidden. Only the post creator can archive the post. [key: "forbiddenResource" ]' })
-    @ApiException(() => ForbiddenException, { description: 'Post is not found. [key: "postNotFound" ]' })
+    @ApiException(() => NotFoundException, { description: 'Post is not found. [key: "postNotFound" ]' })
     @ApiException(() => InternalServerErrorException, { description: 'Issue deleting post. [key: "issueDeletingPost" ]' })
     @ApiParam({ name: 'postId', description: 'ID of the post to be deleted' })
     @ApiResponse({ status: HttpStatus.OK, description: 'Successfully deleted the post.', type: GeneralResponse })
@@ -72,7 +72,7 @@ export class PostController {
     @ApiException(() => InternalServerErrorException, { description: 'Issue updating post. [key: "issueUpdatingPost" ]' })
     @ApiException(() => InternalServerErrorException, { description: 'Post description should not be the same with the current description. [key: "newDescriptionShouldBeAdded" ]' })
     @ApiException(() => ForbiddenException, { description: 'Forbidden. Only the post creator can archive the post. [key: "forbiddenResource" ]' })
-    @ApiException(() => ForbiddenException, { description: 'Post is not found. [key: "postNotFound" ]' })
+    @ApiException(() => NotFoundException, { description: 'Post is not found. [key: "postNotFound" ]' })
     @ApiBody({ type: EditPostDto, description: 'Updated post data', required: true })
     @ApiResponse({ status: HttpStatus.OK, description: 'Successfully edited the post.', type: GeneralResponse })
     editPost(@Param('postId') postId: number, @Body() postData: EditPostDto) {

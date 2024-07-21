@@ -40,7 +40,4 @@ export class CreatePostRes {
 
     @ApiProperty({ description: 'Flag indicating if the post is archived', example: false })
     archived: boolean;
-
-    @ApiProperty({ description: 'Flag indicating if the post is deleted', example: false })
-    deleted: boolean;
 }
