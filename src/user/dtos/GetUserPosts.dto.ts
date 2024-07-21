@@ -39,6 +39,4 @@ export class GetUserPostsRes {
     @ApiProperty({ example: 0, description: 'Number of comments on the post' })
     commentsNr: number;
 
-    @ApiProperty({ example: false, description: 'Flag indicating if the post is deleted' })
-    deleted: boolean;
 }

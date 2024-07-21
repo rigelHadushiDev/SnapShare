@@ -27,7 +27,7 @@ export class UserMediaController {
 
     @Post('upload')
     @HttpCode(HttpStatus.OK)
-    @UseInterceptors(FileInterceptor('file', fileStorage))
+    @UseInterceptors(FileInterceptor('media', fileStorage))
     @ApiOperation({ summary: 'Upload a profile picture', description: 'Uploads a profile picture for the current user.' })
     @ApiConsumes('multipart/form-data')
     @ApiBody({ type: ProfileImgReq, description: 'Profile image upload data', required: true })

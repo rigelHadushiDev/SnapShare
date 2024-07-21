@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, ManyToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, ManyToMany, OneToMany } from 'typeorm';
 import { Notification } from './notification.entity';
 
 @Entity('notificationType')
@@ -13,7 +13,7 @@ export class NotificationType {
     @Column({ name: 'description', type: 'varchar', nullable: true })
     description: string;
 
-    @ManyToMany(() => Notification, notification => notification.receivedNotifications, { nullable: true })
+    @OneToMany(() => Notification, notification => notification.receivedNotifications, { nullable: true })
     @JoinColumn({ name: 'notificationTypeId', referencedColumnName: 'notificationId' })
     typeId: Notification;
 

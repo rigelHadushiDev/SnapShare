@@ -63,7 +63,6 @@ export class UserMediaService {
             .createQueryBuilder(Post, 'post')
             .where('post.userId = :userId', { userId })
             .andWhere('post.archived = :archived', { archived: true })
-            .andWhere('post.deleted = :deleted', { deleted: false })
             .take(postsByPage)
             .skip(skip)
             .getMany();
@@ -81,30 +80,16 @@ export class UserMediaService {
 
 
 
-    // edhe ketu beje me if(currUserId === userId) nqs eshte useri i loguar ti i ben skip dhe i jep direkt postet
-    // nqs jo ti shikon nqs eshte te connectionat e tua dhe ta ka pranuar, nese jo athere return message qe duhet ti besh follow / ose duhet te ta pronoj follow request-in;
-    // nqs po i dergon  te gjitah postet me pagination
-    //shto si req param dhe user
     async getUserPosts(postsByPage: number = 10, page: number = 1) {
+    }
 
 
-        let currUserID = this.currUserID;
-        // what are you going to do first is get all the posts which have archieved true
-
-
-
-
-
-
-
-
-
-
-
-
+    async getSavedPosts(postsByPage: number = 10, page: number = 1) {
     }
 
 
 
+    async getArchievedStories(postsByPage: number = 10, page: number = 1) {
+    }
 
 }

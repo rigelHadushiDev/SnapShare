@@ -1,14 +1,15 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from 'src/user/user.entity';
-import { PostLike } from 'src/like/postLike.entity';
-import { Comment } from 'src/comment/comment.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { StoryLike } from 'src/like/StoryLike.entity';
 
-@Entity('post')
-export class Post {
-    @PrimaryGeneratedColumn({ type: 'integer', name: 'postId' })
+
+@Entity('story')
+export class Story {
+
+    @PrimaryGeneratedColumn({ type: 'integer', name: 'storyId' })
     @ApiProperty({ description: 'The unique ID of the post.' })
-    postId: number;
+    storyId: number;
 
     @Column({ name: 'userId' })
     @ApiProperty({ description: 'The ID of the user who created the post.' })
@@ -26,29 +27,14 @@ export class Post {
     @ApiProperty({ description: 'The date and time when the post was last updated.' })
     updatedAt: Date;
 
-    @Column({ name: 'archived', default: false })
-    @ApiProperty({ description: 'Indicates whether the post is archived.', default: false })
-    archived: boolean;
-
-    @Column({ name: 'postDescription', nullable: true })
-    @ApiProperty({ description: 'The description or content of the post.', nullable: true })
-    postDescription: string;
-
     @Column({ name: 'media', nullable: true })
     @ApiProperty({ description: 'The media content associated with the post (e.g., image URL).', nullable: true })
     media: string;
 
-    @Column({ name: 'commentsNr', nullable: true, default: 0 })
-    @ApiProperty({ description: 'The number of comments the post has.', nullable: true })
-    commentsNr: number;
+    @OneToMany(() => StoryLike, storyLike => storyLike.story)
+    storyLikes: StoryLike[];
 
-    @OneToMany(() => PostLike, postLike => postLike.post)
-    postLikes: PostLike[];
-
-    @OneToMany(() => Comment, comment => comment.post)
-    comments: Comment[];
-
-    @ManyToOne(() => User, user => user.posts, { onDelete: 'CASCADE' })
+    @ManyToOne(() => User, user => user.stories, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
     user: User;
 }

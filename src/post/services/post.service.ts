@@ -18,6 +18,37 @@ export class PostService {
         this.UserID = this.userProvider.getCurrentUser()?.userId;
     }
 
+    async createPost(media: Express.Multer.File, postDataDto: DescriptionDto) {
+        let resp: any
+
+        const userId = this.UserID;
+
+        if (!media) {
+            throw new BadRequestException('mediaFileRequired')
+        }
+
+        const filePath: string = media.path;
+
+        let post = new Post();
+
+        let createdPost;
+
+        await this.entityManager.transaction(async transactionalEntityManager => {
+
+            post.userId = userId;
+            post.postDescription = postDataDto?.description || null;
+            post.media = filePath;
+
+            createdPost = await transactionalEntityManager.save(Post, post);
+        });
+
+        if (createdPost.media)
+            createdPost.media = SnapShareUtility.urlConverter(createdPost.media);
+
+        resp = createdPost;
+
+        return resp;
+    };
 
 
     async toggleArchivePost(postId: number): Promise<{ message: string; status: number }> {

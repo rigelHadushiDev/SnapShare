@@ -5,9 +5,9 @@ import {
     Column,
     ManyToOne,
     JoinColumn,
-    CreateDateColumn,
-    ManyToMany,
+    CreateDateColumn
 } from 'typeorm';
+import { NotificationType } from './notificationType.entity';
 
 @Entity('notification')
 export class Notification {
@@ -27,14 +27,15 @@ export class Notification {
     @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
     createdAt: Date;
 
-    @ManyToOne(() => User, user => user.receivedNotifications, { nullable: true })
+    @ManyToOne(() => User, user => user.receivedNotifications, { nullable: true, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'receivedUserId', referencedColumnName: 'userId' })
     receivedUser: User;
 
-    @ManyToOne(() => User, user => user.createdNotifications, { nullable: true })
+    @ManyToOne(() => User, user => user.createdNotifications, { nullable: true, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'createdBy', referencedColumnName: 'userId' })
     createdUser: User;
 
-    @ManyToMany(() => Notification, notification => notification.typeId, { cascade: true })
-    receivedNotifications: Notification[];
+    @ManyToOne(() => NotificationType, notification => notification.typeId, { nullable: true, onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'typeId', referencedColumnName: 'notificationTypeId' })
+    receivedNotifications: NotificationType;
 }
