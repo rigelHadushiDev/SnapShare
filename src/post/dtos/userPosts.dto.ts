@@ -17,7 +17,7 @@ export class UserPostsDto {
     updatedAt: Date;
 
     @ApiProperty()
-    archived: boolean;
+    archive: boolean;
 
     @ApiProperty()
     postDescription: string;

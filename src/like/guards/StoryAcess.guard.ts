@@ -4,12 +4,13 @@ import { UsersService } from '../../user/services/users.service';
 import { NetworkService } from '../../network/network.service';
 import { User } from '../../user/user.entity';
 import { StoryService } from 'src/story/story.service';
+import { EntityManager } from 'typeorm';
+import { Story } from 'src/story/story.entity';
 
 @Injectable()
 export class StoryAcessGuard implements CanActivate {
     constructor(
-        private readonly usersService: UsersService,
-        private readonly storyService: StoryService,
+        private readonly entityManager: EntityManager,
         private readonly networkService: NetworkService
     ) { }
 
@@ -24,11 +25,22 @@ export class StoryAcessGuard implements CanActivate {
         const userId = user.userId;
         const storyId = params.storyId;
 
-        const currentUser = await this.usersService.getUserById(userId);
+        const story = await this.entityManager.findOne(Story, { where: { storyId: storyId, archive: false } })
 
-        const story = await this.storyService.findStoryById(storyId);
+        if (!story)
+            throw new NotFoundException(`storyNotFound`);
 
         const storyUserId = story.userId;
+
+        const currentUser = await this.entityManager.findOne(User, {
+            where: {
+                userId: storyUserId,
+                archive: false
+            }
+        });
+
+        if (!currentUser)
+            throw new NotFoundException(`userNotFound`)
 
         if (currentUser?.isPrivate === true && userId !== storyUserId) {
             const responseMessage = await this.networkService.isfollowedBy(storyUserId);

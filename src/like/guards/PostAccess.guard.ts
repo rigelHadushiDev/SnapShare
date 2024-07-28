@@ -3,12 +3,13 @@ import { UsersService } from '../../user/services/users.service';
 import { PostService } from '../../post/services/post.service';
 import { NetworkService } from '../../network/network.service';
 import { User } from '../../user/user.entity';
+import { EntityManager } from 'typeorm';
+import { Post } from 'src/post/post.entity';
 
 @Injectable()
 export class PostAccessGuard implements CanActivate {
     constructor(
-        private readonly usersService: UsersService,
-        private readonly postService: PostService,
+        private readonly entityManager: EntityManager,
         private readonly networkService: NetworkService
     ) { }
 
@@ -23,13 +24,31 @@ export class PostAccessGuard implements CanActivate {
         const userId = user.userId;
         const postId = params.postId;
 
-        const currentUser = await this.usersService.getUserById(userId);
 
-        const post = await this.postService.findPostById(postId);
+        const post = await this.entityManager.findOne(Post, {
+            where: {
+                postId: postId,
+                archive: false
+            }
+        });
+
+        if (!post)
+            throw new NotFoundException(`postNotFound`)
 
         const postUserId = post.userId;
 
-        if (currentUser?.isPrivate === true && userId !== postUserId) {
+        const postUser = await this.entityManager.findOne(User, {
+            where: {
+                userId: postUserId,
+                archive: false
+            }
+        });
+
+        if (!postUser)
+            throw new NotFoundException(`userNotFound`)
+
+
+        if (postUser?.isPrivate === true && userId !== postUserId) {
             const responseMessage = await this.networkService.isfollowedBy(postUserId);
             if (responseMessage?.message === 'isntConnectedTo') {
                 throw new ForbiddenException('nonFriendPrivateAccList');

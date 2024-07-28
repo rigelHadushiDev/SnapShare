@@ -27,6 +27,10 @@ export class Story {
     @ApiProperty({ description: 'The date and time when the post was last updated.' })
     updatedAt: Date;
 
+    @Column({ name: 'archive', type: 'boolean', default: false })
+    @ApiProperty({ description: 'The archieve which is set after 24h the post is created' })
+    archive: boolean;
+
     @Column({ name: 'media', nullable: true })
     @ApiProperty({ description: 'The media content associated with the post (e.g., image URL).', nullable: true })
     media: string;

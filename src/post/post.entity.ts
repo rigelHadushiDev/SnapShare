@@ -26,9 +26,9 @@ export class Post {
     @ApiProperty({ description: 'The date and time when the post was last updated.' })
     updatedAt: Date;
 
-    @Column({ name: 'archived', default: false })
+    @Column({ name: 'archive', default: false })
     @ApiProperty({ description: 'Indicates whether the post is archived.', default: false })
-    archived: boolean;
+    archive: boolean;
 
     @Column({ name: 'postDescription', nullable: true })
     @ApiProperty({ description: 'The description or content of the post.', nullable: true })

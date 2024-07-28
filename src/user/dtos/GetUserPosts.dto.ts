@@ -28,7 +28,7 @@ export class GetUserPostsRes {
     updatedAt: Date;
 
     @ApiProperty({ example: false, description: 'Flag indicating if the post is archived' })
-    archived: boolean;
+    archive: boolean;
 
     @ApiProperty({ example: 'me in vacation', description: 'Description of the post' })
     postDescription: string;

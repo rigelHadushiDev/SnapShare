@@ -21,16 +21,6 @@ export class LikeService {
         const resp = new GeneralResponse();
         const userId = this.currUserId;
 
-        const post = await this.entityManager
-            .createQueryBuilder()
-            .from(Post, 'post')
-            .select('*')
-            .where('post.postId = :postId', { postId })
-            .andWhere('post.archive = :archiveState', { archiveState: false })
-            .getOne();
-
-        if (!post) throw new NotFoundException('postNotFound');
-
         const isLiked = await this.entityManager
             .createQueryBuilder()
             .from(PostLike, 'postLike')
@@ -38,7 +28,7 @@ export class LikeService {
             .where('postLike.postId = :postId', { postId })
             .andWhere('postLike.userId = :userId', { userId })
             .andWhere('postLike.deleted = :deleted', { deleted: false })
-            .getOne();
+            .getRawOne();
 
         await this.entityManager.transaction(async transactionalEntityManager => {
             if (isLiked) {
@@ -53,7 +43,7 @@ export class LikeService {
                     .createQueryBuilder()
                     .update(Post)
                     .set({ likesNr: () => 'likesNr - 1' })
-                    .where('postId = :postId', { postId: post.postId })
+                    .where('postId = :postId', { postId: postId })
                     .execute();
 
                 resp.message = 'postLikeRemoved';
@@ -72,7 +62,7 @@ export class LikeService {
                     .createQueryBuilder()
                     .update(Post)
                     .set({ likesNr: () => 'likesNr + 1' })
-                    .where('postId = :postId', { postId: post.postId })
+                    .where('postId = :postId', { postId: postId })
                     .execute();
 
                 resp.message = 'postLikeAdded';
@@ -84,6 +74,64 @@ export class LikeService {
     }
 
     async toggleStoryLike(storyId: number) {
+        const resp = new GeneralResponse();
+        const userId = this.currUserId;
+
+        const isLiked = await this.entityManager
+            .createQueryBuilder()
+            .from(StoryLike, 'storyLike')
+            .select('*')
+            .where('storyLike.storyId = :storyId', { storyId })
+            .andWhere('storyLike.userId = :userId', { userId })
+            .andWhere('storyLike.deleted = :deleted', { deleted: false })
+            .getRawOne();
+
+        await this.entityManager.transaction(async transactionalEntityManager => {
+            if (isLiked) {
+                await transactionalEntityManager
+                    .createQueryBuilder()
+                    .update(StoryLike)
+                    .set({ deleted: true })
+                    .where('likeId = :likeId', { likeId: isLiked?.likeId })
+                    .execute();
+
+                await transactionalEntityManager
+                    .createQueryBuilder()
+                    .update(Story)
+                    .set({ likesNr: () => 'likesNr - 1' })
+                    .where('storyId = :storyId', { storyId: storyId })
+                    .execute();
+
+                resp.message = 'storyLikeRemoved';
+
+            } else {
+
+                await transactionalEntityManager
+                    .createQueryBuilder()
+                    .insert()
+                    .into(StoryLike)
+                    .values({
+                        userId,
+                        storyId
+                    })
+                    .execute();
+
+                await transactionalEntityManager
+                    .createQueryBuilder()
+                    .update(Story)
+                    .set({ likesNr: () => 'likesNr + 1' })
+                    .where('storyId = :storyId', { storyId: storyId })
+                    .execute();
+
+                resp.message = 'storyLikeAdded';
+            }
+        });
+
+        resp.status = HttpStatus.OK;
+        return resp;
+    }
+
+    async togglecommentLike(storyId: number) {
         const resp = new GeneralResponse();
         const userId = this.currUserId;
 
@@ -121,7 +169,7 @@ export class LikeService {
                     .where('storyId = :storyId', { storyId: story?.storyId })
                     .execute();
 
-                resp.message = 'postLikeRemoved';
+                resp.message = 'storyLikeRemoved';
 
             } else {
 
@@ -142,7 +190,7 @@ export class LikeService {
                     .where('storyId = :storyId', { storyId: story?.storyId })
                     .execute();
 
-                resp.message = 'postLikeAdded';
+                resp.message = 'storyLikeAdded';
             }
         });
 
@@ -150,5 +198,5 @@ export class LikeService {
         return resp;
     }
 
-
+    // toogle LIke comment
 }

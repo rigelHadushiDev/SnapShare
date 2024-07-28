@@ -250,7 +250,7 @@ export class NetworkService {
             .andWhere('network.followeeId = :followeeId', { followeeId: userId })
             .getRawOne();
 
-        if (user?.isPrivate && !currUserFriend)
+        if (user?.isPrivate && !currUserFriend && this.UserID != userId)
             throw new ForbiddenException(`nonFriendPrivateAccList`);
 
         const query = `SELECT
@@ -318,7 +318,7 @@ export class NetworkService {
             .andWhere('network.followeeId = :followeeId', { followeeId: userId })
             .getRawOne();
 
-        if (user?.isPrivate && !currUserFriend)
+        if (user?.isPrivate && !currUserFriend && this.UserID != userId)
             throw new ForbiddenException(`nonFriendPrivateAccList`);
 
         const query = `SELECT
@@ -417,7 +417,6 @@ export class NetworkService {
         return resp;
     }
 
-
     async isfollowedBy(followeeId: number) {
         let resp = { message: 'isntConnectedTo' }
 
@@ -427,6 +426,8 @@ export class NetworkService {
             .select('*')
             .where('network.followerId = :followerId', { followerId: this.UserID })
             .andWhere('network.followeeId = :followeeId', { followeeId: followeeId })
+            .andWhere('network.deleted = :deleted', { deleted: 0 })
+            .andWhere('network.pending = :pending', { pending: false })
             .getOne();
 
         if (story)

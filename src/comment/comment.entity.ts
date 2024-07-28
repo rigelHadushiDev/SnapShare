@@ -22,6 +22,12 @@ export class Comment {
     @Column({ name: 'userId', type: "integer" })
     userId: number;
 
+    @Column({ name: 'likeNr', type: "integer", default: 0 })
+    likeNr: number;
+
+    @Column({ name: 'parentCommentId', type: "integer", default: null })
+    parentCommentId: number;
+
     @ManyToOne(() => Post, post => post.comments, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'postId', referencedColumnName: 'postId' })
     post: Post;

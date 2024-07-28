@@ -7,16 +7,12 @@ import { UserProvider } from 'src/user/services/user.provider';
 import { UsersModule } from 'src/user/user.module';
 import { NetworkModule } from 'src/network/network.module';
 import { NetworkService } from 'src/network/network.service';
-import { PostAccessGuard } from './guards/PostAccessGuard';
-import { PostModule } from 'src/post/post.module';
-import { PostService } from 'src/post/services/post.service';
-import { StoryAcessGuard } from './guards/StoryAcessGuard';
-import { StoryModule } from 'src/story/story.module';
-import { StoryService } from 'src/story/story.service';
+import { PostAccessGuard } from './guards/PostAccess.guard';
+import { StoryAcessGuard } from './guards/StoryAcess.guard';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PostLike]), UsersModule, NetworkModule, PostModule, StoryModule],
+  imports: [TypeOrmModule.forFeature([PostLike]), UsersModule, NetworkModule,],
   controllers: [LikeController],
-  providers: [LikeService, UserProvider, NetworkService, PostService, StoryService, PostAccessGuard, StoryAcessGuard]
+  providers: [LikeService, UserProvider, NetworkService, PostAccessGuard, StoryAcessGuard]
 })
 export class LikeModule { }

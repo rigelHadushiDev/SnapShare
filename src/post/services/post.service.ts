@@ -60,19 +60,19 @@ export class PostService {
         let postStatus = await await this.entityManager
             .createQueryBuilder()
             .from(Post, 'post')
-            .select('post.archived')
+            .select('post.archive')
             .where('post.postId = :postId', { postId })
             .getOne();
 
-        postStatus.archived === true ? false : true;
+        postStatus.archive === true ? false : true;
 
         await this.entityManager
             .createQueryBuilder()
             .update(Post)
-            .set({ archived: true })
+            .set({ archive: true })
             .where('postId = :postId', { postId })
             .andWhere('userId = :userId', { userId })
-            .andWhere('archived = :archived', { archived: postStatus.archived })
+            .andWhere('archive = :archive', { archive: postStatus.archive })
             .execute();
 
         resp = { message: 'archiveToggleSuccessful', status: HttpStatus.OK };
@@ -153,8 +153,7 @@ export class PostService {
 
         const post = await this.entityManager.findOne(Post, {
             where: {
-                postId: postId,
-                archived: false
+                postId: postId
             }
         });
 
