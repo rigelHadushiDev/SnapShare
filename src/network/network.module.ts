@@ -10,6 +10,7 @@ import { NotificationType } from './entities/notificationType.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([Network, Notification, NotificationType])],
   providers: [NetworkService, UserProvider],
-  controllers: [NetworkController]
+  controllers: [NetworkController],
+  exports: [NetworkService]
 })
 export class NetworkModule { }

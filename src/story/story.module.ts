@@ -9,6 +9,7 @@ import { UserProvider } from 'src/user/services/user.provider';
 @Module({
   imports: [TypeOrmModule.forFeature([Story]), UsersModule],
   providers: [StoryService, UserProvider],
-  controllers: [StoryController]
+  controllers: [StoryController],
+  exports: [StoryService]
 })
 export class StoryModule { }

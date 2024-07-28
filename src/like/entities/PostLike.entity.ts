@@ -19,6 +19,9 @@ export class PostLike {
     @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp' })
     updatedAt: Date;
 
+    @Column({ name: 'deleted', default: false })
+    deleted: boolean;
+
     @ManyToOne(() => User, user => user.postLikes, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
     user: User;

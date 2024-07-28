@@ -56,7 +56,7 @@ export class UsersController {
     }
 
 
-    @Put("archieve")
+    @Put("archive")
     @ApiOperation({ summary: 'Archieve user.', description: 'Archieve current logged-in user.' })
     @ApiResponse({ status: HttpStatus.OK, description: 'The current loged-in user has been successfully archieved.', type: UserResDto })
     @ApiException(() => NotFoundException, { description: 'The loged in user has not been found. [key: "userNotFound" ]' })

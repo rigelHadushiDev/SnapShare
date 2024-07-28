@@ -13,6 +13,7 @@ import { ContentMediaService } from './services/contentMedia.service';
 @Module({
   imports: [TypeOrmModule.forFeature([Post]), UsersModule],
   providers: [PostService, UserProvider, UsersService, IsCreatorGuard, ContentMediaService],
-  controllers: [PostController, ContentMediaController]
+  controllers: [PostController, ContentMediaController],
+  exports: [PostService]
 })
 export class PostModule { }

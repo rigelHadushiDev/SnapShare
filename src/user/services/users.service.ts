@@ -56,24 +56,34 @@ export class UsersService {
 
 
     async getUserById(userId: number): Promise<User | undefined> {
+        const user = await this.entityManager.findOne(User, {
+            where: {
+                userId: userId,
+                archive: false
+            }
+        });
 
-        const user = this.entityManager.findOneBy(User, { userId });
-
-        if (!user)
-            throw new NotFoundException("userNotFound");
+        if (!user) {
+            throw new NotFoundException("User not found or is archived");
+        }
 
         return user;
     }
 
     async getUserByUsername(username: string): Promise<User | undefined> {
-        const user = this.entityManager.findOneBy(User, { username });
+        const user = await this.entityManager.findOne(User, {
+            where: {
+                username: username,
+                archive: false
+            }
+        });
 
-        if (!user)
-            throw new NotFoundException("userNotFound");
+        if (!user) {
+            throw new NotFoundException("User not found or is archived");
+        }
 
         return user;
     }
-
     // edhe kete beje me if(currUserId === userId) nqs eshte useri i loguar jepi me shum te dhena nese eshte other user jepi aq data sa duhet
 
     async getCurrUserData(): Promise<{ user: UserInfoDto, message: string }> {

@@ -39,5 +39,5 @@ export class CreatePostRes {
     updatedAt: Date;
 
     @ApiProperty({ description: 'Flag indicating if the post is archived', example: false })
-    archived: boolean;
+    archive: boolean;
 }

@@ -62,7 +62,7 @@ export class UserMediaService {
         const posts = await this.entityManager
             .createQueryBuilder(Post, 'post')
             .where('post.userId = :userId', { userId })
-            .andWhere('post.archived = :archived', { archived: true })
+            .andWhere('post.archive = :archive', { archive: true })
             .take(postsByPage)
             .skip(skip)
             .getMany();

@@ -4,7 +4,7 @@ import { Network } from './entities/network.entity';
 import { EntityManager } from 'typeorm';
 import { User } from 'src/user/user.entity';
 import { GeneralResponse } from 'src/post/dtos/GeneralResponse';
-import { ConnectionsCntRes } from './responses/connectionsCntRes';
+import { GetUserStatsRes } from './responses/getUserStatsRes';
 import { Post } from 'src/post/post.entity';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 import { UserListRes } from './responses/UserListRes';
@@ -176,9 +176,9 @@ export class NetworkService {
 
     }
 
-    async connectionCount(userId: number) {
+    async getUserStats(userId: number) {
 
-        let resp = new ConnectionsCntRes();
+        let resp = new GetUserStatsRes();
 
         let user = await this.entityManager
             .createQueryBuilder()
@@ -218,7 +218,16 @@ export class NetworkService {
 
         followersCount = followersCount?.counter || 0;
 
-        resp = { followersCount: followersCount, followingCount: followingCount }
+        let postsCount = await this.entityManager
+            .createQueryBuilder()
+            .from(Post, 'post')
+            .select('COUNT(*)', 'counter')
+            .where("post.archive = :archive", { archive: false })
+            .getRawOne();
+
+        postsCount = postsCount?.counter || 0;
+
+        resp = { followersCount: followersCount, followingCount: followingCount, postsCount: postsCount }
 
         return resp;
     }
@@ -250,7 +259,7 @@ export class NetworkService {
             .andWhere('network.followeeId = :followeeId', { followeeId: userId })
             .getRawOne();
 
-        if (user?.isPrivate && !currUserFriend)
+        if (user?.isPrivate && !currUserFriend && this.UserID != userId)
             throw new ForbiddenException(`nonFriendPrivateAccList`);
 
         const query = `SELECT
@@ -318,7 +327,7 @@ export class NetworkService {
             .andWhere('network.followeeId = :followeeId', { followeeId: userId })
             .getRawOne();
 
-        if (user?.isPrivate && !currUserFriend)
+        if (user?.isPrivate && !currUserFriend && this.UserID != userId)
             throw new ForbiddenException(`nonFriendPrivateAccList`);
 
         const query = `SELECT
@@ -417,4 +426,22 @@ export class NetworkService {
         return resp;
     }
 
+    async isfollowedBy(followeeId: number) {
+        let resp = { message: 'isntConnectedTo' }
+
+        const story = await this.entityManager
+            .createQueryBuilder()
+            .from(Network, 'network')
+            .select('*')
+            .where('network.followerId = :followerId', { followerId: this.UserID })
+            .andWhere('network.followeeId = :followeeId', { followeeId: followeeId })
+            .andWhere('network.deleted = :deleted', { deleted: 0 })
+            .andWhere('network.pending = :pending', { pending: false })
+            .getOne();
+
+        if (story)
+            resp.message = 'isConnectedTo';
+
+        return resp;
+    }
 }
