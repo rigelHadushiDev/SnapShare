@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { LikeController } from './like.controller';
 import { LikeService } from './like.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PostLike } from './postLike.entity';
+import { PostLike } from './entities/PostLike.entity';
 import { UserProvider } from 'src/user/services/user.provider';
 import { UsersModule } from 'src/user/user.module';
 import { NetworkModule } from 'src/network/network.module';

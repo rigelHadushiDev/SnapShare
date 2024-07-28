@@ -2,10 +2,12 @@ import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { Post } from 'src/post/post.entity';
 import { UserProvider } from 'src/user/services/user.provider';
 import { EntityManager } from 'typeorm';
-import { PostLike } from './postLike.entity';
+import { PostLike } from './entities/PostLike.entity';
 import { GeneralResponse } from 'src/post/dtos/GeneralResponse';
 import { Story } from 'src/story/story.entity';
-import { StoryLike } from './StoryLike.entity';
+import { StoryLike } from './entities/StoryLike.entity';
+import { Comment } from 'src/comment/comment.entity';
+import { CommentLike } from './entities/CommentLike.entity';
 
 @Injectable()
 export class LikeService {
@@ -14,8 +16,6 @@ export class LikeService {
     constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) {
         this.currUserId = this.userProvider.getCurrentUser()?.userId;
     }
-
-
 
     async togglePostLike(postId: number) {
         const resp = new GeneralResponse();
@@ -131,66 +131,66 @@ export class LikeService {
         return resp;
     }
 
-    async togglecommentLike(storyId: number) {
+    async toggleCommentLike(commentId: number) {
         const resp = new GeneralResponse();
         const userId = this.currUserId;
 
-        const story = await this.entityManager
+        const commmentExist = await this.entityManager
             .createQueryBuilder()
-            .from(Story, 'story')
+            .from(Comment, 'comment')
             .select('*')
-            .where('story.storyId = :storyId', { storyId })
-            .getOne();
+            .where('comment.commentId = :commentId', { commentId })
+            .getRawOne();
 
-        if (!story) throw new NotFoundException('storyNotFound');
+        if (!commmentExist) throw new NotFoundException('commentNotFound');
 
         const isLiked = await this.entityManager
             .createQueryBuilder()
-            .from(StoryLike, 'storyLike')
+            .from(CommentLike, 'commentlike')
             .select('*')
-            .where('storyLike.storyId = :storyId', { storyId })
-            .andWhere('storyLike.userId = :userId', { userId })
-            .andWhere('storyLike.deleted = :deleted', { deleted: false })
-            .getOne();
+            .where('commentlike.commentId = :commentId', { commentId })
+            .andWhere('commentlike.userId = :userId', { userId })
+            .andWhere('commentlike.deleted = :deleted', { deleted: false })
+            .getRawOne();
 
         await this.entityManager.transaction(async transactionalEntityManager => {
             if (isLiked) {
                 await transactionalEntityManager
                     .createQueryBuilder()
-                    .update(StoryLike)
+                    .update(CommentLike)
                     .set({ deleted: true })
                     .where('likeId = :likeId', { likeId: isLiked?.likeId })
                     .execute();
 
                 await transactionalEntityManager
                     .createQueryBuilder()
-                    .update(Story)
+                    .update(Comment)
                     .set({ likesNr: () => 'likesNr - 1' })
-                    .where('storyId = :storyId', { storyId: story?.storyId })
+                    .where('commentId = :commentId', { commentId: commmentExist?.commentId })
                     .execute();
 
-                resp.message = 'storyLikeRemoved';
+                resp.message = 'commentLikeRemoved';
 
             } else {
 
                 await transactionalEntityManager
                     .createQueryBuilder()
                     .insert()
-                    .into(StoryLike)
+                    .into(CommentLike)
                     .values({
                         userId,
-                        storyId
+                        commentId
                     })
                     .execute();
 
                 await transactionalEntityManager
                     .createQueryBuilder()
-                    .update(Story)
+                    .update(Comment)
                     .set({ likesNr: () => 'likesNr + 1' })
-                    .where('storyId = :storyId', { storyId: story?.storyId })
+                    .where('commentId = :commentId', { commentId: commmentExist?.commentId })
                     .execute();
 
-                resp.message = 'storyLikeAdded';
+                resp.message = 'commentLikeAdded';
             }
         });
 
@@ -198,5 +198,4 @@ export class LikeService {
         return resp;
     }
 
-    // toogle LIke comment
 }

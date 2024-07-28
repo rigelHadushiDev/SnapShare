@@ -18,7 +18,7 @@ export class LikeController {
     @UseGuards(StoryAcessGuard)
     @ApiException(() => ForbiddenException, { description: 'Forbidden. You cant see private users stories that are not your friend . [key: "nonFriendPrivateAccList" ]' })
     @ApiException(() => NotFoundException, { description: 'Post is not found . [key: "usertNotFound" ]' })
-    @ApiException(() => NotFoundException, { description: 'Post is not found . [key: "userNotFound" ]' })
+    @ApiException(() => NotFoundException, { description: 'User is not found . [key: "userNotFound" ]' })
     @ApiParam({ name: 'storyId', description: 'ID of the story to be liked' })
     @ApiResponse({
         status: HttpStatus.OK, description: 'Successfully toggled story like status. [key: "storyLikeAdded or storyLikeRemoved"]', type: GeneralResponse
@@ -32,7 +32,7 @@ export class LikeController {
     @UseGuards(PostAccessGuard)
     @ApiException(() => ForbiddenException, { description: 'Forbidden. You cant see private users posts that are not your friend . [key: "nonFriendPrivateAccList" ]' })
     @ApiException(() => NotFoundException, { description: 'Post is not found . [key: "postNotFound" ]' })
-    @ApiException(() => NotFoundException, { description: 'Post is not found . [key: "userNotFound" ]' })
+    @ApiException(() => NotFoundException, { description: 'User is not found . [key: "userNotFound" ]' })
     @ApiParam({ name: 'postId', description: 'ID of the post to be liked' })
     @ApiResponse({
         status: HttpStatus.OK, description: 'Successfully toggled post like status. [key: "postLikeAdded or postLikeRemoved"]', type: GeneralResponse
@@ -43,15 +43,15 @@ export class LikeController {
         return this.likeService.togglePostLike(postId);
     }
 
-    // shto guard dhe dokumnetimin e throw error
-    // toggleComment
-
-    // shto guard e nqs eshte 
-    // view Story Liked
-
-    // shto guard dhe dokumnetimin e throw error
-    // view Post Liked
-
-    // also add the PostAccessGuard dhe storyAcessGuard ne network dhe hiqi ato individual queries rregullo dokumentacionin
+    @ApiException(() => NotFoundException, { description: 'Comment is not found . [key: "commentNotFound" ]' })
+    @ApiParam({ name: 'commentId', description: 'ID of the comment to be liked' })
+    @ApiResponse({
+        status: HttpStatus.OK, description: 'Successfully toggled comment like status. [key: "commentLikeAdded or commentLikeRemoved"]', type: GeneralResponse
+    })
+    @Post('comment/:commentId')
+    @HttpCode(HttpStatus.OK)
+    likeComment(@Param('commentId') commentId: number) {
+        return this.likeService.toggleCommentLike(commentId);
+    }
 
 }

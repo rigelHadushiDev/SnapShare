@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 
 
 
-export class ConnectionsCntRes {
+export class GetUserStatsRes {
 
     @ApiProperty({
         description: 'Number of SnapShare accounts users is following',
@@ -16,4 +16,10 @@ export class ConnectionsCntRes {
     })
     followersCount: number;
 
+
+    @ApiProperty({
+        description: 'Number of posts the user has in its account.',
+        example: 5
+    })
+    postsCount: number;
 }

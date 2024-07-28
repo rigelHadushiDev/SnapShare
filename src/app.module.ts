@@ -15,7 +15,7 @@ import { NetworkModule } from './network/network.module';
 import { LikeModule } from './like/like.module';
 import { CommentModule } from './comment/comment.module';
 import { Comment } from './comment/comment.entity';
-import { PostLike } from './like/postLike.entity';
+import { PostLike } from './like/entities/PostLike.entity';
 import * as dotenv from 'dotenv';
 import { Network } from './network/entities/network.entity';
 import { FetchUserMiddleware } from './auth/fetchUser.middleware';
@@ -25,7 +25,8 @@ import { Notification } from './network/entities/notification.entity';
 import { NotificationType } from './network/entities/notificationType.entity';
 import { StoryModule } from './story/story.module';
 import { Story } from './story/story.entity';
-import { StoryLike } from './like/StoryLike.entity';
+import { StoryLike } from './like/entities/StoryLike.entity';
+import { CommentLike } from './like/entities/CommentLike.entity';
 
 dotenv.config();
 
@@ -41,9 +42,9 @@ dotenv.config();
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSW,
       database: process.env.DB_NAME,
-      entities: [User, Post, Comment, PostLike, Network, Notification, NotificationType, Story, StoryLike],
-      synchronize: false,
-      autoLoadEntities: false
+      entities: [User, Post, Comment, PostLike, Network, Notification, NotificationType, Story, StoryLike, CommentLike],
+      synchronize: true,
+      autoLoadEntities: true
     }),
     UsersModule,
     AuthModule,

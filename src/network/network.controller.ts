@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, 
 import { NetworkService } from './network.service';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
 import { GeneralResponse } from 'src/post/dtos/GeneralResponse';
-import { ConnectionsCntRes } from './responses/connectionsCntRes';
+import { GetUserStatsRes } from './responses/getUserStatsRes';
 import { PaginationDto } from 'src/user/dtos/GetUserPosts.dto';
 import { UserListRes } from './responses/UserListRes';
 
@@ -52,13 +52,13 @@ export class NetworkController {
     }
 
 
-    @Get('connectionCnt/:followeeId')
-    @ApiOperation({ summary: 'Get users count of followers and following accounts' })
+    @Get('getUserStats/:followeeId')
+    @ApiOperation({ summary: 'Get users stats such as followers, following and post counts.' })
     @ApiException(() => NotFoundException, { description: 'User with this Id not found.  [key: "userNotFound" ]' })
     @ApiParam({ name: 'followeeId', description: 'ID of the friend that you want to get their followers and following Count' })
-    @ApiResponse({ status: HttpStatus.OK, description: 'Successfully retrieved the followers and following count', type: ConnectionsCntRes })
-    async connectionCount(@Param('followeeId') followeeId: number) {
-        return await this.networkService.connectionCount(followeeId);
+    @ApiResponse({ status: HttpStatus.OK, description: 'Successfully retrieved sers stats such as followers, following and post counts.', type: GetUserStatsRes })
+    async getUserStats(@Param('followeeId') followeeId: number) {
+        return await this.networkService.getUserStats(followeeId);
     }
 
 

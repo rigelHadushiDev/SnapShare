@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from 'src/user/user.entity';
-import { PostLike } from 'src/like/postLike.entity';
+import { PostLike } from 'src/like/entities/PostLike.entity';
 import { Comment } from 'src/comment/comment.entity';
 import { ApiProperty } from '@nestjs/swagger';
 

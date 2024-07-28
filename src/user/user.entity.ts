@@ -1,4 +1,4 @@
-import { PostLike } from "src/like/postLike.entity";
+import { PostLike } from "src/like/entities/PostLike.entity";
 import { Network } from "src/network/entities/network.entity";
 import { Post } from "src/post/post.entity";
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';

@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from 'src/user/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { StoryLike } from 'src/like/StoryLike.entity';
+import { StoryLike } from 'src/like/entities/StoryLike.entity';
 
 
 @Entity('story')

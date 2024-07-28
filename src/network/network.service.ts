@@ -4,7 +4,7 @@ import { Network } from './entities/network.entity';
 import { EntityManager } from 'typeorm';
 import { User } from 'src/user/user.entity';
 import { GeneralResponse } from 'src/post/dtos/GeneralResponse';
-import { ConnectionsCntRes } from './responses/connectionsCntRes';
+import { GetUserStatsRes } from './responses/getUserStatsRes';
 import { Post } from 'src/post/post.entity';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 import { UserListRes } from './responses/UserListRes';
@@ -176,9 +176,9 @@ export class NetworkService {
 
     }
 
-    async connectionCount(userId: number) {
+    async getUserStats(userId: number) {
 
-        let resp = new ConnectionsCntRes();
+        let resp = new GetUserStatsRes();
 
         let user = await this.entityManager
             .createQueryBuilder()
@@ -218,7 +218,16 @@ export class NetworkService {
 
         followersCount = followersCount?.counter || 0;
 
-        resp = { followersCount: followersCount, followingCount: followingCount }
+        let postsCount = await this.entityManager
+            .createQueryBuilder()
+            .from(Post, 'post')
+            .select('COUNT(*)', 'counter')
+            .where("post.archive = :archive", { archive: false })
+            .getRawOne();
+
+        postsCount = postsCount?.counter || 0;
+
+        resp = { followersCount: followersCount, followingCount: followingCount, postsCount: postsCount }
 
         return resp;
     }
