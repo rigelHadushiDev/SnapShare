@@ -1,10 +1,13 @@
-import { Body, Controller, Delete, ForbiddenException, HttpCode, HttpStatus, NotFoundException, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, HttpCode, HttpStatus, NotFoundException, Param, Post, Query } from '@nestjs/common';
 import { CommentService } from './comment.service';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CommentPostDto } from './commentPost.dto';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CommentPostDto } from './dtos/commentPost.dto';
 import { GeneralResponse } from 'src/post/dtos/GeneralResponse';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
-import { CommentEditDto } from './commentEdit.dto';
+import { CommentEditDto } from './dtos/commentEdit.dto';
+import { PaginationDto } from 'src/user/dtos/GetUserPosts.dto';
+import { GetCommentRes } from './dtos/getComments.dto';
+import { CommentDto } from 'src/post/dtos/getFeed.dto';
 
 
 
@@ -58,11 +61,18 @@ export class CommentController {
         return this.commentService.deleteComment(commentId)
     }
 
+    @Get('getComments')
+    @ApiOperation({ summary: 'Retrieve the comments of a post' })
+    @ApiResponse({ status: HttpStatus.OK, description: " Post comments got recieved successfully", type: [CommentDto] })
+    @ApiQuery({ name: 'postId', required: true, description: 'Post Id that you want torecieve comments off.', type: Number })
+    getComments(@Query('postId') postId: number, @Query() query: PaginationDto) {
+        const { postsByPage, page } = query;
+        return this.commentService.getComments(postId, postsByPage, page);
+    }
 
-    // here you should a method which gets comments with pagination with certain charchteristics
-    // if a user has comment it should be first
-    // comments with more likes should be first 
-    // if user has replied in one of the comments it should be one of the first
-    // dont forget user profile Img should be convert in a url
+
+    // get children comments
+
+
 
 }

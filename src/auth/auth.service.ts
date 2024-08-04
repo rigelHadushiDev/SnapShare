@@ -28,7 +28,7 @@ export class AuthService {
         if (!access_token)
             new InternalServerErrorException('failedCreatingAccessToken');
 
-        return { access_token };
+        return { access_token, userId: user.userId };
 
     }
 }

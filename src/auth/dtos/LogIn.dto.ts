@@ -17,6 +17,8 @@ export class LogInReq {
 }
 
 export class LogInRes {
+    @ApiProperty({ description: 'Current loged user Id' })
+    userId: number;
 
     @ApiProperty({ description: 'JWT access token' })
     access_token: string;
