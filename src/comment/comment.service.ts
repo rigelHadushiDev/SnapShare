@@ -170,8 +170,6 @@ export class CommentService {
         return resp;
     }
 
-
-
     async getComments(postId: number, feedCommentsLimit?: number, postsByPage: number = 10, page: number = 1) {
 
         let res = new GetCommentRes;
@@ -277,5 +275,9 @@ export class CommentService {
         return res;
 
     }
+
+    // get Replies of comments
+
+
 }
 
