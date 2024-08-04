@@ -257,7 +257,8 @@ export class CommentService {
         FROM CommentCTE
         Where depth < 2 
         ORDER BY 
-         "parentCommentId" ASC,            
+         "parentCommentId" ASC,
+          depth ASC,             
           priority ASC,            
           "createdAt" DESC
         ${limit}
