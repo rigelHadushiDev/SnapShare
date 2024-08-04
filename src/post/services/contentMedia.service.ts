@@ -36,16 +36,6 @@ export class ContentMediaService {
 
         let offset = (page - 1) * postsByPage;
 
-        let offsetCond: string = '';
-        if (offset) {
-            offsetCond = `OFFSET ${offset}`;
-        }
-
-        let limit: string = '';
-        if (postsByPage) {
-            limit = `LIMIT ${postsByPage}`
-        }
-
         let feedPostsQuery = `
          WITH PostLikers AS (
          SELECT
@@ -87,8 +77,8 @@ export class ContentMediaService {
          u."lastName",
          pl."likeId"
      ORDER BY po."createdAt" DESC
-        ${limit}
-        ${offsetCond};`
+        LIMIT ${postsByPage}
+        OFFSET ${offset};`
 
         let posts = await this.entityManager.query(feedPostsQuery)
 

@@ -11,6 +11,7 @@ import { Network } from 'src/network/entities/network.entity';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 import { CommentDto } from 'src/post/dtos/getFeed.dto';
 import { GetCommentRes } from './dtos/getComments.dto';
+import { GetCommentRepliesRes } from './dtos/getCommentReplies.dto';
 
 @Injectable()
 export class CommentService {
@@ -277,8 +278,130 @@ export class CommentService {
 
     }
 
-    // get Replies of comments
+    async getCommentReplies(commentId: number, postsByPage: number = 10, page: number = 1) {
 
+        let resp = new GetCommentRepliesRes();
 
+        // check if comment exist
+        let parentsCounter = await this.entityManager.query(`
+            WITH RECURSIVE CommentHierarchy AS (
+            -- Anchor member: start with the given comment
+            SELECT 
+                "commentId", 
+                "parentCommentId", 
+                0 AS depth
+            FROM "comment"
+            WHERE "commentId" = ${commentId}
+
+            UNION ALL
+
+            -- Recursive member: select the parent comment of the current comment
+            SELECT 
+                co."commentId", 
+                co."parentCommentId", 
+                t.depth + 1
+            FROM "comment" co
+            JOIN CommentHierarchy t ON co."commentId" = t."parentCommentId"
+            ),
+            CommentExistenceCheck AS (
+            SELECT COUNT(*) > 0 AS exists
+            FROM "comment"
+            WHERE "commentId" = ${commentId}
+            )
+            SELECT 
+            CASE 
+                WHEN (SELECT exists FROM CommentExistenceCheck) THEN (SELECT MAX(depth) FROM CommentHierarchy)
+                ELSE -1
+            END AS parentCount;`)
+
+        if (parentsCounter?.length > 0) {
+
+            if (parentsCounter[0]?.parentcount === -1)
+                throw new NotFoundException('commentIdNotFound');
+            else
+                parentsCounter = parentsCounter[0]?.parentcount;
+        }
+
+        let offset = (page - 1) * postsByPage;
+
+        let commentReplies = await this.entityManager.query(`
+            WITH RECURSIVE CommentCTE AS(
+            -- Base case: Select base comment
+            SELECT 
+                ${parentsCounter} AS depth,
+                co."commentId"::INTEGER,
+                co."likeNr"::INTEGER AS "commentLikeNr",
+                co."commentId"::INTEGER AS "parentCommentId",
+                u."profileImg":: VARCHAR,
+                co."createdAt":: TIMESTAMP,
+                co."postId"::INTEGER,
+                co."userId"::INTEGER,
+                CONCAT(u."firstName", ' ', u."lastName") AS "commentUserFullName",
+                co."commentDescription",
+                u.username AS "commentUserName",
+                CASE 
+                    WHEN cl."likeId" IS NOT NULL THEN 'true'
+                    ELSE 'false'
+                END AS "LikedByUser",
+                CONCAT(co."commentId", '-', co."parentCommentId") AS unique_comment_id,
+                CASE
+                    WHEN co."userId" = ${this.currUserId} THEN 1
+                    WHEN cl."userId" = ${this.currUserId} THEN 3
+                    WHEN n."followerId" = ${this.currUserId} THEN 5
+                    ELSE 7
+                END AS priority
+            FROM "comment" co
+            INNER JOIN "user" u ON u."userId" = co."userId" AND u.archive = FALSE
+            LEFT JOIN "commentLike" cl ON cl."userId" = ${this.currUserId} AND cl."commentId" = co."commentId"
+            LEFT JOIN "network" n ON n."followeeId" = co."userId" AND n.pending = FALSE AND n.deleted = FALSE AND n."followerId" = ${this.currUserId}
+            WHERE co."commentId"= ${commentId}
+        
+            UNION ALL
+        
+            -- Recursive case: Select replies to comments
+            SELECT 
+                t.depth + 1 AS depth,
+                co."commentId"::INTEGER,
+                co."likeNr"::INTEGER AS "commentLikeNr",
+                co."parentCommentId"::INTEGER,
+                u."profileImg":: VARCHAR,
+                co."createdAt":: TIMESTAMP,
+                co."postId"::INTEGER,
+                co."userId"::INTEGER,
+                CONCAT(u."firstName", ' ', u."lastName") AS "commentUserFullName",
+                co."commentDescription",
+                u.username AS "commentUserName",
+                CASE 
+                    WHEN cl."likeId" IS NOT NULL THEN 'true'
+                    ELSE 'false'
+                END AS "LikedByUser",
+                CONCAT(co."commentId", '-', co."parentCommentId") AS unique_comment_id,
+                CASE
+                    WHEN co."userId" = ${this.currUserId} THEN 2
+                    WHEN cl."userId" = ${this.currUserId} THEN 4
+                    WHEN n_reply."followerId" = ${this.currUserId} THEN 6
+                    ELSE 8
+                END AS priority
+            FROM CommentCTE t
+            INNER JOIN "comment" co ON co."parentCommentId" = t."commentId"
+            INNER JOIN "user" u ON u."userId" = co."userId" AND u.archive = FALSE
+            LEFT JOIN "commentLike" cl ON cl."userId" = ${this.currUserId} AND cl."commentId" = co."commentId"
+            LEFT JOIN "network" n_reply ON n_reply."followeeId" = co."userId" AND n_reply.pending = FALSE AND n_reply.deleted = FALSE AND n_reply."followerId" = ${this.currUserId}
+        )
+        SELECT *
+        FROM CommentCTE
+        Where depth < ${parentsCounter + 2}
+        ORDER BY 
+        "parentCommentId" ASC,
+        depth asc,
+        priority ASC,            
+        "createdAt" DESC
+         LIMIT ${postsByPage}
+        OFFSET ${offset};`)
+
+        resp = commentReplies;
+
+        return resp;
+    }
 }
 

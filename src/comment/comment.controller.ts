@@ -8,6 +8,7 @@ import { CommentEditDto } from './dtos/commentEdit.dto';
 import { PaginationDto } from 'src/user/dtos/GetUserPosts.dto';
 import { GetCommentRes } from './dtos/getComments.dto';
 import { CommentDto } from 'src/post/dtos/getFeed.dto';
+import { GetCommentRepliesRes } from './dtos/getCommentReplies.dto';
 
 
 
@@ -64,15 +65,23 @@ export class CommentController {
     @Get('getComments')
     @ApiOperation({ summary: 'Retrieve the comments of a post' })
     @ApiResponse({ status: HttpStatus.OK, description: " Post comments got recieved successfully", type: [CommentDto] })
-    @ApiQuery({ name: 'postId', required: true, description: 'Post Id that you want torecieve comments off.', type: Number })
+    @ApiQuery({ name: 'postId', required: true, description: 'Post Id that you want to recieve comments off.', type: Number })
     getComments(@Query('postId') postId: number, @Query() query: PaginationDto) {
         const { postsByPage, page } = query;
         return this.commentService.getComments(postId, postsByPage, page);
     }
 
 
-    // get children comments
-
-
-
+    @Get('getCommentReplies')
+    @ApiOperation({ summary: 'Retrieve the replies of a comment' })
+    @ApiResponse({
+        status: HttpStatus.OK, description: "Replies of a comment got successfully retrived",
+        type: [GetCommentRepliesRes]
+    })
+    @ApiQuery({ name: 'commentId', required: true, description: 'Comment Id that you want to recieve other reply comments off.', type: Number })
+    @ApiException(() => ForbiddenException, { description: 'Parent comment Id was not found . [key: "commentIdNotFound" ]' })
+    getCommentReplies(@Query('commentId') comentId: number, @Query() query: PaginationDto) {
+        const { postsByPage, page } = query;
+        return this.commentService.getCommentReplies(comentId, postsByPage, page);
+    }
 }
