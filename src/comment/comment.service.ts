@@ -214,7 +214,7 @@ export class CommentService {
                     ELSE 7
                 END AS priority
             FROM "comment" co
-            INNER JOIN "post" po ON po."postId" = co."postId" AND po.archive = FALSE
+            INNER JOIN "post" po ON po."postId" = co."postId" 
             INNER JOIN "user" u ON u."userId" = co."userId" AND u.archive = FALSE
             LEFT JOIN "commentLike" cl ON cl."userId" = ${this.currUserId} AND cl."commentId" = co."commentId"
             LEFT JOIN "network" n ON n."followeeId" = co."userId" AND n.pending = FALSE AND n.deleted = FALSE AND n."followerId" = ${this.currUserId}
@@ -249,7 +249,7 @@ export class CommentService {
                 END AS priority
             FROM CommentCTE t
             INNER JOIN "comment" co ON co."parentCommentId" = t."commentId"
-            INNER JOIN "post" po ON po."postId" = co."postId" AND po.archive = FALSE
+            INNER JOIN "post" po ON po."postId" = co."postId" 
             INNER JOIN "user" u ON u."userId" = co."userId" AND u.archive = FALSE
             LEFT JOIN "commentLike" cl ON cl."userId" = ${this.currUserId} AND cl."commentId" = co."commentId"
             LEFT JOIN "network" n_reply ON n_reply."followeeId" = co."userId" AND n_reply.pending = FALSE AND n_reply.deleted = FALSE AND n_reply."followerId" = ${this.currUserId}

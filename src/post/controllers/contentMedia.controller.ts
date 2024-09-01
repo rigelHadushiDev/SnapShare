@@ -18,9 +18,6 @@ export class ContentMediaController {
 
     constructor(private readonly ContentMediaService: ContentMediaService) { }
 
-
-
-
     @Get('display/:type/:userName/:filename/:mediaId?')
     @ApiOperation({ summary: 'Retrieve a media file by type, username, and filename' })
     @ApiParam({ name: 'type', description: 'The type of media (e.g., image, video)' })
