@@ -56,7 +56,8 @@ export class UserMediaController {
         //type: 
     })
     async getArchivedPosts(@Query() query: PaginationDto) {
-        return this.userMediaService.getArchivedPosts();
+        const { postsByPage, page } = query;
+        return this.userMediaService.getArchivedPosts(postsByPage, page);
     }
 
 

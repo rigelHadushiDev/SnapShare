@@ -19,7 +19,7 @@ import { PostLike } from './like/entities/PostLike.entity';
 import * as dotenv from 'dotenv';
 import { Network } from './network/entities/network.entity';
 import { FetchUserMiddleware } from './auth/fetchUser.middleware';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { HttpExceptionFilter } from './common/filters/httpException.filter';
 import { SSEModule } from './sse/sse.module';
 import { Notification } from './network/entities/notification.entity';
 import { NotificationType } from './network/entities/notificationType.entity';
@@ -27,7 +27,7 @@ import { StoryModule } from './story/story.module';
 import { Story } from './story/story.entity';
 import { StoryLike } from './like/entities/StoryLike.entity';
 import { CommentLike } from './like/entities/CommentLike.entity';
-
+import { JwtExpiredExceptionFilter } from './common/filters/JweExpiredException.filter';
 dotenv.config();
 
 @Module({
@@ -66,6 +66,10 @@ dotenv.config();
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: JwtExpiredExceptionFilter,
     },
   ],
 })

@@ -6,7 +6,7 @@ const fs = require('fs');
 import { configureStorageOptions, fileStorage, imgVideoFilters } from 'src/user/fileStorage.config';
 import { Response } from 'express';
 import { EditPostDto } from '../dtos/EditPost.dto';
-import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
+import { HttpExceptionFilter } from 'src/common/filters/httpException.filter';
 import { Observable } from 'rxjs';
 import { Post as PostEntity } from '../post.entity';
 import { IsCreatorGuard } from '../guards/IsCreator.guard';

@@ -276,7 +276,11 @@ export class NetworkService {
                       AND n2."deleted" = false
                 ) THEN true 
                 ELSE false 
-            END AS "isFollowedbyCurrUser"
+            END AS "isFollowedbyCurrUser",
+            CASE 
+                WHEN u."userId" = $1 THEN true 
+                ELSE false 
+            END AS "isCurrentUser"
         FROM 
             network n
         JOIN
@@ -296,7 +300,7 @@ export class NetworkService {
         }
 
 
-        resp = { userId: userId, username: followersList.username, profileImg: followersList.profileImg, isFollowedbyCurrUser: followersList.isFollowedbyCurrUser }
+        resp = followersList
         return resp;
     };
 
@@ -344,7 +348,11 @@ export class NetworkService {
                       AND n2."deleted" = false
                 ) THEN true 
                 ELSE false 
-            END AS "isFollowedbyCurrUser"
+            END AS "isFollowedbyCurrUser",
+            CASE 
+                WHEN u."userId" = $1 THEN true 
+                ELSE false 
+            END AS "isCurrentUser"
         FROM 
             network n
         JOIN
@@ -363,8 +371,8 @@ export class NetworkService {
                 followee.profileImg = SnapShareUtility.urlConverter(followeeList.profileImg);
         }
 
+        resp = followeeList
 
-        resp = { userId: userId, username: followeeList.username, profileImg: followeeList.profileImg, isFollowedbyCurrUser: followeeList.isFollowedbyCurrUser }
         return resp;
     };
 
