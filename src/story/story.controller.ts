@@ -18,9 +18,8 @@ export class StoryController {
         configureStorageOptions('story', imgVideoFilters);
     }
 
-
     @Post('upload')
-    @ApiOperation({ summary: "Upload a story.", description: "Upload a story for the current logged-in user. \n The porperty media is formdata type'multipart/ form - data'  " })
+    @ApiOperation({ summary: "Upload a story.", description: "Upload a story for the current logged-in user. \n The property media is formdata type'multipart/ form - data'  " })
     @HttpCode(HttpStatus.OK)
     @UseInterceptors(FileInterceptor('media', fileStorage))
     @ApiResponse({

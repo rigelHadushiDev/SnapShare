@@ -9,6 +9,7 @@ import { UserProvider } from './user.provider';
 import { CreateUserReq, UserInfoDto } from '../dtos/CreateUser.dto';
 import { Network } from 'src/network/entities/network.entity';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
+import { GetUserDataRes } from '../dtos/GetUserData.dto';
 const fs = require('fs');
 
 @Injectable()
@@ -86,9 +87,8 @@ export class UsersService {
 
         return user;
     }
-    // edhe kete beje me if(currUserId === userId) nqs eshte useri i loguar jepi me shum te dhena nese eshte other user jepi aq data sa duhet
 
-    async getCurrUserData(userId: number) {
+    async getCurrUserData(userId: number): Promise<GetUserDataRes> {
 
         let resp;
 

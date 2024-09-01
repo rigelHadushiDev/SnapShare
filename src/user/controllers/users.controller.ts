@@ -18,6 +18,7 @@ import { UsersService } from '../services/users.service';
 import { Public } from 'src/common/decorators/public.decorator';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
+import { GetUserDataRes } from '../dtos/GetUserData.dto';
 
 
 @ApiBearerAuth()
@@ -40,7 +41,7 @@ export class UsersController {
 
     @Get('userData/:userId')
     @ApiOperation({ summary: 'Retrieve user data.', description: 'Retrieve user data based on the id.' })
-    @ApiResponse({ status: HttpStatus.OK, description: 'The user data has been found successfully.', type: UserResDto })
+    @ApiResponse({ status: HttpStatus.OK, description: 'The user data has been found successfully.', type: GetUserDataRes })
     @ApiParam({ name: 'userId', type: 'number', description: 'ID of the user' })
     @ApiException(() => NotFoundException, { description: 'User has not been found. [key: "userNotFound"]' })
     async getUserData(@Param('userId') userId: number) {
