@@ -6,6 +6,7 @@ import { StoryAcessGuard } from './guards/StoryAcess.guard';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
 import { GeneralResponse } from 'src/post/dtos/GeneralResponse';
 import { PaginationDto } from 'src/user/dtos/GetUserPosts.dto';
+import { UserListRes } from 'src/network/responses/UserListRes';
 
 
 @ApiTags('Like APIs')
@@ -60,10 +61,7 @@ export class LikeController {
     @ApiException(() => ForbiddenException, { description: 'Forbidden. You cant see private users posts that are not your friend . [key: "nonFriendPrivateAccList" ]' })
     @ApiException(() => NotFoundException, { description: 'User is not found . [key: "userNotFound" ]' })
     @ApiParam({ name: 'postId', description: 'ID of the post that you want to see the account that have liked your post.' })
-    @ApiResponse({
-        status: HttpStatus.OK, description: 'Successfully toggled comment like status. [key: "commentLikeAdded or commentLikeRemoved"]', // type: GeneralResponse
-    })
-    @ApiParam({ name: 'postId', required: true, description: 'Post Id that you want to recieve comments off.', type: Number })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Successfully viewed the users accounts which liked the post.', type: UserListRes })
     @Get(':postId/getPostLikers')
     getPostLikers(@Param('postId') postId: number, @Query() query: PaginationDto) {
         const { postsByPage, page } = query;

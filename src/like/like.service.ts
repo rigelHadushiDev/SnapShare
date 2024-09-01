@@ -207,18 +207,6 @@ export class LikeService {
 
         let skip: number = (page - 1) * postsByPage;
 
-        // limit => postsByPage,  offset => skip
-
-        let postOwnerUser = await this.entityManager
-            .createQueryBuilder()
-            .from(Post, 'p')
-            .select('p.userId')
-            .where('p.postId = :postId', { postId })
-            .getRawOne();
-
-        // if post exist gets checked by the guard
-        let userId = postOwnerUser?.userId;
-
         const query = `SELECT
             u."userId",
             u."username",
@@ -259,4 +247,51 @@ export class LikeService {
 
         return resp;
     }
+
+    // async getStoryLikers(postId: number, postsByPage: number = 10, page: number = 1) {
+
+    //     let resp = new UserListRes;
+
+    //     let skip: number = (page - 1) * postsByPage;
+
+    //     const query = `SELECT
+    //         u."userId",
+    //         u."username",
+    //         u."profileImg",
+    //         CASE 
+    //             WHEN EXISTS(
+    //                 SELECT 1 
+    //                 FROM network n 
+    //                 WHERE n."followerId" = $1 -- The current user's ID
+    //                 AND n."followeeId" = u."userId" -- The user who liked the post
+    //                 AND n."pending" = false 
+    //                 AND n."deleted" = false
+    //             ) THEN true 
+    //             ELSE false 
+    //         END AS "isFollowedByCurrUser",
+    //         CASE 
+    //             WHEN u."userId" = $1 THEN true 
+    //             ELSE false 
+    //         END AS "isCurrentUser"
+    //     FROM 
+    //         "postLike" pl
+    //     JOIN 
+    //         "user" u ON pl."userId" = u."userId"
+    //     WHERE 
+    //         pl."postId" = $2
+    //     LIMIT $3 OFFSET $4;`;
+
+
+    //     const postLikersList = await this.entityManager.query(query, [this.currUserId, postId, postsByPage, skip]);
+
+
+    //     for (const likers of postLikersList) {
+    //         if (likers?.profileImg)
+    //             likers.profileImg = SnapShareUtility.urlConverter(likers.profileImg);
+    //     }
+
+    //     resp = postLikersList
+
+    //     return resp;
+    // }
 }
