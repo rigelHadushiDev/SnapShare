@@ -7,6 +7,8 @@ import * as path from 'path';
 import { UpdateUserDto } from '../dtos/UpdateUserDto';
 import { UserProvider } from './user.provider';
 import { CreateUserReq, UserInfoDto } from '../dtos/CreateUser.dto';
+import { Network } from 'src/network/entities/network.entity';
+import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 const fs = require('fs');
 
 @Injectable()
@@ -86,15 +88,50 @@ export class UsersService {
     }
     // edhe kete beje me if(currUserId === userId) nqs eshte useri i loguar jepi me shum te dhena nese eshte other user jepi aq data sa duhet
 
-    async getCurrUserData(): Promise<{ user: UserInfoDto, message: string }> {
+    async getCurrUserData(userId: number) {
 
-        const userId: number = this.currUserID;
+        let resp;
 
         let user = await this.getUserById(userId);
 
-        const { password: excludedPassword, ...userInfo } = user;
+        let { password: excludedPassword, ...userInfo } = user;
 
-        return { message: 'UserArchivedSuccessfully', user: userInfo };
+        let followStatus = '';
+
+        if (userId === this.currUserID) {
+            followStatus = 'isCurrentUser';
+
+        } else {
+
+            const networkRecord = await this.entityManager
+                .createQueryBuilder(Network, 'n')
+                .where('n.followerId = :currUserID', { currUserID: this.currUserID })
+                .andWhere('n.followeeId = :userId', { userId })
+                .andWhere('n.deleted = :deleted', { deleted: 0 })
+                .getOne();
+
+            if (!networkRecord) {
+                if (!userInfo.isPrivate) {
+                    followStatus = 'notFollowingPublicUser';
+                } else {
+                    followStatus = 'notFollowingPrivateUser';
+                }
+            }
+            else if (networkRecord && networkRecord.pending && userInfo.isPrivate) {
+                followStatus = 'requested';
+            } else if (networkRecord && !networkRecord.pending) {
+                followStatus = 'connected';
+            }
+        }
+
+
+        if (userInfo?.profileImg)
+            userInfo.profileImg = SnapShareUtility.urlConverter(userInfo.profileImg);
+
+
+        resp = { userInfo, followStatus };
+
+        return resp;
     }
 
 

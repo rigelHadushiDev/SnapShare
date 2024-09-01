@@ -61,4 +61,6 @@ export class UserMediaController {
         const { postsByPage, page } = query;
         return this.userMediaService.getArchivedPosts(postsByPage, page, postCommentsLimit);
     }
+
+
 }
