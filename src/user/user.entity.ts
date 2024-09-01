@@ -6,6 +6,7 @@ import { Comment } from "src/comment/comment.entity";
 import { ApiProperty } from "@nestjs/swagger";
 import { Notification } from "src/network/entities/notification.entity";
 import { Story } from "src/story/story.entity";
+import { StoryViews } from "src/story/StoryViews.entity";
 
 @Entity('user')
 export class User {
@@ -79,5 +80,8 @@ export class User {
 
     @OneToMany(() => Story, story => story.user)
     stories: Story[];
+
+    @OneToMany(() => User, StoryViews => StoryViews.user)
+    user: User[];
 
 }

@@ -21,26 +21,27 @@ export class ContentMediaController {
 
 
 
-    @Get('display/:type/:userName/:filename')
+    @Get('display/:type/:userName/:filename/:mediaId?')
     @ApiOperation({ summary: 'Retrieve a media file by type, username, and filename' })
     @ApiParam({ name: 'type', description: 'The type of media (e.g., image, video)' })
     @ApiParam({ name: 'userName', description: 'The hashed username of the media owner' })
     @ApiParam({ name: 'filename', description: 'The filename of the media' })
+    @ApiParam({ name: 'mediaId', description: 'The Id of the media', required: false, type: Number })
     @ApiResponse({
         status: HttpStatus.OK, description: 'The media file has been successfully retrieved.', content: { 'application/octet-stream': {} }
     })
-    getMedia(@Param('userName') userName: string, @Param('type') type: string, @Param('filename') filename: string, @Res() res: Response) {
-        return this.ContentMediaService.getMedia(userName, type, filename, res);
+    getMedia(@Param('userName') userName: string, @Param('type') type: string, @Param('filename') filename: string, @Param('mediaId') mediaId: number, @Res() res: Response,) {
+        return this.ContentMediaService.getMedia(userName, type, filename, mediaId, res);
     }
 
-    @Get('getFeed')
+    @Get('getPostsFeed')
     @ApiOperation({ summary: 'Retrieve the feed posts and its comments properties' })
     @ApiQuery({ name: 'postCommentsLimit', required: false, description: 'Number of the comments that you want to recieve together with the the posts.', type: Number })
     @ApiResponse({ status: HttpStatus.OK, description: " Feed posts got recieved successfully", type: GetFeedResp })
     @ApiException(() => NotFoundException, { description: 'No Post on Feed was found. [key: "noPostOnFeed" ]' })
-    getFeed(@Query() query: PaginationDto, @Query('postCommentsLimit') postCommentsLimit?: number) {
+    getPostsFeed(@Query() query: PaginationDto, @Query('postCommentsLimit') postCommentsLimit?: number) {
         const { postsByPage, page } = query;
-        return this.ContentMediaService.getFeed(postsByPage, page, postCommentsLimit);
+        return this.ContentMediaService.getPostsFeed(postsByPage, page, postCommentsLimit);
     }
 
 }

@@ -28,6 +28,7 @@ import { Story } from './story/story.entity';
 import { StoryLike } from './like/entities/StoryLike.entity';
 import { CommentLike } from './like/entities/CommentLike.entity';
 import { JwtExpiredExceptionFilter } from './common/filters/JweExpiredException.filter';
+import { StoryViews } from './story/StoryViews.entity';
 dotenv.config();
 
 @Module({
@@ -42,7 +43,7 @@ dotenv.config();
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSW,
       database: process.env.DB_NAME,
-      entities: [User, Post, Comment, PostLike, Network, Notification, NotificationType, Story, StoryLike, CommentLike],
+      entities: [User, Post, Comment, PostLike, Network, Notification, NotificationType, Story, StoryLike, CommentLike, StoryViews],
       synchronize: true,
       autoLoadEntities: true
     }),

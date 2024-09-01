@@ -2,33 +2,34 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 import { User } from 'src/user/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { StoryLike } from 'src/like/entities/StoryLike.entity';
+import { StoryViews } from './StoryViews.entity';
 
 
 @Entity('story')
 export class Story {
 
     @PrimaryGeneratedColumn({ type: 'integer', name: 'storyId' })
-    @ApiProperty({ description: 'The unique ID of the post.' })
+    @ApiProperty({ description: 'The unique ID of the story.' })
     storyId: number;
 
     @Column({ name: 'userId' })
-    @ApiProperty({ description: 'The ID of the user who created the post.' })
+    @ApiProperty({ description: 'The ID of the user who created the story.' })
     userId: number;
 
     @Column({ name: 'likesNr', type: 'integer', nullable: true, default: 0 })
-    @ApiProperty({ description: 'The number of likes the post has.', nullable: true })
+    @ApiProperty({ description: 'The number of likes the story has.', nullable: true })
     likesNr: number;
 
     @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
-    @ApiProperty({ description: 'The date and time when the post was created.' })
+    @ApiProperty({ description: 'The date and time when the story was created.' })
     createdAt: Date;
 
     @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp' })
-    @ApiProperty({ description: 'The date and time when the post was last updated.' })
+    @ApiProperty({ description: 'The date and time when the story was last updated.' })
     updatedAt: Date;
 
     @Column({ name: 'archive', type: 'boolean', default: false })
-    @ApiProperty({ description: 'The archieve which is set after 24h the post is created' })
+    @ApiProperty({ description: 'The archieve which is set after 24h the story is created' })
     archive: boolean;
 
     @Column({ name: 'media', nullable: true })
@@ -41,4 +42,7 @@ export class Story {
     @ManyToOne(() => User, user => user.stories, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
     user: User;
+
+    @OneToMany(() => StoryViews, storyViews => storyViews.story)
+    storyViews: StoryViews[];
 }

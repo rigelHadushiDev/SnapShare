@@ -34,11 +34,11 @@ export class StoryService {
             story.userId = userId;
             story.media = filePath;
 
-            await transactionalEntityManager.save(Story, story);
+            story = await transactionalEntityManager.save(Story, story);
         });
 
         if (story && story?.media) {
-            story.media = SnapShareUtility.urlConverter(story.media);
+            story.media = SnapShareUtility.urlConverter(story.media, story.storyId);
         }
 
         resp = story;
@@ -99,5 +99,9 @@ export class StoryService {
 
         return story;
     }
+
+
+
+
 
 }
