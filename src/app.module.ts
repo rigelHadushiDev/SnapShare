@@ -29,6 +29,8 @@ import { StoryLike } from './like/entities/StoryLike.entity';
 import { CommentLike } from './like/entities/CommentLike.entity';
 import { JwtExpiredExceptionFilter } from './common/filters/JweExpiredException.filter';
 import { StoryViews } from './story/StoryViews.entity';
+import { FeedModule } from './feed/feed.module';
+import { ExploreModule } from './explore/explore.module';
 dotenv.config();
 
 @Module({
@@ -54,7 +56,9 @@ dotenv.config();
     CommentModule,
     LikeModule,
     SSEModule,
-    StoryModule
+    StoryModule,
+    FeedModule,
+    ExploreModule
   ],
   controllers: [AppController],
   providers: [

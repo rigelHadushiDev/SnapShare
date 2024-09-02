@@ -80,13 +80,4 @@ export class PostController {
     }
 
 
-
-    @Get(':postId')
-    @ApiOperation({ summary: 'Retrieve a post by ID' })
-    @ApiParam({ name: 'postId', description: 'ID of the post that want to be retrieved' })
-    @ApiException(() => ForbiddenException, { description: 'Post is not found. [ key: "postNotFound" ]' })
-    @ApiResponse({ status: HttpStatus.OK, description: 'Successfully found a post', type: PostEntity })
-    getPostById(@Param('postId') postId: number) {
-        return this.PostService.findPostById(postId);
-    }
 }

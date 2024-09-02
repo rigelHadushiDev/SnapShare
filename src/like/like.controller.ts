@@ -72,5 +72,13 @@ export class LikeController {
         return this.likeService.getPostLikers(postId, postsByPage, page);
     }
 
-
+    @ApiException(() => NotFoundException, { description: 'Story is not found . [key: "storyNotFound" ]' })
+    @ApiParam({ name: 'storyId', description: 'ID of the story that you want to see the accounts that have liked your post.' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Successfully viewed the users accounts which liked the post.', type: UserListRes })
+    @Get(':storyId/getStoryLikers')
+    @ApiOperation({ summary: 'API for getting the accounts which liked the story, in which only the story owner has access.', description: 'API for getting the accounts which liked the story, and also if they are in the current user network , their profile Img and their username.' })
+    getStoryLikers(@Param('storyId') storyId: number, @Query() query: PaginationDto) {
+        const { postsByPage, page } = query;
+        return this.likeService.getStoryLikers(storyId, postsByPage, page);
+    }
 }

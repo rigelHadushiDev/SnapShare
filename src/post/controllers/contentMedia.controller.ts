@@ -1,15 +1,10 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, NotFoundException, Param, Put, Query, Res, UploadedFile, UseFilters, Post, UseInterceptors, UseGuards, Delete, BadRequestException, ForbiddenException, InternalServerErrorException } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Body, Controller, Get, HttpStatus, Param, Res } from '@nestjs/common';
 const path = require('path');
-import { PostService } from '../services/post.service';
 const fs = require('fs');
-import { configureStorageOptions, fileStorage, imgVideoFilters } from 'src/user/fileStorage.config';
 import { Response } from 'express';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ContentMediaService } from '../services/contentMedia.service';
-import { PaginationDto } from 'src/user/dtos/GetUserPosts.dto';
-import { GetFeedResp } from '../dtos/getFeed.dto';
+
 
 @ApiBearerAuth()
 @ApiTags("Content Media APIs")
@@ -30,15 +25,4 @@ export class ContentMediaController {
     getMedia(@Param('userName') userName: string, @Param('type') type: string, @Param('filename') filename: string, @Param('mediaId') mediaId: number, @Res() res: Response,) {
         return this.ContentMediaService.getMedia(userName, type, filename, mediaId, res);
     }
-
-    @Get('getPostsFeed')
-    @ApiOperation({ summary: 'Retrieve the feed posts and its comments properties' })
-    @ApiQuery({ name: 'postCommentsLimit', required: false, description: 'Number of the comments that you want to recieve together with the the posts.', type: Number })
-    @ApiResponse({ status: HttpStatus.OK, description: " Feed posts got recieved successfully", type: GetFeedResp })
-    @ApiException(() => NotFoundException, { description: 'No Post on Feed was found. [key: "noPostOnFeed" ]' })
-    getPostsFeed(@Query() query: PaginationDto, @Query('postCommentsLimit') postCommentsLimit?: number) {
-        const { postsByPage, page } = query;
-        return this.ContentMediaService.getPostsFeed(postsByPage, page, postCommentsLimit);
-    }
-
 }
