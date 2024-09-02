@@ -1,4 +1,4 @@
-import { Controller, ForbiddenException, Get, HttpCode, HttpStatus, NotFoundException, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Controller, ForbiddenException, Get, HttpCode, HttpStatus, NotFoundException, Param, Post, Put, Query, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LikeService } from './like.service';
 import { PostAccessGuard } from './guards/PostAccess.guard';
@@ -73,6 +73,7 @@ export class LikeController {
     }
 
     @ApiException(() => NotFoundException, { description: 'Story is not found . [key: "storyNotFound" ]' })
+    @ApiException(() => UnauthorizedException, { description: 'only owner of th story can see the accounts which liked its story . [key: "onlyStoryOwnerHasAccess" ]' })
     @ApiParam({ name: 'storyId', description: 'ID of the story that you want to see the accounts that have liked your post.' })
     @ApiResponse({ status: HttpStatus.OK, description: 'Successfully viewed the users accounts which liked the post.', type: UserListRes })
     @Get(':storyId/getStoryLikers')
