@@ -51,17 +51,6 @@ export class ExploreService {
             OFFSET ${directOffset};`);
 
 
-        if (directNetworkList.length < directLimit) {
-            let unusedDirectSlots = directLimit - directNetworkList.length;
-            let unusedDirectOffset = directOffset - directNetworkList.length;
-
-            friendLimit += Math.floor(unusedDirectSlots / 2);
-            othersLimit += unusedDirectSlots - Math.floor(unusedDirectSlots / 2);
-
-            // Adjust offsets proportionally
-            friendOffset += Math.floor(unusedDirectOffset / 2);
-            othersOffset += unusedDirectOffset - Math.floor(unusedDirectOffset / 2);
-        }
         let friendsNetworkList = await this.entityManager.query(`WITH YourFriends AS (
             SELECT DISTINCT
                 COALESCE(n."followerId", n."followeeId") AS friendId
@@ -105,20 +94,6 @@ export class ExploreService {
             u.username
         LIMIT ${friendLimit}
         OFFSET ${friendOffset};`);
-
-
-        if (directNetworkList.length < directLimit) {
-            let unusedDirectSlots = directLimit - directNetworkList.length;
-            let unusedDirectOffset = directOffset - directNetworkList.length;
-
-            friendLimit += Math.floor(unusedDirectSlots / 2);
-            othersLimit += unusedDirectSlots - Math.floor(unusedDirectSlots / 2);
-
-            // Adjust offsets proportionally
-            friendOffset += Math.floor(unusedDirectOffset / 2);
-            othersOffset += unusedDirectOffset - Math.floor(unusedDirectOffset / 2);
-        }
-
 
         let popularityList = await this.entityManager.query(` SELECT
     u."userId",
