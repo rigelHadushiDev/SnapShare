@@ -268,7 +268,7 @@ export class CommentService {
 
         if (comments.length > 0) {
             for (let comment of comments) {
-                if (comment?.length && comment?.profileImg)
+                if (comment?.profileImg)
                     comment.profileImg = SnapShareUtility.urlConverter(comment.profileImg);
             }
         }

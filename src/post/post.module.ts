@@ -12,9 +12,10 @@ import { ContentMediaService } from './services/contentMedia.service';
 import { CommentModule } from 'src/comment/comment.module';
 import { CommentService } from 'src/comment/comment.service';
 import { StoryViews } from 'src/story/StoryViews.entity';
+import { NetworkModule } from 'src/network/network.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Post, StoryViews]), UsersModule, CommentModule],
+  imports: [TypeOrmModule.forFeature([Post, StoryViews]), UsersModule, CommentModule, NetworkModule],
   providers: [PostService, UserProvider, UsersService, IsCreatorGuard, ContentMediaService, CommentService],
   controllers: [PostController, ContentMediaController],
   exports: [PostService]

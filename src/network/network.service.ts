@@ -443,9 +443,9 @@ export class NetworkService {
             .select('*')
             .where('network.followerId = :followerId', { followerId: this.UserID })
             .andWhere('network.followeeId = :followeeId', { followeeId: followeeId })
-            .andWhere('network.deleted = :deleted', { deleted: 0 })
+            .andWhere('network.deleted = :deleted', { deleted: false })
             .andWhere('network.pending = :pending', { pending: false })
-            .getOne();
+            .getRawOne();
 
         if (story)
             resp.message = 'isConnectedTo';

@@ -47,7 +47,7 @@ export class CommentDto {
     priority: number;
 }
 
-class PostDto {
+export class PostDto {
     @ApiPropertyOptional()
     postId: number;
 
@@ -85,7 +85,7 @@ class PostDto {
     postLikersUsernames: string | null;
 }
 
-class PostWithCommentsDto {
+export class PostWithCommentsDto {
     @ApiPropertyOptional({ type: PostDto })
     post: PostDto;
 

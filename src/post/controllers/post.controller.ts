@@ -10,12 +10,14 @@ import { HttpExceptionFilter } from 'src/common/filters/httpException.filter';
 import { Observable } from 'rxjs';
 import { Post as PostEntity } from '../post.entity';
 import { IsCreatorGuard } from '../guards/IsCreator.guard';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreatePostRes, DescriptionDto } from '../dtos/CreatePost.dto';
 import { ApiImplicitFormData } from 'src/common/decorators/api-implicit-form-data.decorator';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
 import { GeneralResponse } from '../dtos/GeneralResponse';
-
+import { PostAccessGuard } from 'src/like/guards/PostAccess.guard';
+import { PaginationDto } from 'src/user/dtos/GetUserPosts.dto';
+import { GetUserPostsRes } from '../dtos/getUsersPosts.dto';
 
 @ApiBearerAuth()
 @ApiTags("Post APIs")
@@ -77,6 +79,21 @@ export class PostController {
     @ApiResponse({ status: HttpStatus.OK, description: 'Successfully edited the post.', type: GeneralResponse })
     editPost(@Param('postId') postId: number, @Body() postData: EditPostDto) {
         return this.PostService.editPost(postId, postData);
+    }
+
+
+    @UseGuards(PostAccessGuard)
+    @Get('getUserPosts/:userId')
+    @ApiOperation({ summary: 'Get all posts of an user account.' })
+    @ApiParam({ name: 'userId', description: 'ID of the user that owns these posts.' })
+    @ApiQuery({ name: 'postCommentsLimit', required: false, description: 'Number of the comments that you want to recieve together with the the posts.', type: Number })
+    @ApiException(() => ForbiddenException, { description: 'Forbidden. You cant see private users stories that are not your friend . [key: "nonFriendPrivateAccList" ]' })
+    @ApiException(() => NotFoundException, { description: 'Post is not found . [key: "userNotFound" ]' })
+    @ApiException(() => NotFoundException, { description: 'No Post  published by the user was found. [key: "noPostOnUserAcc" ]' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Successfully retrived user account posts.', type: GetUserPostsRes })
+    getUserPosts(@Query() query: PaginationDto, @Param('userId') userId: number, @Query('postCommentsLimit') postCommentsLimit?: number) {
+        const { postsByPage, page } = query;
+        return this.PostService.getUserPosts(postsByPage, page, userId, postCommentsLimit);
     }
 
 

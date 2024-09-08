@@ -8,13 +8,16 @@ import { EditPostDto } from '../dtos/EditPost.dto';
 import { Observable } from 'rxjs';
 import { DescriptionDto } from '../dtos/CreatePost.dto';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
+import { GetFeedResp } from '../dtos/getFeed.dto';
+import { CommentService } from 'src/comment/comment.service';
+import { GetUserPostsRes } from '../dtos/getUsersPosts.dto';
 const fs = require('fs');
 
 @Injectable()
 export class PostService {
 
     public UserID: number;
-    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) {
+    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider, private readonly commentService: CommentService) {
         this.UserID = this.userProvider.getCurrentUser()?.userId;
     }
 
@@ -163,6 +166,85 @@ export class PostService {
 
         return post;
     }
+
+
+
+    async getUserPosts(postsByPage: number = 10, page: number = 1, userId: number, postCommentsLimit: number = 3) {
+
+
+        let resp = new GetUserPostsRes();
+
+        let offset = (page - 1) * postsByPage;
+
+        let userPostsQuery = `WITH PostLikers AS (
+                    SELECT
+                        pl."postId",
+                        l."username",
+                        ROW_NUMBER() OVER (PARTITION BY pl."postId" ORDER BY n."networkId" ASC) AS rn
+                    FROM "postLike" pl
+                    INNER JOIN "user" l ON l."userId" = pl."userId"
+                    LEFT JOIN "network" n ON n."followeeId" = pl."userId" 
+                        AND n.pending = FALSE AND n.deleted = FALSE 
+                        AND n."followerId" = ${this.UserID}
+                    WHERE pl.deleted = FALSE and l.archive = FALSE
+                )
+                SELECT 
+                    po."postId",
+                    po."postDescription",
+                    po."commentsNr" AS "postCommentsNr",
+                    po."likesNr" AS "postLikesNr",
+                    po.media AS "postMedia",
+                    po."userId" AS "postUserId",
+                    po."createdAt" AS "postCreatedAt",
+                    u."profileImg" AS "postProfileImg",
+                    CONCAT(u."firstName", ' ', u."lastName") AS "AccFullName",
+                    CASE 
+                        WHEN pl."likeId" IS NOT NULL THEN 'true'
+                        ELSE 'false'
+                    END AS "postLikedByUser",
+                    STRING_AGG(pls."username", ', ') AS "postLikersUsernames"
+                FROM "post" po
+                INNER JOIN "user" u ON u."userId" = po."userId" AND u.archive = false
+                LEFT JOIN "postLike" pl ON pl."postId" = po."postId" AND pl."userId" = ${userId} AND pl.deleted = FALSE 
+                LEFT JOIN PostLikers pls ON pls."postId" = po."postId" AND pls.rn <= ${postCommentsLimit}
+                WHERE po."userId" = ${userId}  And po.archive = FALSE
+                AND po.archive = FALSE
+                GROUP BY 
+                    po."postId",
+                    u."profileImg",
+                    u.username,
+                    u."firstName",
+                    u."lastName",
+                    pl."likeId"
+                ORDER BY po."createdAt" DESC
+                LIMIT ${postsByPage}
+                OFFSET ${offset};`
+
+        let posts = await this.entityManager.query(userPostsQuery)
+
+        if (posts?.length == 0)
+            throw new NotFoundException('noPostOnUserAcc');
+
+        let userPostsContainer = [];
+        for (let post of posts) {
+            let postContainer = [];
+
+            if (post?.postMedia)
+                post.postMedia = SnapShareUtility.urlConverter(post.postMedia);
+
+            if (post?.postProfileImg)
+                post.postProfileImg = SnapShareUtility.urlConverter(post.postProfileImg);
+
+            let comment = await this.commentService.getComments(post.postId, postCommentsLimit)
+
+            postContainer.push(post, comment)
+            userPostsContainer.push(postContainer);
+        }
+
+        resp = { userPostsContainer };
+        return resp;
+    }
+
 }
 
 
