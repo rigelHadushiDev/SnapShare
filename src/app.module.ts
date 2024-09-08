@@ -32,6 +32,7 @@ import { StoryViews } from './story/StoryViews.entity';
 import { FeedModule } from './feed/feed.module';
 import { ExploreModule } from './explore/explore.module';
 import { Engagement } from './feed/engagement.entity';
+import { EngagementType } from './feed/engagementType.entity';
 dotenv.config();
 
 @Module({
@@ -47,7 +48,7 @@ dotenv.config();
       password: process.env.DB_PASSW,
       database: process.env.DB_NAME,
       entities: [Engagement, User, Post, Comment, PostLike, Network,
-        Notification, NotificationType, Story, StoryLike, CommentLike, StoryViews],
+        Notification, NotificationType, Story, StoryLike, CommentLike, StoryViews, EngagementType],
       synchronize: true,
       autoLoadEntities: true
     }),

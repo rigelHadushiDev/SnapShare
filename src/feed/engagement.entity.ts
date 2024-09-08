@@ -1,11 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from 'src/user/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { EngagementType } from './engagementType.entity';
 
 @Entity('engagement')
 export class Engagement {
-    @PrimaryGeneratedColumn({ type: 'integer', name: 'postId' })
-    @ApiProperty({ description: 'The unique ID of the post.' })
+    @PrimaryGeneratedColumn({ type: 'integer', name: 'engagementId' })
+    @ApiProperty({ description: 'The unique ID of the engagement.' })
     engagementId: number;
 
     @Column({ name: 'userId1' })
@@ -21,11 +22,11 @@ export class Engagement {
     engagementNr: number;
 
     @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
-    @ApiProperty({ description: 'The date and time when the engagment started was created.' })
+    @ApiProperty({ description: 'The date and time when the engagement was created.' })
     createdAt: Date;
 
     @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp' })
-    @ApiProperty({ description: 'The date and time when the engagment was last updated.' })
+    @ApiProperty({ description: 'The date and time when the engagement was last updated.' })
     updatedAt: Date;
 
     @ManyToOne(() => User, user => user.initiatedEngagements, { onDelete: 'CASCADE' })
@@ -35,4 +36,8 @@ export class Engagement {
     @ManyToOne(() => User, user => user.receivedEngagements, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'userId2', referencedColumnName: 'userId' })
     user2: User;
+
+    @ManyToOne(() => EngagementType, engagementType => engagementType.engagements, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'engagementTypeId', referencedColumnName: 'engagementTypeId' })
+    type: EngagementType;
 }

@@ -12,6 +12,8 @@ import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 import { CommentDto } from 'src/post/dtos/getFeed.dto';
 import { GetCommentRes } from './dtos/getComments.dto';
 import { GetCommentRepliesRes } from './dtos/getCommentReplies.dto';
+import { Engagement } from 'src/feed/engagement.entity';
+import { EngagementType } from 'src/feed/engagementType.entity';
 
 @Injectable()
 export class CommentService {
@@ -53,6 +55,8 @@ export class CommentService {
         if (postExists?.isPrivate && !currUserFriend && this.currUserId != postExists?.userId)
             throw new ForbiddenException(`nonFriendPrivateAccList`);
 
+
+
         await this.entityManager.transaction(async transactionalEntityManager => {
 
             await transactionalEntityManager
@@ -68,16 +72,22 @@ export class CommentService {
             comment.userId = this.currUserId;
             comment.commentDescription = commentDescription;
 
+            let userId2 = postExists.userId;
+
             if (parentCommentId) {
                 const parentComment = await this.entityManager
                     .createQueryBuilder()
                     .from(Comment, 'comment')
                     .select('comment.commentId')
+                    .addSelect('comment.userId', 'userId')
                     .where('comment.commentId = :commentId', { commentId: parentCommentId })
                     .andWhere('comment.postId = :postId', { postId })
                     .getRawOne();
 
+
                 if (!parentComment) throw new NotFoundException('parentCommentNotFound');
+
+                userId2 = parentComment.userId;
 
                 comment.parentCommentId = parentCommentId;
                 resp.message = 'commentReplySuccessfullyAdded';
@@ -86,6 +96,46 @@ export class CommentService {
             }
 
             await transactionalEntityManager.save(Comment, comment);
+
+
+            const engagement = await this.entityManager
+                .createQueryBuilder(Engagement, 'e')
+                .select('e.engagementId', 'engagementId')
+                .innerJoin(EngagementType, 'et', 'e.engagementTypeId = et.engagementTypeId')
+                .where('et.type = :type', { type: 'LIKE' })
+                .andWhere(
+                    '(e.userId1 = :userId1 AND e.userId2 = :userId2) OR (e.userId1 = :userId2 AND e.userId2 = :userId1)',
+                    { userId1: this.currUserId, userId2 }
+                )
+                .getRawOne();
+
+
+            if (engagement) {
+
+                await transactionalEntityManager
+                    .createQueryBuilder()
+                    .update(Engagement)
+                    .set({ engagementNr: () => 'engagementNr + 1' })
+                    .where('engagementId = :engagementId', { engagementId: engagement.engagementId })
+                    .execute();
+
+            } else {
+
+                await this.entityManager.query(`
+                            WITH engagement_type AS (
+                              SELECT "engagementTypeId"
+                              FROM "engagementType"
+                              WHERE "type" = 'COMMENT'
+                            )
+                            INSERT INTO "engagement" ("userId1", "userId2", "engagementTypeId", "engagementNr")
+                            SELECT 
+                              $1 AS "userId1", 
+                              $2 AS "userId2", 
+                              "engagementTypeId",
+                                  1 as engagementNr
+                            FROM engagement_type;
+                          `, [this.currUserId, userId2]);
+            }
         });
 
         resp.status = HttpStatus.OK;
@@ -134,6 +184,7 @@ export class CommentService {
                 .execute();
         })
 
+        // make a query to see if the comment has a parent comment 
         resp = { status: HttpStatus.OK, message: 'commentSuccessfullyDeleted' };
 
         return resp;
