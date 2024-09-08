@@ -276,7 +276,11 @@ export class NetworkService {
                       AND n2."deleted" = false
                 ) THEN true 
                 ELSE false 
-            END AS "isFollowedbyCurrUser"
+            END AS "isFollowedbyCurrUser",
+            CASE 
+                WHEN u."userId" = $1 THEN true 
+                ELSE false 
+            END AS "isCurrentUser"
         FROM 
             network n
         JOIN
@@ -296,7 +300,7 @@ export class NetworkService {
         }
 
 
-        resp = { userId: userId, username: followersList.username, profileImg: followersList.profileImg, isFollowedbyCurrUser: followersList.isFollowedbyCurrUser }
+        resp = followersList
         return resp;
     };
 
@@ -344,7 +348,11 @@ export class NetworkService {
                       AND n2."deleted" = false
                 ) THEN true 
                 ELSE false 
-            END AS "isFollowedbyCurrUser"
+            END AS "isFollowedbyCurrUser",
+            CASE 
+                WHEN u."userId" = $1 THEN true 
+                ELSE false 
+            END AS "isCurrentUser"
         FROM 
             network n
         JOIN
@@ -363,8 +371,8 @@ export class NetworkService {
                 followee.profileImg = SnapShareUtility.urlConverter(followeeList.profileImg);
         }
 
+        resp = followeeList
 
-        resp = { userId: userId, username: followeeList.username, profileImg: followeeList.profileImg, isFollowedbyCurrUser: followeeList.isFollowedbyCurrUser }
         return resp;
     };
 
@@ -429,17 +437,17 @@ export class NetworkService {
     async isfollowedBy(followeeId: number) {
         let resp = { message: 'isntConnectedTo' }
 
-        const story = await this.entityManager
+        const isUserNetwork = await this.entityManager
             .createQueryBuilder()
             .from(Network, 'network')
             .select('*')
             .where('network.followerId = :followerId', { followerId: this.UserID })
             .andWhere('network.followeeId = :followeeId', { followeeId: followeeId })
-            .andWhere('network.deleted = :deleted', { deleted: 0 })
+            .andWhere('network.deleted = :deleted', { deleted: false })
             .andWhere('network.pending = :pending', { pending: false })
-            .getOne();
+            .getRawOne();
 
-        if (story)
+        if (isUserNetwork)
             resp.message = 'isConnectedTo';
 
         return resp;

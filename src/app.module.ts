@@ -19,7 +19,7 @@ import { PostLike } from './like/entities/PostLike.entity';
 import * as dotenv from 'dotenv';
 import { Network } from './network/entities/network.entity';
 import { FetchUserMiddleware } from './auth/fetchUser.middleware';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { HttpExceptionFilter } from './common/filters/httpException.filter';
 import { SSEModule } from './sse/sse.module';
 import { Notification } from './network/entities/notification.entity';
 import { NotificationType } from './network/entities/notificationType.entity';
@@ -27,7 +27,10 @@ import { StoryModule } from './story/story.module';
 import { Story } from './story/story.entity';
 import { StoryLike } from './like/entities/StoryLike.entity';
 import { CommentLike } from './like/entities/CommentLike.entity';
-
+import { JwtExpiredExceptionFilter } from './common/filters/JweExpiredException.filter';
+import { StoryViews } from './story/StoryViews.entity';
+import { FeedModule } from './feed/feed.module';
+import { ExploreModule } from './explore/explore.module';
 dotenv.config();
 
 @Module({
@@ -42,7 +45,7 @@ dotenv.config();
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSW,
       database: process.env.DB_NAME,
-      entities: [User, Post, Comment, PostLike, Network, Notification, NotificationType, Story, StoryLike, CommentLike],
+      entities: [User, Post, Comment, PostLike, Network, Notification, NotificationType, Story, StoryLike, CommentLike, StoryViews],
       synchronize: true,
       autoLoadEntities: true
     }),
@@ -53,7 +56,9 @@ dotenv.config();
     CommentModule,
     LikeModule,
     SSEModule,
-    StoryModule
+    StoryModule,
+    FeedModule,
+    ExploreModule
   ],
   controllers: [AppController],
   providers: [
@@ -66,6 +71,10 @@ dotenv.config();
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: JwtExpiredExceptionFilter,
     },
   ],
 })

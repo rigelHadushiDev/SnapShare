@@ -9,10 +9,15 @@ import { UsersService } from 'src/user/services/users.service';
 import { IsCreatorGuard } from './guards/IsCreator.guard';
 import { ContentMediaController } from './controllers/contentMedia.controller';
 import { ContentMediaService } from './services/contentMedia.service';
+import { CommentModule } from 'src/comment/comment.module';
+import { CommentService } from 'src/comment/comment.service';
+import { StoryViews } from 'src/story/StoryViews.entity';
+import { NetworkModule } from 'src/network/network.module';
+import { GetUserPostsAccessGuard } from './guards/GetUserPostsAccess.guard';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Post]), UsersModule],
-  providers: [PostService, UserProvider, UsersService, IsCreatorGuard, ContentMediaService],
+  imports: [TypeOrmModule.forFeature([Post, StoryViews]), UsersModule, CommentModule, NetworkModule],
+  providers: [PostService, UserProvider, UsersService, IsCreatorGuard, ContentMediaService, CommentService, GetUserPostsAccessGuard],
   controllers: [PostController, ContentMediaController],
   exports: [PostService]
 })

@@ -8,6 +8,7 @@ import {
     HttpStatus,
     InternalServerErrorException,
     NotFoundException,
+    Param,
     Post,
     Put
 } from '@nestjs/common';
@@ -15,8 +16,9 @@ import { CreateUserReq, UserResDto, UserInfoDto } from '../dtos/CreateUser.dto';
 import { UpdateUserDto } from '../dtos/UpdateUserDto';
 import { UsersService } from '../services/users.service';
 import { Public } from 'src/common/decorators/public.decorator';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
+import { GetUserDataRes } from '../dtos/GetUserData.dto';
 
 
 @ApiBearerAuth()
@@ -37,12 +39,13 @@ export class UsersController {
         return await this.userService.createUser(createUserDto);
     }
 
-    @Get('userData')
-    @ApiOperation({ summary: 'Retrieve user data.', description: 'Retrieve current loged in user data.' })
-    @ApiResponse({ status: HttpStatus.OK, description: 'The profile picture has been uploaded successfully.', type: UserResDto })
-    @ApiException(() => NotFoundException, { description: 'The loged in user has not been found. [key: "userNotFound" ]' })
-    async getCurrUserData() {
-        return await this.userService.getCurrUserData();
+    @Get('userData/:userId')
+    @ApiOperation({ summary: 'Retrieve user data.', description: 'Retrieve user data based on the id.' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'The user data has been found successfully.', type: GetUserDataRes })
+    @ApiParam({ name: 'userId', type: 'number', description: 'ID of the user' })
+    @ApiException(() => NotFoundException, { description: 'User has not been found. [key: "userNotFound"]' })
+    async getUserData(@Param('userId') userId: number) {
+        return await this.userService.getCurrUserData(userId);
     }
 
     @Put('update')
@@ -54,7 +57,6 @@ export class UsersController {
     async updateUser(@Body() updateUserDto: UpdateUserDto) {
         return await this.userService.updateUser(updateUserDto);
     }
-
 
     @Put("archive")
     @ApiOperation({ summary: 'Archieve user.', description: 'Archieve current logged-in user.' })

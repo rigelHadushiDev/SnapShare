@@ -4,6 +4,7 @@ import {
     Get,
     HttpCode,
     HttpStatus,
+    NotFoundException,
     Post,
     Query,
     UploadedFile,
@@ -16,6 +17,7 @@ import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator
 import { ProfileImgReq, ProfileImgRes } from '../dtos/UploadProfileImg.dto';
 import { PaginationDto } from '../dtos/GetUserPosts.dto';
 import { UserMediaService } from '../services/userMedia.service';
+import { GetFeedResp } from 'src/post/dtos/getFeed.dto';
 
 @ApiBearerAuth()
 @ApiTags("User Media APIs")
@@ -50,13 +52,14 @@ export class UserMediaController {
     @Get('getArchivedPosts')
     @ApiOperation({ summary: 'Successfully retrieve the current users archived posts.' })
     @ApiBody({ type: PaginationDto, required: false })
-    //After making the comments and likes module come back 
     @ApiResponse({
-        status: HttpStatus.OK, description: 'Archived posts of the user are retrieved successfully.',
-        //type: 
+        status: HttpStatus.OK, description: 'Archived posts of the user are retrieved successfully.', type: GetFeedResp
     })
-    async getArchivedPosts(@Query() query: PaginationDto) {
-        return this.userMediaService.getArchivedPosts();
+    @ApiQuery({ name: 'postCommentsLimit', required: false, description: 'Number of the comments that you want to recieve together with the the posts.', type: Number })
+    @ApiException(() => NotFoundException, { description: 'No archived posts were found. [key: "noArchivedPosts" ]' })
+    async getArchivedPosts(@Query() query: PaginationDto, @Query('postCommentsLimit') postCommentsLimit?: number) {
+        const { postsByPage, page } = query;
+        return this.userMediaService.getArchivedPosts(postsByPage, page, postCommentsLimit);
     }
 
 

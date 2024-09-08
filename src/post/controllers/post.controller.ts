@@ -6,16 +6,19 @@ const fs = require('fs');
 import { configureStorageOptions, fileStorage, imgVideoFilters } from 'src/user/fileStorage.config';
 import { Response } from 'express';
 import { EditPostDto } from '../dtos/EditPost.dto';
-import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
+import { HttpExceptionFilter } from 'src/common/filters/httpException.filter';
 import { Observable } from 'rxjs';
 import { Post as PostEntity } from '../post.entity';
 import { IsCreatorGuard } from '../guards/IsCreator.guard';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreatePostRes, DescriptionDto } from '../dtos/CreatePost.dto';
 import { ApiImplicitFormData } from 'src/common/decorators/api-implicit-form-data.decorator';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
 import { GeneralResponse } from '../dtos/GeneralResponse';
-
+import { PostAccessGuard } from 'src/like/guards/PostAccess.guard';
+import { PaginationDto } from 'src/user/dtos/GetUserPosts.dto';
+import { GetUserPostsRes } from '../dtos/getUsersPosts.dto';
+import { GetUserPostsAccessGuard } from '../guards/GetUserPostsAccess.guard';
 
 @ApiBearerAuth()
 @ApiTags("Post APIs")
@@ -80,13 +83,18 @@ export class PostController {
     }
 
 
-
-    @Get(':postId')
-    @ApiOperation({ summary: 'Retrieve a post by ID' })
-    @ApiParam({ name: 'postId', description: 'ID of the post that want to be retrieved' })
-    @ApiException(() => ForbiddenException, { description: 'Post is not found. [ key: "postNotFound" ]' })
-    @ApiResponse({ status: HttpStatus.OK, description: 'Successfully found a post', type: PostEntity })
-    getPostById(@Param('postId') postId: number) {
-        return this.PostService.findPostById(postId);
+    @UseGuards(GetUserPostsAccessGuard)
+    @Get('getUserPosts/:userId')
+    @ApiOperation({ summary: 'Get all posts of an user account.' })
+    @ApiParam({ name: 'userId', description: 'ID of the user that owns these posts.' })
+    @ApiQuery({ name: 'postCommentsLimit', required: false, description: 'Number of the comments that you want to recieve together with the the posts.', type: Number })
+    @ApiException(() => ForbiddenException, { description: 'Forbidden. You cant see private users posts that are not your friend . [key: "nonFriendPrivateAccList" ]' })
+    @ApiException(() => NotFoundException, { description: 'Post is not found . [key: "userNotFound" ]' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Successfully retrived user account posts.', type: GetUserPostsRes })
+    getUserPosts(@Query() query: PaginationDto, @Param('userId') userId: number, @Query('postCommentsLimit') postCommentsLimit?: number) {
+        const { postsByPage, page } = query;
+        return this.PostService.getUserPosts(postsByPage, page, userId, postCommentsLimit);
     }
+
+
 }

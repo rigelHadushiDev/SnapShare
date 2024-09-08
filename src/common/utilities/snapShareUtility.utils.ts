@@ -31,10 +31,15 @@ export class SnapShareUtility {
     }
 
 
-    static urlConverter(media: string) {
+    static urlConverter(media: string, mediaId?: number) {
 
         const pathParts = media.split(/[\/\\]/);
-        const result = `${process.env.DOMAIN_NAME}/contentMedia/display/${pathParts[pathParts.length - 2]}/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
+        let result = `${process.env.DOMAIN_NAME}/contentMedia/display/${pathParts[pathParts.length - 2]}/${pathParts[pathParts.length - 3]}/${pathParts[pathParts.length - 1]}`;
+
+        if (mediaId) {
+            result = `${result}/${mediaId}`;
+        }
+
         return result;
     }
 

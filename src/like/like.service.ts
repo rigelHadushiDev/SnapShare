@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Post } from 'src/post/post.entity';
 import { UserProvider } from 'src/user/services/user.provider';
 import { EntityManager } from 'typeorm';
@@ -8,6 +8,9 @@ import { Story } from 'src/story/story.entity';
 import { StoryLike } from './entities/StoryLike.entity';
 import { Comment } from 'src/comment/comment.entity';
 import { CommentLike } from './entities/CommentLike.entity';
+import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
+import { UserListRes } from 'src/network/responses/UserListRes';
+
 
 @Injectable()
 export class LikeService {
@@ -198,4 +201,112 @@ export class LikeService {
         return resp;
     }
 
+    async getPostLikers(postId: number, postsByPage: number = 10, page: number = 1) {
+
+        let resp = new UserListRes;
+
+        let skip: number = (page - 1) * postsByPage;
+
+        const query = `SELECT
+            u."userId",
+            u."username",
+            u."profileImg",
+            CASE 
+                WHEN EXISTS(
+                    SELECT 1 
+                    FROM network n 
+                    WHERE n."followerId" = $1 -- The current user's ID
+                    AND n."followeeId" = u."userId" -- The user who liked the post
+                    AND n."pending" = false 
+                    AND n."deleted" = false
+                ) THEN true 
+                ELSE false 
+            END AS "isFollowedByCurrUser",
+            CASE 
+                WHEN u."userId" = $1 THEN true 
+                ELSE false 
+            END AS "isCurrentUser"
+        FROM 
+            "postLike" pl
+        JOIN 
+            "user" u ON pl."userId" = u."userId"
+        WHERE 
+            pl."postId" = $2
+        LIMIT $3 OFFSET $4;`;
+
+
+        const postLikersList = await this.entityManager.query(query, [this.currUserId, postId, postsByPage, skip]);
+
+
+        for (const likers of postLikersList) {
+            if (likers?.profileImg)
+                likers.profileImg = SnapShareUtility.urlConverter(likers.profileImg);
+        }
+
+        resp = postLikersList
+
+        return resp;
+    }
+
+    async getStoryLikers(storyId: number, postsByPage: number = 10, page: number = 1) {
+
+        let resp = new UserListRes;
+
+        // only owner of th story can see the acc which liked its story and it can be also archived story
+
+        const storyExist = await this.entityManager
+            .createQueryBuilder()
+            .from(Story, 's')
+            .select('*')
+            .where('s.storyId = :storyId', { storyId })
+            .getRawOne();
+
+        if (!storyExist)
+            throw new NotFoundException('storyNotFound');
+
+        if (storyExist.userId !== this.currUserId)
+            throw new UnauthorizedException('onlyStoryOwnerHasAccess');
+
+        let skip: number = (page - 1) * postsByPage;
+
+        const query = `SELECT
+            u."userId",
+            u."username",
+            u."profileImg",
+            CASE 
+                WHEN EXISTS(
+                    SELECT 1 
+                    FROM network n 
+                    WHERE n."followerId" = $1 
+                    AND n."followeeId" = u."userId" 
+                    AND n."pending" = false 
+                    AND n."deleted" = false
+                ) THEN true 
+                ELSE false 
+            END AS "isFollowedByCurrUser",
+            CASE 
+                WHEN u."userId" = $1 THEN true 
+                ELSE false 
+            END AS "isCurrentUser"
+        FROM 
+            "storyLike" sl
+        JOIN 
+            "user" u ON sl."userId" = u."userId"
+        WHERE 
+            sl."storyId" = $2
+        LIMIT $3 OFFSET $4;`;
+
+
+        const storyLikersList = await this.entityManager.query(query, [this.currUserId, storyId, postsByPage, skip]);
+
+
+        for (const likers of storyLikersList) {
+            if (likers?.profileImg)
+                likers.profileImg = SnapShareUtility.urlConverter(likers.profileImg);
+        }
+
+        resp = storyLikersList
+
+        return resp;
+    }
 }
