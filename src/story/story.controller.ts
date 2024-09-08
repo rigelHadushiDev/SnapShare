@@ -1,13 +1,17 @@
-import { BadRequestException, Controller, Delete, ForbiddenException, HttpCode, HttpStatus, InternalServerErrorException, NotFoundException, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { BadRequestException, Controller, Delete, ForbiddenException, Get, HttpCode, HttpStatus, InternalServerErrorException, NotFoundException, Param, Post, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { configureStorageOptions, fileStorage, imgVideoFilters } from 'src/user/fileStorage.config';
 import { EntityManager } from 'typeorm';
 import { StoryService } from './story.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
-import { StoryMediaReq } from './UploadStory.dto';
+import { StoryMediaReq } from './dtos/uploadStory.dto';
 import { Story } from './story.entity';
 import { GeneralResponse } from 'src/post/dtos/GeneralResponse';
+import { StoryAcessGuard } from 'src/like/guards/StoryAcess.guard';
+import { PaginationDto } from 'src/user/dtos/GetUserPosts.dto';
+import { GetUserStoriesAccessGuard } from './guards/GetUserStoriesAccess.guard';
+import { GetUserStoriesResDto } from './dtos/GetUserStoriesRes.dto';
 
 @ApiBearerAuth()
 @ApiTags('Story APIs')
@@ -40,5 +44,19 @@ export class StoryController {
     deleteStory(@Param('storyId') storyId: number) {
         return this.StoryService.deleteStory(storyId);
     }
+
+    @UseGuards(GetUserStoriesAccessGuard)
+    @Get('getUserStories/:userId')
+    @ApiOperation({ summary: 'Get all user stories that were posted in 24 hours.' })
+    @ApiParam({ name: 'userId', description: 'ID of the user that owns these stories.' })
+    @ApiException(() => ForbiddenException, { description: 'Forbidden. You cant see private users stories that are not your friend . [key: "nonFriendPrivateAccList" ]' })
+    @ApiException(() => NotFoundException, { description: 'Story is not found . [key: "userNotFound" ]' })
+    @ApiException(() => NotFoundException, { description: 'No Story  published by the user was found. [key: "noStoryOnUserAcc" ]' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Successfully retrived user account stories.', type: GetUserStoriesResDto })
+    getUserStories(@Query() query: PaginationDto, @Param('userId') userId: number) {
+        const { postsByPage, page } = query;
+        return this.StoryService.getUserStories(postsByPage, page, userId);
+    }
+
 
 }

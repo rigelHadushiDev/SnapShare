@@ -18,6 +18,7 @@ import { GeneralResponse } from '../dtos/GeneralResponse';
 import { PostAccessGuard } from 'src/like/guards/PostAccess.guard';
 import { PaginationDto } from 'src/user/dtos/GetUserPosts.dto';
 import { GetUserPostsRes } from '../dtos/getUsersPosts.dto';
+import { GetUserPostsAccessGuard } from '../guards/GetUserPostsAccess.guard';
 
 @ApiBearerAuth()
 @ApiTags("Post APIs")
@@ -82,14 +83,13 @@ export class PostController {
     }
 
 
-    @UseGuards(PostAccessGuard)
+    @UseGuards(GetUserPostsAccessGuard)
     @Get('getUserPosts/:userId')
     @ApiOperation({ summary: 'Get all posts of an user account.' })
     @ApiParam({ name: 'userId', description: 'ID of the user that owns these posts.' })
     @ApiQuery({ name: 'postCommentsLimit', required: false, description: 'Number of the comments that you want to recieve together with the the posts.', type: Number })
-    @ApiException(() => ForbiddenException, { description: 'Forbidden. You cant see private users stories that are not your friend . [key: "nonFriendPrivateAccList" ]' })
+    @ApiException(() => ForbiddenException, { description: 'Forbidden. You cant see private users posts that are not your friend . [key: "nonFriendPrivateAccList" ]' })
     @ApiException(() => NotFoundException, { description: 'Post is not found . [key: "userNotFound" ]' })
-    @ApiException(() => NotFoundException, { description: 'No Post  published by the user was found. [key: "noPostOnUserAcc" ]' })
     @ApiResponse({ status: HttpStatus.OK, description: 'Successfully retrived user account posts.', type: GetUserPostsRes })
     getUserPosts(@Query() query: PaginationDto, @Param('userId') userId: number, @Query('postCommentsLimit') postCommentsLimit?: number) {
         const { postsByPage, page } = query;

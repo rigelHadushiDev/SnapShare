@@ -437,7 +437,7 @@ export class NetworkService {
     async isfollowedBy(followeeId: number) {
         let resp = { message: 'isntConnectedTo' }
 
-        const story = await this.entityManager
+        const isUserNetwork = await this.entityManager
             .createQueryBuilder()
             .from(Network, 'network')
             .select('*')
@@ -447,7 +447,7 @@ export class NetworkService {
             .andWhere('network.pending = :pending', { pending: false })
             .getRawOne();
 
-        if (story)
+        if (isUserNetwork)
             resp.message = 'isConnectedTo';
 
         return resp;

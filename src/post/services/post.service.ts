@@ -186,7 +186,10 @@ export class PostService {
                     LEFT JOIN "network" n ON n."followeeId" = pl."userId" 
                         AND n.pending = FALSE AND n.deleted = FALSE 
                         AND n."followerId" = ${this.UserID}
+                    LEFT JOIN "post" pt ON pt."postId" = pl."postId" 
+                        AND pt.archive = FALSE
                     WHERE pl.deleted = FALSE and l.archive = FALSE
+                    AND pt."userId" != pl."userId"
                 )
                 SELECT 
                     po."postId",
@@ -222,25 +225,23 @@ export class PostService {
 
         let posts = await this.entityManager.query(userPostsQuery)
 
-        if (posts?.length == 0)
-            throw new NotFoundException('noPostOnUserAcc');
-
         let userPostsContainer = [];
-        for (let post of posts) {
-            let postContainer = [];
+        if (posts?.length !== 0) {
+            for (let post of posts) {
+                let postContainer = [];
 
-            if (post?.postMedia)
-                post.postMedia = SnapShareUtility.urlConverter(post.postMedia);
+                if (post?.postMedia)
+                    post.postMedia = SnapShareUtility.urlConverter(post.postMedia);
 
-            if (post?.postProfileImg)
-                post.postProfileImg = SnapShareUtility.urlConverter(post.postProfileImg);
+                if (post?.postProfileImg)
+                    post.postProfileImg = SnapShareUtility.urlConverter(post.postProfileImg);
 
-            let comment = await this.commentService.getComments(post.postId, postCommentsLimit)
+                let comment = await this.commentService.getComments(post.postId, postCommentsLimit)
 
-            postContainer.push(post, comment)
-            userPostsContainer.push(postContainer);
+                postContainer.push(post, comment)
+                userPostsContainer.push(postContainer);
+            }
         }
-
         resp = { userPostsContainer };
         return resp;
     }
