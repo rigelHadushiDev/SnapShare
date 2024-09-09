@@ -1,9 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Unique } from 'typeorm';
 import { User } from 'src/user/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { EngagementType } from './engagementType.entity';
 
 @Entity('engagement')
+@Unique(['userId1', 'userId2', 'type'])  // Composite unique constraint
 export class Engagement {
     @PrimaryGeneratedColumn({ type: 'integer', name: 'engagementId' })
     @ApiProperty({ description: 'The unique ID of the engagement.' })

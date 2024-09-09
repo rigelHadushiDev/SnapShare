@@ -26,121 +26,86 @@ export class CommentService {
 
     async commentPost(postData: CommentPostDto) {
         let resp = new GeneralResponse();
-
         const { postId, commentDescription, parentCommentId } = postData;
 
-        const postExists = await this.entityManager
-            .createQueryBuilder()
-            .select('post.postId', 'postId')
-            .addSelect('user.userId', 'userId')
-            .addSelect('user.isPrivate', 'isPrivate')
-            .from(Post, 'post')
-            .leftJoin('user', 'user', 'post.userId = user.userId')
-            .where('post.postId = :postId', { postId })
-            .andWhere('post.archive = :archive', { archive: false })
-            .getRawOne();
-
-        if (!postExists) throw new NotFoundException('postNotFound');
-
-        if (!postExists?.userId) throw new NotFoundException('userNotFound');
-
-        const currUserFriend = await this.entityManager
-            .createQueryBuilder(Network, 'network')
-            .select('*')
-            .where('network.followerId = :currUserId', { currUserId: this.currUserId })
-            .andWhere('network.pending = :pendingStatus', { pendingStatus: false })
-            .andWhere('network.followeeId = :followeeId', { followeeId: postExists?.userId })
-            .getRawOne();
-
-        if (postExists?.isPrivate && !currUserFriend && this.currUserId != postExists?.userId)
-            throw new ForbiddenException(`nonFriendPrivateAccList`);
-
-
+        const post = await this.entityManager
+            .createQueryBuilder(Post, 'p')
+            .select('p.postId', 'postId')
+            .addSelect('p.userId', 'userId')
+            .where('p.postId = :postId', { postId })
+            .andWhere('p.archive = false')
+            .getRawOne(); // Use getRawOne() to get the raw result with aliases
 
         await this.entityManager.transaction(async transactionalEntityManager => {
-
+            // Increment comment count
             await transactionalEntityManager
                 .createQueryBuilder()
                 .update(Post)
                 .set({ commentsNr: () => 'commentsNr + 1' })
                 .where('postId = :postId', { postId })
-                .andWhere('archive = :archiveStatus', { archiveStatus: false })
+                .andWhere('archive = false')
                 .execute();
 
+            // Create and save the comment
             let comment = new Comment();
             comment.postId = postId;
             comment.userId = this.currUserId;
             comment.commentDescription = commentDescription;
 
-            let userId2 = postExists.userId;
+            let userId2 = post.userId;
 
+            // If replying to a parent comment
             if (parentCommentId) {
                 const parentComment = await this.entityManager
-                    .createQueryBuilder()
-                    .from(Comment, 'comment')
-                    .select('comment.commentId')
+                    .createQueryBuilder(Comment, 'comment')
+                    .select(['comment.commentId', 'comment.userId'])
+                    .select('comment.commentId', 'commentId')
                     .addSelect('comment.userId', 'userId')
                     .where('comment.commentId = :commentId', { commentId: parentCommentId })
                     .andWhere('comment.postId = :postId', { postId })
                     .getRawOne();
 
-
-                if (!parentComment) throw new NotFoundException('parentCommentNotFound');
+                if (!parentComment) throw new NotFoundException('Parent comment not found');
 
                 userId2 = parentComment.userId;
-
                 comment.parentCommentId = parentCommentId;
-                resp.message = 'commentReplySuccessfullyAdded';
+                resp.message = 'Comment reply successfully added';
             } else {
-                resp.message = 'postCommentSuccessfullyAdded';
+                resp.message = 'Post comment successfully added';
             }
 
             await transactionalEntityManager.save(Comment, comment);
 
-
-            const engagement = await this.entityManager
-                .createQueryBuilder(Engagement, 'e')
-                .select('e.engagementId', 'engagementId')
-                .innerJoin(EngagementType, 'et', 'e.engagementTypeId = et.engagementTypeId')
-                .where('et.type = :type', { type: 'LIKE' })
-                .andWhere(
-                    '(e.userId1 = :userId1 AND e.userId2 = :userId2) OR (e.userId1 = :userId2 AND e.userId2 = :userId1)',
-                    { userId1: this.currUserId, userId2 }
+            // Handle engagements with the comment user
+            const engagementQuery = `
+              WITH engagement_type AS (
+                SELECT "engagementTypeId"
+                FROM "engagementType"
+                WHERE "type" = 'COMMENT'
                 )
-                .getRawOne();
+                INSERT INTO "engagement" ("userId1", "userId2", "engagementTypeId", "engagementNr")
+                SELECT
+                LEAST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)), 
+                GREATEST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)),
+                "engagementTypeId",
+                1
+                FROM engagement_type
+                ON CONFLICT ("userId1", "userId2", "engagementTypeId") DO UPDATE
+                SET "engagementNr" = "engagement"."engagementNr" + 1; `;
 
+            // Update engagement with the comment user
+            await transactionalEntityManager.query(engagementQuery, [this.currUserId, userId2]);
 
-            if (engagement) {
-
-                await transactionalEntityManager
-                    .createQueryBuilder()
-                    .update(Engagement)
-                    .set({ engagementNr: () => 'engagementNr + 1' })
-                    .where('engagementId = :engagementId', { engagementId: engagement.engagementId })
-                    .execute();
-
-            } else {
-
-                await this.entityManager.query(`
-                            WITH engagement_type AS (
-                              SELECT "engagementTypeId"
-                              FROM "engagementType"
-                              WHERE "type" = 'COMMENT'
-                            )
-                            INSERT INTO "engagement" ("userId1", "userId2", "engagementTypeId", "engagementNr")
-                            SELECT 
-                              $1 AS "userId1", 
-                              $2 AS "userId2", 
-                              "engagementTypeId",
-                                  1 as engagementNr
-                            FROM engagement_type;
-                          `, [this.currUserId, userId2]);
+            // Update engagement with the post owner
+            if (userId2 !== post.userId) {
+                await transactionalEntityManager.query(engagementQuery, [this.currUserId, post.userId]);
             }
         });
 
         resp.status = HttpStatus.OK;
         return resp;
     }
+
 
     async deleteComment(commentId: number) {
 
@@ -164,7 +129,7 @@ export class CommentService {
         if (!commentWithPost?.postOwnerId || commentWithPost.archive)
             throw new NotFoundException('postNotFound');
 
-        if (commentWithPost.postOwnerId !== this.currUserId && commentWithPost.userId !== this.currUserId)
+        if (commentWithPost.userId !== this.currUserId)
             throw new ForbiddenException('cannotDeleteComment');
 
         await this.entityManager.transaction(async transactionalEntityManager => {

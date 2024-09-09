@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, ForbiddenException, Get, HttpCode, HttpStatus, NotFoundException, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, HttpCode, HttpStatus, NotFoundException, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CommentPostDto } from './dtos/commentPost.dto';
@@ -9,6 +9,7 @@ import { PaginationDto } from 'src/user/dtos/GetUserPosts.dto';
 import { GetCommentRes } from './dtos/getComments.dto';
 import { CommentDto } from 'src/post/dtos/getFeed.dto';
 import { GetCommentRepliesRes } from './dtos/getCommentReplies.dto';
+import { PostAccessGuard } from 'src/like/guards/PostAccess.guard';
 
 
 
@@ -21,6 +22,7 @@ export class CommentController {
 
 
     @Post()
+    @UseGuards(PostAccessGuard)
     @ApiOperation({
         summary: "Add a comment in a post or a reply in post comments.",
         description: " Add a comment to the user post or add replies to a user comment."
