@@ -13,9 +13,10 @@ import { StoryViews } from 'src/story/StoryViews.entity';
 import { FeedController } from './feed.controller';
 import { FeedService } from './feed.service';
 import { Story } from 'src/story/story.entity';
+import { UserFeed } from './entities/userFeed.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Post, StoryViews, Story]), UsersModule, CommentModule],
+    imports: [TypeOrmModule.forFeature([Post, StoryViews, Story, UserFeed]), UsersModule, CommentModule],
     providers: [PostService, UserProvider, UsersService, IsCreatorGuard, FeedService, CommentService],
     controllers: [FeedController],
 })

@@ -12,8 +12,8 @@ import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 import { CommentDto } from 'src/post/dtos/getFeed.dto';
 import { GetCommentRes } from './dtos/getComments.dto';
 import { GetCommentRepliesRes } from './dtos/getCommentReplies.dto';
-import { Engagement } from 'src/feed/engagement.entity';
-import { EngagementType } from 'src/feed/engagementType.entity';
+import { Engagement } from 'src/feed/entities/engagement.entity';
+import { EngagementType } from 'src/feed/entities/engagementType.entity';
 import { User } from 'src/user/user.entity';
 
 @Injectable()

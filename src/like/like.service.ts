@@ -10,8 +10,8 @@ import { Comment } from 'src/comment/comment.entity';
 import { CommentLike } from './entities/CommentLike.entity';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 import { UserListRes } from 'src/network/responses/UserListRes';
-import { Engagement } from 'src/feed/engagement.entity';
-import { EngagementType } from 'src/feed/engagementType.entity';
+import { Engagement } from 'src/feed/entities/engagement.entity';
+import { EngagementType } from 'src/feed/entities/engagementType.entity';
 
 
 @Injectable()

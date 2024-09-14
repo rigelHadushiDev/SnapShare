@@ -1,13 +1,14 @@
 import { PostLike } from "src/like/entities/PostLike.entity";
 import { Network } from "src/network/entities/network.entity";
 import { Post } from "src/post/post.entity";
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, OneToOne } from 'typeorm';
 import { Comment } from "src/comment/comment.entity";
 import { ApiProperty } from "@nestjs/swagger";
 import { Notification } from "src/network/entities/notification.entity";
 import { Story } from "src/story/story.entity";
 import { StoryViews } from "src/story/StoryViews.entity";
-import { Engagement } from "src/feed/engagement.entity";
+import { Engagement } from "src/feed/entities/engagement.entity";
+import { UserFeed } from "src/feed/entities/userFeed.entity";
 
 @Entity('user')
 export class User {
@@ -91,4 +92,6 @@ export class User {
     @OneToMany(() => Engagement, engagement => engagement.user2)
     receivedEngagements: Engagement[];
 
+    @OneToOne(() => UserFeed, userFeed => userFeed.user, { cascade: true })
+    userFeed: UserFeed;
 }
