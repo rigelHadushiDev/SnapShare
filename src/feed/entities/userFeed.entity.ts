@@ -1,9 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
 import { User } from 'src/user/user.entity';
 
 @Entity('UserFeed')
 export class UserFeed {
-    @PrimaryGeneratedColumn({ type: 'integer' })
+    @PrimaryColumn({ type: 'integer' })
     userId: number;
 
     @Column({ type: 'timestamp' })

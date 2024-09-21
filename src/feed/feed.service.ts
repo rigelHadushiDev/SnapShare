@@ -11,6 +11,7 @@ import { GetFeedResp } from 'src/post/dtos/getFeed.dto';
 import { StoryViews } from 'src/story/StoryViews.entity';
 import { UserFeed } from './entities/userFeed.entity';
 import { off } from 'process';
+import { format } from 'date-fns';
 const fs = require('fs');
 
 @Injectable()
@@ -54,114 +55,145 @@ export class FeedService {
     }
 
 
-    async getPostsFeed(postsByPage: number = 10, page: number = 1, postCommentsLimit: number = 3) {
+    async getPostsFeed(postsByPage: number = 10, page: number = 1, postCommentsLimit: number = 3, newData: boolean = false) {
 
 
         let resp = new GetFeedResp();
 
         let offset = (page - 1) * postsByPage;
-        let posts = await this.getPostsByPriority(postsByPage, offset);
+
+        let posts = await this.getPostsByPriority(postsByPage, offset, newData);
 
         let feedContainer = [];
-        for (let post of posts) {
-            let postContainer = [];
 
-            if (post?.postMedia)
-                post.postMedia = SnapShareUtility.urlConverter(post.postMedia);
+        for (let postArray of posts) {
+            for (let post of postArray) {
+                let postContainer = [];
 
-            if (post?.postProfileImg)
-                post.postProfileImg = SnapShareUtility.urlConverter(post.postProfileImg);
+                if (post?.postMedia)
+                    post.postMedia = SnapShareUtility.urlConverter(post.postMedia);
 
-            let comment = await this.commentService.getComments(post.postId, postCommentsLimit)
+                if (post?.postProfileImg)
+                    post.postProfileImg = SnapShareUtility.urlConverter(post.postProfileImg);
 
-            postContainer.push(post, comment)
-            feedContainer.push(postContainer);
+                const comment = await this.commentService.getComments(post.postId, postCommentsLimit);
+
+                postContainer.push(post, comment)
+                feedContainer.push(postContainer);
+            }
         }
 
         resp = { feedContainer };
         return resp;
     }
 
+    async getPostsByPriority(postsByPage: number, offset: number = 0, newData: boolean) {
 
+        let resp: any[] = [];
 
-    async getPostsByPriority(postsByPage: number, offset: number = 0) {
-
-        let resp: any;
-        let standartLimit: number = 100;
+        let standartLimit: number = 200;
         let cond: string = '';
         let seenByUser: boolean = false;
         let limit: number;
 
         let result: any[] = [];
 
-        const lastSeenTimestamp = await this.entityManager
+        let lastSeenTimestamp = await this.entityManager
             .createQueryBuilder(UserFeed, 'uf')
-            .select('uf.lastSeenTimestamp', 'lastSeenTimestamp')
+            .select('uf.lastSeenTimestamp', 'timestamp')
             .where('uf.userId = :userId', { userId: this.UserID })
             .getRawOne();
+        let time = format(new Date(lastSeenTimestamp.timestamp), "yyyy-MM-dd HH:mm:ss");
 
-        if (offset === 0) {
+        // how much you went into the old feed posts
+        let oldFeedPostDiff: number = 0;
+
+        if (newData) {
             if (lastSeenTimestamp) {
-                cond = `AND po."createdAt" >= '${lastSeenTimestamp}'`;
-                limit = standartLimit;
 
-                result = await this.getDataToFeedAlgorithm(cond, seenByUser, limit);
-                resp = await this.feedAlgorithm(cond, postsByPage);
+                cond = `AND po."createdAt" >= '${time}'`;
 
-                if (resp?.length < postsByPage) {
+                let getDataForAlgOffset: number = 0;
+                if (standartLimit === offset) {
+                    // if the batch gets used get a new batch and change correspondingly the offset and limit
+                    getDataForAlgOffset = standartLimit;
+                    standartLimit = standartLimit * 2;
+                }
 
-                    cond = ` AND po."createdAt" < '${lastSeenTimestamp}'`;
+                // reset the offset of the data taken from the sorting algorithm once the new batch of data is taken
+                offset = offset - getDataForAlgOffset;
+
+                result = await this.getDataToFeedAlgorithm(cond, seenByUser, standartLimit, getDataForAlgOffset);
+                let topNewPosts = await this.feedAlgorithm(result, postsByPage, offset);
+
+                if (topNewPosts?.length > 0) {
+                    resp.push(topNewPosts);
+                }
+
+                if (topNewPosts?.length < postsByPage) {
+
                     seenByUser = true;
 
-                    result = await this.getDataToFeedAlgorithm(cond, seenByUser, limit);
+                    // take the ones that are older
+                    cond = `AND po."createdAt" < '${time}'`;
 
-                    limit = postsByPage - resp?.length;
-                    let topOldPosts = await this.feedAlgorithm(result, limit);
+                    // this will happpen only once
+                    result = await this.getDataToFeedAlgorithm(cond, seenByUser, standartLimit);
+
+                    // setting up the diff , so that i know when the user keeps scrolling on older posts so i dont
+                    // dublicate posts
+                    oldFeedPostDiff = (offset - postsByPage);
+
+                    offset = offset - oldFeedPostDiff;
+                    limit = postsByPage - topNewPosts?.length;
+
+                    let topOldPosts = await this.feedAlgorithm(result, limit, offset);
                     resp.push(topOldPosts);
 
                 }
+
             } else {
 
-
+                // this will also happen only once because it will directly send the seenByUser to true and the newDate will be false
                 seenByUser = true;
-                limit = standartLimit;
 
-                result = await this.getDataToFeedAlgorithm(cond, seenByUser, limit);
+                // cond will be set to empty string bc its the first time ever user opens their feed
+                cond = '';
 
-                let oldPostsOrder = await this.feedAlgorithm(result, postsByPage);
+                // setting up the diff , so that i know when the user keeps scrolling on older posts so i dont
+                // dublicate posts
+                oldFeedPostDiff = postsByPage;
+
+                result = await this.getDataToFeedAlgorithm(cond, seenByUser, standartLimit);
+                let oldPostsOrder = await this.feedAlgorithm(result, postsByPage, offset);
                 resp.push(oldPostsOrder);
             }
-        } else {
-            seenByUser = true;
-            limit = standartLimit;
 
-            result = await this.getDataToFeedAlgorithm(cond, seenByUser, limit);
-            // now here you also add the offset
+        } else {
+
+            cond = lastSeenTimestamp ? `AND po."createdAt" < '${time}'` : ``;
+
+            seenByUser = true;
+
+            let getDataForAlgOffset: number = 0;
+            if (standartLimit === offset) {
+                getDataForAlgOffset = standartLimit;
+                standartLimit = standartLimit * 2;
+            }
+
+            // oldFeedPostDiff is impossible to be bigger than 0 if you dont implement cache,
+            // because it will be a new Api call when it gets here at this point. NEstJS is not singletone by default.
+            getDataForAlgOffset += oldFeedPostDiff;
+            standartLimit += oldFeedPostDiff;
+            // once new batch finishes , you reset the offset; 
+            offset = offset - getDataForAlgOffset;
+
+
+            result = await this.getDataToFeedAlgorithm(cond, seenByUser, standartLimit, getDataForAlgOffset);
             let oldPostsOrder = await this.feedAlgorithm(result, postsByPage, offset);
             resp.push(oldPostsOrder);
         }
 
-
-        if (lastSeenTimestamp) {
-            await this.entityManager
-                .createQueryBuilder()
-                .update(UserFeed)
-                .set({
-                    lastSeenTimestamp: () => 'CURRENT_TIMESTAMP'
-                })
-                .where('userId = :userId', { userId: this.UserID })
-                .execute();
-        } else {
-            await this.entityManager
-                .createQueryBuilder()
-                .insert()
-                .into(UserFeed)
-                .values({
-                    userId: this.UserID,
-                    lastSeenTimestamp: () => 'CURRENT_TIMESTAMP'
-                })
-                .execute();
-        }
         return resp;
     }
 
@@ -180,7 +212,7 @@ export class FeedService {
             FROM "postLike" pl
             INNER JOIN "user" l ON l."userId" = pl."userId"
             LEFT JOIN "network" n ON n."followeeId" = l."userId" AND n.pending = FALSE AND n.deleted = FALSE AND n."followerId" = ${this.UserID} 
-            WHERE pl.deleted = FALSE
+            WHERE pl.deleted = FALSE AND l."userId" <> ${this.UserID} 
         ),
         EngagementComment AS (
             SELECT 
@@ -245,13 +277,10 @@ export class FeedService {
         ORDER BY po."createdAt" DESC
        ${limit}
        ${offset}`;
-        console.log(feedPostsQuery);
+
         let resp = await this.entityManager.query(feedPostsQuery);
         return resp;
     }
-
-
-
 
     async feedAlgorithm(posts, postsByPage: number, offset: number = 0) {
 
@@ -274,7 +303,7 @@ export class FeedService {
         // Step 5: Sort the rankedPosts list by score in descending order
         const sortedPosts = rankedPosts.sort((a, b) => b.score - a.score);
 
-        // Step 6: Extract the top posts based on postsByPage and offset
+        // Step 6: Extract the top posts withmost points. The number of posts theat should be send it is set by the value of variable postsByPage
         const topPosts = sortedPosts.slice(offset, offset + postsByPage);
 
         // Step 7: Return the top posts
@@ -283,23 +312,34 @@ export class FeedService {
         return resp;
     }
 
+    async updateLastSeenTimestamp(): Promise<void> {
+        try {
+            await this.entityManager
+                .createQueryBuilder()
+                .insert()
+                .into(UserFeed)
+                .values({
+                    userId: this.UserID,
+                    lastSeenTimestamp: () => 'CURRENT_TIMESTAMP'
+                })
+                .orUpdate(['lastSeenTimestamp'], ['userId'])
+                .execute();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        } catch (error) {
+            throw new InternalServerErrorException('failedUpdateingLastSeenFeedTimestamp');
+        }
+    }
 
 
 
 }
+
+
+
+// LOOK IT UP TOMORROW
+// implement oldFeedPostDiff with cache Implemenatation and also the seenBy flase or true will check it yourself and set it in your cache so that the front only sends the
+//reload object
+
+
+// ALSO CREATE the refresh feed , it should set a time where user has left the feed.
+
