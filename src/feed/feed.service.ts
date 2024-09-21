@@ -87,7 +87,7 @@ export class FeedService {
     async getPostsByPriority(postsByPage: number, offset: number = 0) {
 
         let resp: any;
-        let standartLimit: number = 400;
+        let standartLimit: number = 100;
         let cond: string = '';
         let seenByUser: boolean = false;
         let limit: number;
@@ -116,7 +116,7 @@ export class FeedService {
                     result = await this.getDataToFeedAlgorithm(cond, seenByUser, limit);
 
                     limit = postsByPage - resp?.length;
-                    let topOldPosts = await this.feedAlgorithm(cond, limit);
+                    let topOldPosts = await this.feedAlgorithm(result, limit);
                     resp.push(topOldPosts);
 
                 }
@@ -173,49 +173,79 @@ export class FeedService {
 
         let feedPostsQuery = `
         WITH PostLikers AS (
+            SELECT
+                pl."postId",
+                l."username",
+                ROW_NUMBER() OVER (PARTITION BY pl."postId" ORDER BY n."networkId" ASC) AS rn
+            FROM "postLike" pl
+            INNER JOIN "user" l ON l."userId" = pl."userId"
+            LEFT JOIN "network" n ON n."followeeId" = l."userId" AND n.pending = FALSE AND n.deleted = FALSE AND n."followerId" = ${this.UserID} 
+            WHERE pl.deleted = FALSE
+        ),
+        EngagementComment AS (
+            SELECT 
+                LEAST(CAST(${this.UserID} AS INTEGER), po."userId") AS "userId1", 
+                GREATEST(CAST(${this.UserID} AS INTEGER), po."userId") AS "userId${this.UserID}", 
+                e."engagementNr" AS "engagementCommentNr"
+            FROM "engagement" e
+            INNER JOIN "post" po ON LEAST(CAST(${this.UserID} AS INTEGER), po."userId") = e."userId1"
+            AND GREATEST(CAST(${this.UserID} AS INTEGER), po."userId") = e."userId${this.UserID}"
+            WHERE e."engagementTypeId" = (
+                SELECT "engagementTypeId" FROM "engagementType" WHERE "type" = 'COMMENT'
+            )
+        ),
+        EngagementLike AS (
+            SELECT 
+                LEAST(CAST(${this.UserID} AS INTEGER), po."userId") AS "userId1", 
+                GREATEST(CAST(${this.UserID} AS INTEGER), po."userId") AS "userId${this.UserID}", 
+                e."engagementNr" AS "engagementLikeNr"
+            FROM "engagement" e
+            INNER JOIN "post" po ON LEAST(CAST(${this.UserID} AS INTEGER), po."userId") = e."userId1"
+            AND GREATEST(CAST(${this.UserID} AS INTEGER), po."userId") = e."userId${this.UserID}"
+            WHERE e."engagementTypeId" = (
+                SELECT "engagementTypeId" FROM "engagementType" WHERE "type" = 'LIKE'
+            )
+        )
         SELECT
-            pl."postId",
-            l."username",
-           ROW_NUMBER() OVER (PARTITION BY pl."postId" ORDER BY n."networkId" ASC) AS rn
-       FROM "postLike" pl
-       INNER JOIN "user" l ON l."userId" = pl."userId"
-       LEFT JOIN "network" n ON n."followeeId" = l."userId" AND n.pending = FALSE AND n.deleted = FALSE AND n."followerId" = ${this.UserID}
-        WHERE pl.deleted = FALSE
-    )
-    SELECT 
-        po."postId" ,
-        po."postDescription",
-        po."commentsNr" AS "postCommentsNr",
-        po."likesNr" as "postLikesNr",
-        po.media as "postMedia",
-        po."userId" as "postUserId",
-        po."createdAt" as "postCreatedAt",
-        u."profileImg" as "postProfileImg",
-        u.username as "postLikersUsername",
-        CONCAT(u."firstName", ' ', u."lastName") AS "AccFullName",
-        CASE 
-            WHEN pl."likeId" IS NOT NULL THEN 'true'
-            ELSE 'false'
-        END AS "postLikedByUser",
-        STRING_AGG(pls."username", ', ') AS "postLikersUsernames",
-        '${seenByUser}' as "seenByUser"
-    FROM "post" po
-    INNER JOIN "user" u ON u."userId" = po."userId" AND u.archive = false
-    LEFT JOIN "network" n ON n."followeeId" = po."userId" AND n.pending = FALSE AND n.deleted = FALSE AND n."followerId" = ${this.UserID}
-    LEFT JOIN "postLike" pl ON pl."userId" = n."followerId" AND pl."postId" = po."postId" AND pl.deleted = false
-    LEFT JOIN PostLikers pls ON pls."postId" = po."postId" AND pls.rn <= 3
-    WHERE po.archive = FALSE AND n."networkId" IS NOT NULL ${cond}
-    GROUP BY 
-        po."postId",
-        u."profileImg",
-        u.username,
-        u."firstName",
-        u."lastName",
-        pl."likeId"
-    ORDER BY po."createdAt" DESC
+            po."postId" ,
+            po."postDescription",
+            po."commentsNr" AS "postCommentsNr",
+            po."likesNr" as "postLikesNr",
+            po.media as "postMedia",
+            po."userId" as "postUserId",
+            po."createdAt" as "postCreatedAt",
+            u."profileImg" as "postProfileImg",
+            u.username as "postLikersUsername",
+            CONCAT(u."firstName", ' ', u."lastName") AS "AccFullName",
+            CASE
+                WHEN pl."likeId" IS NOT NULL THEN 'true'
+                ELSE 'false'
+            END AS "postLikedByUser",
+            STRING_AGG(pls."username", ', ') AS "postLikersUsernames",
+            '${seenByUser}' as "seenByUser",
+            COALESCE(ec."engagementCommentNr", 0) AS "engagementCommentNr",
+            COALESCE(el."engagementLikeNr", 0) AS "engagementLikeNr"
+        FROM "post" po
+        INNER JOIN "user" u ON u."userId" = po."userId" AND u.archive = false
+        LEFT JOIN "network" n ON n."followeeId" = po."userId" AND n.pending = FALSE AND n.deleted = FALSE AND n."followerId" = ${this.UserID} 
+        LEFT JOIN "postLike" pl ON pl."userId" = n."followerId" AND pl."postId" = po."postId" AND pl.deleted = false
+        LEFT JOIN PostLikers pls ON pls."postId" = po."postId" AND pls.rn <= 3
+        LEFT JOIN EngagementComment ec ON ec."userId1" = LEAST(${this.UserID} , po."userId") AND ec."userId${this.UserID}" = GREATEST(${this.UserID} , po."userId")
+        LEFT JOIN EngagementLike el ON el."userId1" = LEAST(${this.UserID} , po."userId") AND el."userId${this.UserID}" = GREATEST(${this.UserID} , po."userId")
+        WHERE po.archive = FALSE AND n."networkId" IS NOT NULL ${cond}
+        GROUP BY
+            po."postId",
+            u."profileImg",
+            u.username,
+            u."firstName",
+            u."lastName",
+            pl."likeId",
+            ec."engagementCommentNr",
+            el."engagementLikeNr"
+        ORDER BY po."createdAt" DESC
        ${limit}
        ${offset}`;
-
+        console.log(feedPostsQuery);
         let resp = await this.entityManager.query(feedPostsQuery);
         return resp;
     }
@@ -224,7 +254,50 @@ export class FeedService {
 
 
     async feedAlgorithm(posts, postsByPage: number, offset: number = 0) {
+
+        let resp: any;
+        const rankedPosts: any[] = [];
+
+        for (const post of posts) {
+
+            const score = (
+                (post.postCreatedAt * 0.50) +
+                (post.engagementCommentNr * 0.20) +
+                (post.engagementLikeNr * 0.10) +
+                (post.postCommentsNr * 0.13) +
+                (post.postLikesNr * 0.07)
+            );
+
+            rankedPosts.push({ post, score });
+        }
+
+        // Step 5: Sort the rankedPosts list by score in descending order
+        const sortedPosts = rankedPosts.sort((a, b) => b.score - a.score);
+
+        // Step 6: Extract the top posts based on postsByPage and offset
+        const topPosts = sortedPosts.slice(offset, offset + postsByPage);
+
+        // Step 7: Return the top posts
+        resp = topPosts.map(rankedPost => rankedPost.post);
+
+        return resp;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

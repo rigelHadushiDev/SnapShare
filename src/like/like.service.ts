@@ -99,32 +99,24 @@ export class LikeService {
                     .where('postId = :postId', { postId: postId })
                     .execute();
 
-                if (engagement) {
-
-                    await transactionalEntityManager
-                        .createQueryBuilder()
-                        .update(Engagement)
-                        .set({ engagementNr: () => 'engagementNr + 1' })
-                        .where('engagementId = :engagementId', { engagementId: engagement.engagementId })
-                        .execute();
-
-                } else {
-
-                    await this.entityManager.query(`
-                            WITH engagement_type AS (
+                const engagementQuery = `
+                          WITH engagement_type AS (
                               SELECT "engagementTypeId"
                               FROM "engagementType"
                               WHERE "type" = 'LIKE'
-                            )
-                            INSERT INTO "engagement" ("userId1", "userId2", "engagementTypeId", "engagementNr")
-                            SELECT 
-                              $1 AS "userId1", 
-                              $2 AS "userId2", 
+                          )
+                          INSERT INTO "engagement" ("userId1", "userId2", "engagementTypeId", "engagementNr")
+                          SELECT 
+                              LEAST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)), 
+                              GREATEST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)),
                               "engagementTypeId",
-                                  1 as engagementNr
-                            FROM engagement_type;
-                          `, [this.currUserId, post.userId]);
-                }
+                              1
+                          FROM engagement_type
+                          ON CONFLICT ("userId1", "userId2", "engagementTypeId") DO UPDATE
+                          SET "engagementNr" = "engagement"."engagementNr" + 1`;
+
+                await transactionalEntityManager.query(engagementQuery, [this.currUserId, post.userId]);
+
                 resp.message = 'postLikeAdded';
             }
         });
@@ -212,32 +204,24 @@ export class LikeService {
                     .where('storyId = :storyId', { storyId: storyId })
                     .execute();
 
-                if (engagement) {
 
-                    await transactionalEntityManager
-                        .createQueryBuilder()
-                        .update(Engagement)
-                        .set({ engagementNr: () => 'engagementNr + 1' })
-                        .where('engagementId = :engagementId', { engagementId: engagement.engagementId })
-                        .execute();
+                const engagementQuery = `
+                WITH engagement_type AS (
+                    SELECT "engagementTypeId"
+                    FROM "engagementType"
+                    WHERE "type" = 'LIKE'
+                )
+                INSERT INTO "engagement" ("userId1", "userId2", "engagementTypeId", "engagementNr")
+                SELECT 
+                    LEAST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)), 
+                    GREATEST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)),
+                    "engagementTypeId",
+                    1
+                FROM engagement_type
+                ON CONFLICT ("userId1", "userId2", "engagementTypeId") DO UPDATE
+                SET "engagementNr" = "engagement"."engagementNr" + 1`;
 
-                } else {
-
-                    await this.entityManager.query(`
-                        WITH engagement_type AS (
-                          SELECT "engagementTypeId"
-                          FROM "engagementType"
-                          WHERE "type" = 'LIKE'
-                        )
-                        INSERT INTO "engagement" ("userId1", "userId2", "engagementTypeId", "engagementNr")
-                        SELECT 
-                          $1 AS "userId1", 
-                          $2 AS "userId2", 
-                          "engagementTypeId",
-                          	1 as engagementNr
-                        FROM engagement_type;
-                      `, [this.currUserId, story.userId]);
-                }
+                await transactionalEntityManager.query(engagementQuery, [this.currUserId, story.userId]);
                 resp.message = 'storyLikeAdded';
             }
         });
@@ -327,33 +311,25 @@ export class LikeService {
                     .where('commentId = :commentId', { commentId: commmentExist?.commentId })
                     .execute();
 
-                if (engagement) {
 
-                    await transactionalEntityManager
-                        .createQueryBuilder()
-                        .update(Engagement)
-                        .set({ engagementNr: () => 'engagementNr + 1' })
-                        .where('engagementId = :engagementId', { engagementId: engagement.engagementId })
-                        .execute();
+                const engagementQuery = `
+                    WITH engagement_type AS (
+                        SELECT "engagementTypeId"
+                        FROM "engagementType"
+                        WHERE "type" = 'LIKE'
+                    )
+                    INSERT INTO "engagement" ("userId1", "userId2", "engagementTypeId", "engagementNr")
+                    SELECT 
+                        LEAST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)), 
+                        GREATEST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)),
+                        "engagementTypeId",
+                        1
+                    FROM engagement_type
+                    ON CONFLICT ("userId1", "userId2", "engagementTypeId") DO UPDATE
+                    SET "engagementNr" = "engagement"."engagementNr" + 1`;
 
-                } else {
+                await transactionalEntityManager.query(engagementQuery, [this.currUserId, commmentExist.userId]);
 
-                    await this.entityManager.query(`
-                            WITH engagement_type AS (
-                              SELECT "engagementTypeId"
-                              FROM "engagementType"
-                              WHERE "type" = 'LIKE'
-                            )
-                            INSERT INTO "engagement" ("userId1", "userId2", "engagementTypeId", "engagementNr")
-                            SELECT 
-                              $1 AS "userId1", 
-                              $2 AS "userId2", 
-                              "engagementTypeId",
-                                  1 as engagementNr
-                            FROM engagement_type;
-                          `, [this.currUserId, commmentExist.userId]);
-                }
-                resp.message = 'commentLikeAdded';
             }
         });
 
