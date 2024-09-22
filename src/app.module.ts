@@ -31,6 +31,10 @@ import { JwtExpiredExceptionFilter } from './common/filters/JweExpiredException.
 import { StoryViews } from './story/StoryViews.entity';
 import { FeedModule } from './feed/feed.module';
 import { ExploreModule } from './explore/explore.module';
+import { Engagement } from './feed/entities/engagement.entity';
+import { EngagementType } from './feed/entities/engagementType.entity';
+import { UserFeed } from './feed/entities/userFeed.entity';
+import { CacheModule } from '@nestjs/cache-manager';
 dotenv.config();
 
 @Module({
@@ -45,7 +49,9 @@ dotenv.config();
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSW,
       database: process.env.DB_NAME,
-      entities: [User, Post, Comment, PostLike, Network, Notification, NotificationType, Story, StoryLike, CommentLike, StoryViews],
+      entities: [Engagement, User, Post, Comment, PostLike, Network,
+        Notification, NotificationType, Story, StoryLike, CommentLike,
+        StoryViews, EngagementType, UserFeed],
       synchronize: true,
       autoLoadEntities: true
     }),
@@ -56,6 +62,11 @@ dotenv.config();
     CommentModule,
     LikeModule,
     SSEModule,
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 0,
+      max: undefined,
+    }),
     StoryModule,
     FeedModule,
     ExploreModule

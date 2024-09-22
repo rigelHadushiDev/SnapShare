@@ -15,14 +15,14 @@ export class PostAccessGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
-        const { user, params }: { user: User; params: { postId: number } } = request;
+        const { user, params, body }: { user: User; params: { postId?: number }; body: { postId?: number } } = request;
 
         if (!user || !params) {
             throw new ForbiddenException('Unauthorized access');
         }
 
         const userId = user.userId;
-        const postId = params.postId;
+        const postId = params.postId ?? body.postId;
 
 
         const post = await this.entityManager.findOne(Post, {

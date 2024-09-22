@@ -12,6 +12,9 @@ import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 import { CommentDto } from 'src/post/dtos/getFeed.dto';
 import { GetCommentRes } from './dtos/getComments.dto';
 import { GetCommentRepliesRes } from './dtos/getCommentReplies.dto';
+import { Engagement } from 'src/feed/entities/engagement.entity';
+import { EngagementType } from 'src/feed/entities/engagementType.entity';
+import { User } from 'src/user/user.entity';
 
 @Injectable()
 export class CommentService {
@@ -24,73 +27,86 @@ export class CommentService {
 
     async commentPost(postData: CommentPostDto) {
         let resp = new GeneralResponse();
-
         const { postId, commentDescription, parentCommentId } = postData;
 
-        const postExists = await this.entityManager
-            .createQueryBuilder()
-            .select('post.postId', 'postId')
-            .addSelect('user.userId', 'userId')
-            .addSelect('user.isPrivate', 'isPrivate')
-            .from(Post, 'post')
-            .leftJoin('user', 'user', 'post.userId = user.userId')
-            .where('post.postId = :postId', { postId })
-            .andWhere('post.archive = :archive', { archive: false })
-            .getRawOne();
-
-        if (!postExists) throw new NotFoundException('postNotFound');
-
-        if (!postExists?.userId) throw new NotFoundException('userNotFound');
-
-        const currUserFriend = await this.entityManager
-            .createQueryBuilder(Network, 'network')
-            .select('*')
-            .where('network.followerId = :currUserId', { currUserId: this.currUserId })
-            .andWhere('network.pending = :pendingStatus', { pendingStatus: false })
-            .andWhere('network.followeeId = :followeeId', { followeeId: postExists?.userId })
-            .getRawOne();
-
-        if (postExists?.isPrivate && !currUserFriend && this.currUserId != postExists?.userId)
-            throw new ForbiddenException(`nonFriendPrivateAccList`);
+        const post = await this.entityManager
+            .createQueryBuilder(Post, 'p')
+            .select('p.postId', 'postId')
+            .addSelect('p.userId', 'userId')
+            .where('p.postId = :postId', { postId })
+            .andWhere('p.archive = false')
+            .getRawOne(); // Use getRawOne() to get the raw result with aliases
 
         await this.entityManager.transaction(async transactionalEntityManager => {
-
+            // Increment comment count
             await transactionalEntityManager
                 .createQueryBuilder()
                 .update(Post)
                 .set({ commentsNr: () => 'commentsNr + 1' })
                 .where('postId = :postId', { postId })
-                .andWhere('archive = :archiveStatus', { archiveStatus: false })
+                .andWhere('archive = false')
                 .execute();
 
+            // Create and save the comment
             let comment = new Comment();
             comment.postId = postId;
             comment.userId = this.currUserId;
             comment.commentDescription = commentDescription;
 
+            let userId2 = post.userId;
+
+            // If replying to a parent comment
             if (parentCommentId) {
                 const parentComment = await this.entityManager
-                    .createQueryBuilder()
-                    .from(Comment, 'comment')
-                    .select('comment.commentId')
+                    .createQueryBuilder(Comment, 'comment')
+                    .select(['comment.commentId', 'comment.userId'])
+                    .select('comment.commentId', 'commentId')
+                    .addSelect('comment.userId', 'userId')
                     .where('comment.commentId = :commentId', { commentId: parentCommentId })
                     .andWhere('comment.postId = :postId', { postId })
                     .getRawOne();
 
-                if (!parentComment) throw new NotFoundException('parentCommentNotFound');
+                if (!parentComment) throw new NotFoundException('Parent comment not found');
 
+                userId2 = parentComment.userId;
                 comment.parentCommentId = parentCommentId;
-                resp.message = 'commentReplySuccessfullyAdded';
+                resp.message = 'Comment reply successfully added';
             } else {
-                resp.message = 'postCommentSuccessfullyAdded';
+                resp.message = 'Post comment successfully added';
             }
 
             await transactionalEntityManager.save(Comment, comment);
+
+            // Handle engagements with the comment user
+            const engagementQuery = `
+              WITH engagement_type AS (
+                SELECT "engagementTypeId"
+                FROM "engagementType"
+                WHERE "type" = 'COMMENT'
+                )
+                INSERT INTO "engagement" ("userId1", "userId2", "engagementTypeId", "engagementNr")
+                SELECT
+                LEAST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)), 
+                GREATEST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)),
+                "engagementTypeId",
+                1
+                FROM engagement_type
+                ON CONFLICT ("userId1", "userId2", "engagementTypeId") DO UPDATE
+                SET "engagementNr" = "engagement"."engagementNr" + 1; `;
+
+            // Update engagement with the comment user
+            await transactionalEntityManager.query(engagementQuery, [this.currUserId, userId2]);
+
+            // Update engagement with the post owner
+            if (userId2 !== post.userId) {
+                await transactionalEntityManager.query(engagementQuery, [this.currUserId, post.userId]);
+            }
         });
 
         resp.status = HttpStatus.OK;
         return resp;
     }
+
 
     async deleteComment(commentId: number) {
 
@@ -103,6 +119,7 @@ export class CommentService {
             .select('p.postId', 'postId')
             .addSelect('c.commentId', 'commentId')
             .addSelect('c.userId', 'userId')
+            .addSelect('c.parentCommentId', 'parentCommentId')
             .addSelect('p.userId', 'postOwnerId')
             .addSelect('p.archive', 'archive')
             .where('c.commentId = :commentId', { commentId })
@@ -116,6 +133,7 @@ export class CommentService {
 
         if (commentWithPost.postOwnerId !== this.currUserId && commentWithPost.userId !== this.currUserId)
             throw new ForbiddenException('cannotDeleteComment');
+
 
         await this.entityManager.transaction(async transactionalEntityManager => {
             const comments = await transactionalEntityManager
@@ -132,6 +150,54 @@ export class CommentService {
                 .where('postId = :postId', { postId: commentWithPost?.postId })
                 .andWhere('archive = :archiveStatus', { archiveStatus: false })
                 .execute();
+
+            await this.entityManager.query(
+                `   WITH engagement_type AS (
+                      SELECT "engagementTypeId"
+                      FROM "engagementType"
+                      WHERE "type" = 'COMMENT'
+                    )
+                    UPDATE "engagement"
+                    SET "engagementNr" = "engagement"."engagementNr" - 1
+                    WHERE (
+                      LEAST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)) = LEAST("userId1", "userId2")
+                      AND GREATEST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)) = GREATEST("userId1", "userId2")
+                      AND "engagementTypeId" = (SELECT "engagementTypeId" FROM engagement_type)
+                    )
+                    AND "engagementNr" > 0;
+                    `,
+                [commentWithPost.postOwnerId, this.currUserId]
+            );
+            let parentCommentId = commentWithPost?.parentCommentId;
+            if (parentCommentId) {
+
+                const parentCommentUserId = await this.entityManager
+                    .createQueryBuilder()
+                    .from(Comment, 'c')
+                    .select('c."userId"', 'userId')
+                    .where('c."commentId" = :parentCommentId', { parentCommentId })
+                    .getRawOne();
+
+                await this.entityManager.query(
+                    `
+                WITH engagement_type AS (
+                  SELECT "engagementTypeId"
+                  FROM "engagementType"
+                  WHERE "type" = 'COMMENT'
+                )
+                UPDATE "engagement"
+                SET "engagementNr" = "engagement"."engagementNr" - 1
+                WHERE (
+                  LEAST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)) = LEAST("userId1", "userId2")
+                  AND GREATEST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)) = GREATEST("userId1", "userId2")
+                  AND "engagementTypeId" = (SELECT "engagementTypeId" FROM engagement_type)
+                )
+                AND "engagementNr" > 0;
+                `,
+                    [parentCommentUserId.userId, this.currUserId]
+                );
+            }
+
         })
 
         resp = { status: HttpStatus.OK, message: 'commentSuccessfullyDeleted' };

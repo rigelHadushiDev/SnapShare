@@ -10,6 +10,8 @@ import { Comment } from 'src/comment/comment.entity';
 import { CommentLike } from './entities/CommentLike.entity';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 import { UserListRes } from 'src/network/responses/UserListRes';
+import { Engagement } from 'src/feed/entities/engagement.entity';
+import { EngagementType } from 'src/feed/entities/engagementType.entity';
 
 
 @Injectable()
@@ -33,6 +35,24 @@ export class LikeService {
             .andWhere('postLike.deleted = :deleted', { deleted: false })
             .getRawOne();
 
+        const post = await this.entityManager
+            .createQueryBuilder(Post, 'post')
+            .select('post.userId', 'userId')
+            .where('post.postId = :postId', { postId })
+            .andWhere('post.archive = :archive', { archive: false })
+            .getRawOne();
+
+        const engagement = await this.entityManager
+            .createQueryBuilder(Engagement, 'e')
+            .select('e.engagementId', 'engagementId')
+            .innerJoin(EngagementType, 'et', 'e.engagementTypeId = et.engagementTypeId')
+            .where('et.type = :type', { type: 'LIKE' })
+            .andWhere(
+                '(e.userId1 = :userId1 AND e.userId2 = :userId2) OR (e.userId1 = :userId2 AND e.userId2 = :userId1)',
+                { userId1: this.currUserId, userId2: post.userId }
+            )
+            .getRawOne();
+
         await this.entityManager.transaction(async transactionalEntityManager => {
             if (isLiked) {
                 await transactionalEntityManager
@@ -48,6 +68,17 @@ export class LikeService {
                     .set({ likesNr: () => 'likesNr - 1' })
                     .where('postId = :postId', { postId: postId })
                     .execute();
+
+                if (engagement) {
+
+                    await transactionalEntityManager
+                        .createQueryBuilder()
+                        .update(Engagement)
+                        .set({ engagementNr: () => 'engagementNr - 1' })
+                        .where('engagementId = :engagementId', { engagementId: engagement.engagementId })
+                        .execute();
+
+                }
 
                 resp.message = 'postLikeRemoved';
             } else {
@@ -67,6 +98,24 @@ export class LikeService {
                     .set({ likesNr: () => 'likesNr + 1' })
                     .where('postId = :postId', { postId: postId })
                     .execute();
+
+                const engagementQuery = `
+                          WITH engagement_type AS (
+                              SELECT "engagementTypeId"
+                              FROM "engagementType"
+                              WHERE "type" = 'LIKE'
+                          )
+                          INSERT INTO "engagement" ("userId1", "userId2", "engagementTypeId", "engagementNr")
+                          SELECT 
+                              LEAST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)), 
+                              GREATEST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)),
+                              "engagementTypeId",
+                              1
+                          FROM engagement_type
+                          ON CONFLICT ("userId1", "userId2", "engagementTypeId") DO UPDATE
+                          SET "engagementNr" = "engagement"."engagementNr" + 1`;
+
+                await transactionalEntityManager.query(engagementQuery, [this.currUserId, post.userId]);
 
                 resp.message = 'postLikeAdded';
             }
@@ -89,6 +138,25 @@ export class LikeService {
             .andWhere('storyLike.deleted = :deleted', { deleted: false })
             .getRawOne();
 
+
+        const story = await this.entityManager
+            .createQueryBuilder(Story, 'story')
+            .select('story.userId', 'userId')
+            .where('story.storyId = :storyId', { storyId })
+            .andWhere('story.archive = :archive', { archive: false })
+            .getRawOne();
+
+        const engagement = await this.entityManager
+            .createQueryBuilder(Engagement, 'e')
+            .select('e.engagementId', 'engagementId')
+            .innerJoin(EngagementType, 'et', 'e.engagementTypeId = et.engagementTypeId')
+            .where('et.type = :type', { type: 'LIKE' })
+            .andWhere(
+                '(e.userId1 = :userId1 AND e.userId2 = :userId2) OR (e.userId1 = :userId2 AND e.userId2 = :userId1)',
+                { userId1: this.currUserId, userId2: story.userId }
+            )
+            .getRawOne();
+
         await this.entityManager.transaction(async transactionalEntityManager => {
             if (isLiked) {
                 await transactionalEntityManager
@@ -105,6 +173,16 @@ export class LikeService {
                     .where('storyId = :storyId', { storyId: storyId })
                     .execute();
 
+                if (engagement) {
+
+                    await transactionalEntityManager
+                        .createQueryBuilder()
+                        .update(Engagement)
+                        .set({ engagementNr: () => 'engagementNr - 1' })
+                        .where('engagementId = :engagementId', { engagementId: engagement.engagementId })
+                        .execute();
+
+                }
                 resp.message = 'storyLikeRemoved';
 
             } else {
@@ -126,6 +204,24 @@ export class LikeService {
                     .where('storyId = :storyId', { storyId: storyId })
                     .execute();
 
+
+                const engagementQuery = `
+                WITH engagement_type AS (
+                    SELECT "engagementTypeId"
+                    FROM "engagementType"
+                    WHERE "type" = 'LIKE'
+                )
+                INSERT INTO "engagement" ("userId1", "userId2", "engagementTypeId", "engagementNr")
+                SELECT 
+                    LEAST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)), 
+                    GREATEST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)),
+                    "engagementTypeId",
+                    1
+                FROM engagement_type
+                ON CONFLICT ("userId1", "userId2", "engagementTypeId") DO UPDATE
+                SET "engagementNr" = "engagement"."engagementNr" + 1`;
+
+                await transactionalEntityManager.query(engagementQuery, [this.currUserId, story.userId]);
                 resp.message = 'storyLikeAdded';
             }
         });
@@ -156,6 +252,17 @@ export class LikeService {
             .andWhere('commentlike.deleted = :deleted', { deleted: false })
             .getRawOne();
 
+        const engagement = await this.entityManager
+            .createQueryBuilder(Engagement, 'e')
+            .select('e.engagementId', 'engagementId')
+            .innerJoin(EngagementType, 'et', 'e.engagementTypeId = et.engagementTypeId')
+            .where('et.type = :type', { type: 'LIKE' })
+            .andWhere(
+                '(e.userId1 = :userId1 AND e.userId2 = :userId2) OR (e.userId1 = :userId2 AND e.userId2 = :userId1)',
+                { userId1: this.currUserId, userId2: commmentExist.userId }
+            )
+            .getRawOne();
+
         await this.entityManager.transaction(async transactionalEntityManager => {
             if (isLiked) {
                 await transactionalEntityManager
@@ -171,6 +278,17 @@ export class LikeService {
                     .set({ likesNr: () => 'likesNr - 1' })
                     .where('commentId = :commentId', { commentId: commmentExist?.commentId })
                     .execute();
+
+                if (engagement) {
+
+                    await transactionalEntityManager
+                        .createQueryBuilder()
+                        .update(Engagement)
+                        .set({ engagementNr: () => 'engagementNr - 1' })
+                        .where('engagementId = :engagementId', { engagementId: engagement.engagementId })
+                        .execute();
+
+                }
 
                 resp.message = 'commentLikeRemoved';
 
@@ -193,7 +311,25 @@ export class LikeService {
                     .where('commentId = :commentId', { commentId: commmentExist?.commentId })
                     .execute();
 
-                resp.message = 'commentLikeAdded';
+
+                const engagementQuery = `
+                    WITH engagement_type AS (
+                        SELECT "engagementTypeId"
+                        FROM "engagementType"
+                        WHERE "type" = 'LIKE'
+                    )
+                    INSERT INTO "engagement" ("userId1", "userId2", "engagementTypeId", "engagementNr")
+                    SELECT 
+                        LEAST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)), 
+                        GREATEST(CAST($1 AS INTEGER), CAST($2 AS INTEGER)),
+                        "engagementTypeId",
+                        1
+                    FROM engagement_type
+                    ON CONFLICT ("userId1", "userId2", "engagementTypeId") DO UPDATE
+                    SET "engagementNr" = "engagement"."engagementNr" + 1`;
+
+                await transactionalEntityManager.query(engagementQuery, [this.currUserId, commmentExist.userId]);
+
             }
         });
 
