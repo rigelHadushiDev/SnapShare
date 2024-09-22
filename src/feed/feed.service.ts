@@ -58,7 +58,7 @@ export class FeedService {
     }
 
 
-    async getPostsFeed(postsByPage: number = 10, page: number = 1, postCommentsLimit: number = 3, reload: boolean = false) {
+    async getPostsFeed(postsByPage: number = 10, page: number = 1, postCommentsLimit: number = 3, reload: boolean) {
 
 
         let resp = new GetFeedResp();
@@ -69,22 +69,22 @@ export class FeedService {
 
         let feedContainer = [];
 
-        for (let postArray of posts) {
-            for (let post of postArray) {
-                let postContainer = [];
 
-                if (post?.postMedia)
-                    post.postMedia = SnapShareUtility.urlConverter(post.postMedia);
+        for (let post of posts) {
+            let postContainer = [];
 
-                if (post?.postProfileImg)
-                    post.postProfileImg = SnapShareUtility.urlConverter(post.postProfileImg);
+            if (post?.postMedia)
+                post.postMedia = SnapShareUtility.urlConverter(post.postMedia);
 
-                const comment = await this.commentService.getComments(post.postId, postCommentsLimit);
+            if (post?.postProfileImg)
+                post.postProfileImg = SnapShareUtility.urlConverter(post.postProfileImg);
 
-                postContainer.push(post, comment)
-                feedContainer.push(postContainer);
-            }
+            const comment = await this.commentService.getComments(post.postId, postCommentsLimit);
+
+            postContainer.push(post, comment)
+            feedContainer.push(postContainer);
         }
+
 
         resp = { feedContainer };
         return resp;
@@ -96,7 +96,7 @@ export class FeedService {
 
         let standartLimit: number = 200;
         let cond: string = '';
-        let seenByUser: boolean = false;
+        let unSeenByUser: boolean = true;
         let limit: number;
 
         let result: any[] = [];
@@ -106,15 +106,15 @@ export class FeedService {
             .select('uf.lastSeenTimestamp', 'timestamp')
             .where('uf.userId = :userId', { userId: this.UserID })
             .getRawOne();
-        let time = format(new Date(lastSeenTimestamp.timestamp), "yyyy-MM-dd HH:mm:ss");
+
+        let time: string;
+        if (lastSeenTimestamp)
+            time = format(new Date(lastSeenTimestamp.timestamp), "yyyy-MM-dd HH:mm:ss");
 
         // get the seenByUser cache Implementation
-        const seenPostsnFeed = await this.cacheManager.get(`feedSeenBy${this.UserID}`);
+        const UnseenPostFeed = await this.cacheManager.get(`unSeenByUser${this.UserID}`);
 
-        // how much you went into the old feed posts
-        let oldFeedPostDiff: number = 0;
-
-        if (reload || seenPostsnFeed) {
+        if (reload || UnseenPostFeed) {
             if (lastSeenTimestamp) {
 
                 cond = `AND po."createdAt" >= '${time}'`;
@@ -129,8 +129,10 @@ export class FeedService {
                 // reset the offset of the data taken from the sorting algorithm once the new batch of data is taken
                 offset = offset - getDataForAlgOffset;
 
-                result = await this.getDataToFeedAlgorithm(cond, seenByUser, standartLimit, getDataForAlgOffset);
+                result = await this.getDataToFeedAlgorithm(cond, unSeenByUser, standartLimit, getDataForAlgOffset);
                 let topNewPosts = await this.feedAlgorithm(result, postsByPage, offset);
+
+                await this.cacheManager.set(`unSeenByUser${this.UserID}`, unSeenByUser);
 
                 if (topNewPosts?.length > 0) {
                     resp.push(topNewPosts);
@@ -138,21 +140,17 @@ export class FeedService {
 
                 if (topNewPosts?.length < postsByPage) {
 
-                    seenByUser = true;
-                    await this.cacheManager.set(`feedSeenBy${this.UserID}`, seenByUser);
+                    unSeenByUser = false;
+                    await this.cacheManager.set(`unSeenByUser${this.UserID}`, unSeenByUser);
 
                     // take the ones that are older
                     cond = `AND po."createdAt" < '${time}'`;
 
                     // this will happpen only once
-                    result = await this.getDataToFeedAlgorithm(cond, seenByUser, standartLimit);
+                    result = await this.getDataToFeedAlgorithm(cond, unSeenByUser, standartLimit);
 
-                    // setting up the diff , so that i know when the user keeps scrolling on older posts so i dont
-                    // dublicate posts
-                    oldFeedPostDiff = (offset - postsByPage);
-                    await this.cacheManager.set(`oldFeedPostDiff${this.UserID}`, oldFeedPostDiff);
+                    offset = 0
 
-                    offset = offset - oldFeedPostDiff;
                     limit = postsByPage - topNewPosts?.length;
 
                     let topOldPosts = await this.feedAlgorithm(result, limit, offset);
@@ -163,28 +161,26 @@ export class FeedService {
             } else {
 
                 // this will also happen only once because it will directly send the seenByUser to true and the newDate will be false
-                seenByUser = true;
-                await this.cacheManager.set(`feedSeenBy${this.UserID}`, seenByUser);
+                unSeenByUser = false;
+                await this.cacheManager.set(`unSeenByUser${this.UserID}`, unSeenByUser);
 
                 // cond will be set to empty string bc its the first time ever user opens their feed
                 cond = '';
 
-                // setting up the diff , so that i know when the user keeps scrolling on older posts so i dont
-                // dublicate posts
-                oldFeedPostDiff = postsByPage;
-                await this.cacheManager.set(`oldFeedPostDiff${this.UserID}`, oldFeedPostDiff);
-
-                result = await this.getDataToFeedAlgorithm(cond, seenByUser, standartLimit);
+                result = await this.getDataToFeedAlgorithm(cond, unSeenByUser, standartLimit);
                 let oldPostsOrder = await this.feedAlgorithm(result, postsByPage, offset);
                 resp.push(oldPostsOrder);
             }
 
+            resp = resp.flat();
+            let postIds = resp.map(post => post.postId).join(', ');
+            await this.cacheManager.set(`oldPostID${this.UserID}`, postIds);
+
         } else {
+            // not IN and the postID to the method getDataToFeedAlgorithm
 
-            cond = lastSeenTimestamp ? `AND po."createdAt" < '${time}'` : ``;
-
-            seenByUser = true;
-            await this.cacheManager.set(`feedSeenBy${this.UserID}`, seenByUser);
+            unSeenByUser = false;
+            await this.cacheManager.set(`unSeenByUser${this.UserID}`, unSeenByUser);
 
             let getDataForAlgOffset: number = 0;
             if (standartLimit === offset) {
@@ -192,24 +188,32 @@ export class FeedService {
                 standartLimit = standartLimit * 2;
             }
 
-            const oldFeedPostDiff: number = await this.cacheManager.get(`oldFeedPostDiff${this.UserID}`);
-
-            getDataForAlgOffset += oldFeedPostDiff;
-            standartLimit += oldFeedPostDiff;
-            // once new batch finishes , you reset the offset; 
             offset = offset - getDataForAlgOffset;
 
+            let oldPostIds = await this.cacheManager.get(`oldPostID${this.UserID}`);
+            let previousOffset: number = await this.cacheManager.get(`previousOffset${this.UserID}`);
 
-            result = await this.getDataToFeedAlgorithm(cond, seenByUser, standartLimit, getDataForAlgOffset);
+            if (previousOffset >= offset) {
+                cond = ''
+                // offset = offset - postsByPage;
+            } else {
+                cond = previousOffset < offset ? ` AND po."postId" NOT IN (${oldPostIds}) ` : '';
+                offset = offset - postsByPage;
+            }
+
+
+            result = await this.getDataToFeedAlgorithm(cond, unSeenByUser, standartLimit, getDataForAlgOffset);
             let oldPostsOrder = await this.feedAlgorithm(result, postsByPage, offset);
             resp.push(oldPostsOrder);
+            resp = resp.flat();
         }
 
+        await this.cacheManager.set(`previousOffset${this.UserID}`, offset);
         return resp;
     }
 
 
-    async getDataToFeedAlgorithm(cond: string = '', seenByUser: boolean, limit: any, offset: any = 0) {
+    async getDataToFeedAlgorithm(cond: string = '', unSeenByUser: boolean, limit: any, offset: any = 0) {
 
         offset = offset ? ` OFFSET ${offset}` : '';
         limit = limit ? ` LIMIT ${limit}` : '';
@@ -265,7 +269,7 @@ export class FeedService {
                 ELSE 'false'
             END AS "postLikedByUser",
             STRING_AGG(pls."username", ', ') AS "postLikersUsernames",
-            '${seenByUser}' as "seenByUser",
+            '${unSeenByUser}' as "unSeenByUser",
             COALESCE(ec."engagementCommentNr", 0) AS "engagementCommentNr",
             COALESCE(el."engagementLikeNr", 0) AS "engagementLikeNr"
         FROM "post" po
@@ -332,7 +336,7 @@ export class FeedService {
                 .into(UserFeed)
                 .values({
                     userId: this.UserID,
-                    lastSeenTimestamp: () => 'CURRENT_TIMESTAMP'
+                    lastSeenTimestamp: new Date(), // Use the current date and time
                 })
                 .orUpdate(['lastSeenTimestamp'], ['userId'])
                 .execute();
