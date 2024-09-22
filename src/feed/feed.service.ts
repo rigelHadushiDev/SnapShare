@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpCode, HttpStatus, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { UserProvider } from 'src/user/services/user.provider';
 import { EntityManager } from 'typeorm';
 import { Post } from 'src/post/post.entity';
@@ -12,14 +12,17 @@ import { StoryViews } from 'src/story/StoryViews.entity';
 import { UserFeed } from './entities/userFeed.entity';
 import { off } from 'process';
 import { format } from 'date-fns';
-const fs = require('fs');
+import { GeneralResponse } from 'src/post/dtos/GeneralResponse';
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Cache } from 'cache-manager';
+import fs from 'fs';
 
 @Injectable()
 export class FeedService {
 
     public UserID: number;
     constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider,
-        private readonly commentService: CommentService
+        private readonly commentService: CommentService, @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
     ) {
         this.UserID = this.userProvider.getCurrentUser()?.userId;
     }
@@ -55,14 +58,14 @@ export class FeedService {
     }
 
 
-    async getPostsFeed(postsByPage: number = 10, page: number = 1, postCommentsLimit: number = 3, newData: boolean = false) {
+    async getPostsFeed(postsByPage: number = 10, page: number = 1, postCommentsLimit: number = 3, reload: boolean = false) {
 
 
         let resp = new GetFeedResp();
 
         let offset = (page - 1) * postsByPage;
 
-        let posts = await this.getPostsByPriority(postsByPage, offset, newData);
+        let posts = await this.getPostsByPriority(postsByPage, offset, reload);
 
         let feedContainer = [];
 
@@ -87,7 +90,7 @@ export class FeedService {
         return resp;
     }
 
-    async getPostsByPriority(postsByPage: number, offset: number = 0, newData: boolean) {
+    async getPostsByPriority(postsByPage: number, offset: number = 0, reload: boolean) {
 
         let resp: any[] = [];
 
@@ -105,10 +108,13 @@ export class FeedService {
             .getRawOne();
         let time = format(new Date(lastSeenTimestamp.timestamp), "yyyy-MM-dd HH:mm:ss");
 
+        // get the seenByUser cache Implementation
+        const seenPostsnFeed = await this.cacheManager.get(`feedSeenBy${this.UserID}`);
+
         // how much you went into the old feed posts
         let oldFeedPostDiff: number = 0;
 
-        if (newData) {
+        if (reload || seenPostsnFeed) {
             if (lastSeenTimestamp) {
 
                 cond = `AND po."createdAt" >= '${time}'`;
@@ -133,6 +139,7 @@ export class FeedService {
                 if (topNewPosts?.length < postsByPage) {
 
                     seenByUser = true;
+                    await this.cacheManager.set(`feedSeenBy${this.UserID}`, seenByUser);
 
                     // take the ones that are older
                     cond = `AND po."createdAt" < '${time}'`;
@@ -143,6 +150,7 @@ export class FeedService {
                     // setting up the diff , so that i know when the user keeps scrolling on older posts so i dont
                     // dublicate posts
                     oldFeedPostDiff = (offset - postsByPage);
+                    await this.cacheManager.set(`oldFeedPostDiff${this.UserID}`, oldFeedPostDiff);
 
                     offset = offset - oldFeedPostDiff;
                     limit = postsByPage - topNewPosts?.length;
@@ -156,6 +164,7 @@ export class FeedService {
 
                 // this will also happen only once because it will directly send the seenByUser to true and the newDate will be false
                 seenByUser = true;
+                await this.cacheManager.set(`feedSeenBy${this.UserID}`, seenByUser);
 
                 // cond will be set to empty string bc its the first time ever user opens their feed
                 cond = '';
@@ -163,6 +172,7 @@ export class FeedService {
                 // setting up the diff , so that i know when the user keeps scrolling on older posts so i dont
                 // dublicate posts
                 oldFeedPostDiff = postsByPage;
+                await this.cacheManager.set(`oldFeedPostDiff${this.UserID}`, oldFeedPostDiff);
 
                 result = await this.getDataToFeedAlgorithm(cond, seenByUser, standartLimit);
                 let oldPostsOrder = await this.feedAlgorithm(result, postsByPage, offset);
@@ -174,6 +184,7 @@ export class FeedService {
             cond = lastSeenTimestamp ? `AND po."createdAt" < '${time}'` : ``;
 
             seenByUser = true;
+            await this.cacheManager.set(`feedSeenBy${this.UserID}`, seenByUser);
 
             let getDataForAlgOffset: number = 0;
             if (standartLimit === offset) {
@@ -181,8 +192,8 @@ export class FeedService {
                 standartLimit = standartLimit * 2;
             }
 
-            // oldFeedPostDiff is impossible to be bigger than 0 if you dont implement cache,
-            // because it will be a new Api call when it gets here at this point. NEstJS is not singletone by default.
+            const oldFeedPostDiff: number = await this.cacheManager.get(`oldFeedPostDiff${this.UserID}`);
+
             getDataForAlgOffset += oldFeedPostDiff;
             standartLimit += oldFeedPostDiff;
             // once new batch finishes , you reset the offset; 
@@ -312,7 +323,8 @@ export class FeedService {
         return resp;
     }
 
-    async updateLastSeenTimestamp(): Promise<void> {
+    async updateFeedLastSeen(): Promise<GeneralResponse> {
+        let resp = new GeneralResponse();
         try {
             await this.entityManager
                 .createQueryBuilder()
@@ -325,13 +337,12 @@ export class FeedService {
                 .orUpdate(['lastSeenTimestamp'], ['userId'])
                 .execute();
 
+            resp = { status: HttpStatus.OK, message: 'updateFeedLastSeen' }
         } catch (error) {
-            throw new InternalServerErrorException('failedUpdateingLastSeenFeedTimestamp');
+            throw new InternalServerErrorException('failedUpdateingFeedLastSeen');
         }
+        return resp;
     }
-
-
-
 }
 
 

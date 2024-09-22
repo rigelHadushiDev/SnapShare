@@ -34,6 +34,7 @@ import { ExploreModule } from './explore/explore.module';
 import { Engagement } from './feed/entities/engagement.entity';
 import { EngagementType } from './feed/entities/engagementType.entity';
 import { UserFeed } from './feed/entities/userFeed.entity';
+import { CacheModule } from '@nestjs/cache-manager';
 dotenv.config();
 
 @Module({
@@ -61,6 +62,11 @@ dotenv.config();
     CommentModule,
     LikeModule,
     SSEModule,
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 0,
+      max: undefined,
+    }),
     StoryModule,
     FeedModule,
     ExploreModule
