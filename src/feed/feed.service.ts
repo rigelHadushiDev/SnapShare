@@ -347,14 +347,35 @@ export class FeedService {
         }
         return resp;
     }
+
+
+    async getStoryFeed(postsByPage: number = 10, page: number = 1, reload: boolean) {
+
+
+        let resp: any
+
+        let offset = (page - 1) * postsByPage;
+
+        // the difference in this 
+        let stories = await this.getPostsByPriority(postsByPage, offset, reload);
+
+        let storyfeedContainer = [];
+
+
+        for (let story of stories) {
+            let postContainer = [];
+
+            if (story?.postMedia)
+                story.postMedia = SnapShareUtility.urlConverter(story.postMedia);
+
+            if (story?.postProfileImg)
+                story.postProfileImg = SnapShareUtility.urlConverter(story.postProfileImg);
+
+            storyfeedContainer.push(postContainer);
+        }
+
+
+        resp = { storyfeedContainer };
+        return resp;
+    }
 }
-
-
-
-// LOOK IT UP TOMORROW
-// implement oldFeedPostDiff with cache Implemenatation and also the seenBy flase or true will check it yourself and set it in your cache so that the front only sends the
-//reload object
-
-
-// ALSO CREATE the refresh feed , it should set a time where user has left the feed.
-
