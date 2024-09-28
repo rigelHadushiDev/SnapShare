@@ -17,7 +17,7 @@ import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator
 import { ProfileImgReq, ProfileImgRes } from '../dtos/UploadProfileImg.dto';
 import { PaginationDto } from '../dtos/GetUserPosts.dto';
 import { UserMediaService } from '../services/userMedia.service';
-import { GetFeedResp } from 'src/post/dtos/getFeed.dto';
+import { GetFeedResp } from 'src/feed/dtos/getFeed.dto';
 
 @ApiBearerAuth()
 @ApiTags("User Media APIs")

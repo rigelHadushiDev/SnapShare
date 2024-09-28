@@ -4,7 +4,7 @@ const fs = require('fs');
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
 import { PaginationDto } from 'src/user/dtos/GetUserPosts.dto';
-import { GetFeedResp } from 'src/post/dtos/getFeed.dto';
+import { GetFeedResp } from './dtos/getFeed.dto';
 import { FeedService } from './feed.service';
 import { GeneralResponse } from 'src/post/dtos/GeneralResponse';
 

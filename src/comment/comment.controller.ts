@@ -7,7 +7,7 @@ import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator
 import { CommentEditDto } from './dtos/commentEdit.dto';
 import { PaginationDto } from 'src/user/dtos/GetUserPosts.dto';
 import { GetCommentRes } from './dtos/getComments.dto';
-import { CommentDto } from 'src/post/dtos/getFeed.dto';
+import { CommentDto } from 'src/feed/dtos/getFeed.dto';
 import { GetCommentRepliesRes } from './dtos/getCommentReplies.dto';
 import { PostAccessGuard } from 'src/like/guards/PostAccess.guard';
 

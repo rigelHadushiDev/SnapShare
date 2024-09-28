@@ -8,7 +8,7 @@ import { EditPostDto } from '../dtos/EditPost.dto';
 import { Observable } from 'rxjs';
 import { DescriptionDto } from '../dtos/CreatePost.dto';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
-import { GetFeedResp } from '../dtos/getFeed.dto';
+import { GetFeedResp } from '../../feed/dtos/getFeed.dto';
 import { CommentService } from 'src/comment/comment.service';
 import { GetUserPostsRes } from '../dtos/getUsersPosts.dto';
 const fs = require('fs');
