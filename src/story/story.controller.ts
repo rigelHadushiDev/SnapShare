@@ -30,8 +30,8 @@ export class StoryController {
         status: HttpStatus.OK, description: 'The story has been successfully uploaded.', type: Story
     })
     @ApiBody({ type: StoryMediaReq, description: 'Story Media upload data', required: true })
-    uploadStory(@UploadedFile() file: Express.Multer.File) {
-        return this.StoryService.uploadStory(file);
+    async uploadStory(@UploadedFile() file: Express.Multer.File) {
+        return await this.StoryService.uploadStory(file);
     }
 
 
@@ -41,8 +41,8 @@ export class StoryController {
     @ApiException(() => InternalServerErrorException, { description: 'An issue occured on removing this story. [key: "issueDeletingStory" ]' })
     @ApiException(() => ForbiddenException, { description: 'Forbidden. Only the story creator can delete the story. [key: "isntStoryCreator" ]' })
     @ApiException(() => NotFoundException, { description: 'Story is not found. [key: "noStoryFound" ]' })
-    deleteStory(@Param('storyId') storyId: number) {
-        return this.StoryService.deleteStory(storyId);
+    async deleteStory(@Param('storyId') storyId: number) {
+        return await this.StoryService.deleteStory(storyId);
     }
 
     @UseGuards(GetUserStoriesAccessGuard)
@@ -53,9 +53,9 @@ export class StoryController {
     @ApiException(() => NotFoundException, { description: 'Story is not found . [key: "userNotFound" ]' })
     @ApiException(() => NotFoundException, { description: 'No Story  published by the user was found. [key: "noStoryOnUserAcc" ]' })
     @ApiResponse({ status: HttpStatus.OK, description: 'Successfully retrived user account stories.', type: GetUserStoriesResDto })
-    getUserStories(@Query() query: PaginationDto, @Param('userId') userId: number) {
+    async getUserStories(@Query() query: PaginationDto, @Param('userId') userId: number) {
         const { postsByPage, page } = query;
-        return this.StoryService.getUserStories(postsByPage, page, userId);
+        return await this.StoryService.getUserStories(postsByPage, page, userId);
     }
 
 

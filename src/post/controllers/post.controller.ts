@@ -38,8 +38,8 @@ export class PostController {
     @ApiException(() => BadRequestException, {
         description: 'A media file is required to create a post. Please upload a media file. [key: "mediaFileRequired" ]'
     })
-    createPost(@UploadedFile() media, @Body() description: DescriptionDto) {
-        return this.PostService.createPost(media, description);
+    async createPost(@UploadedFile() media, @Body() description: DescriptionDto) {
+        return await this.PostService.createPost(media, description);
     }
 
 
@@ -51,8 +51,8 @@ export class PostController {
         status: HttpStatus.OK, description: 'Successfully toggled archive status. [key: "archiveToggleSuccessful"]', type: GeneralResponse
     })
     @Put('archive/:postId')
-    toggleArchivePost(@Param('postId') postId: number) {
-        return this.PostService.toggleArchivePost(postId);
+    async toggleArchivePost(@Param('postId') postId: number) {
+        return await this.PostService.toggleArchivePost(postId);
     }
 
     @UseGuards(IsCreatorGuard)
@@ -63,8 +63,8 @@ export class PostController {
     @ApiParam({ name: 'postId', description: 'ID of the post to be deleted' })
     @ApiResponse({ status: HttpStatus.OK, description: 'Successfully deleted the post.', type: GeneralResponse })
     @ApiOperation({ summary: 'Toggle archive status of a post by ID' })
-    deletePost(@Param('postId') postId: number) {
-        return this.PostService.deletePost(postId);
+    async deletePost(@Param('postId') postId: number) {
+        return await this.PostService.deletePost(postId);
     }
 
 
@@ -78,8 +78,8 @@ export class PostController {
     @ApiException(() => NotFoundException, { description: 'Post is not found. [key: "postNotFound" ]' })
     @ApiBody({ type: EditPostDto, description: 'Updated post data', required: true })
     @ApiResponse({ status: HttpStatus.OK, description: 'Successfully edited the post.', type: GeneralResponse })
-    editPost(@Param('postId') postId: number, @Body() postData: EditPostDto) {
-        return this.PostService.editPost(postId, postData);
+    async editPost(@Param('postId') postId: number, @Body() postData: EditPostDto) {
+        return await this.PostService.editPost(postId, postData);
     }
 
 
@@ -91,9 +91,9 @@ export class PostController {
     @ApiException(() => ForbiddenException, { description: 'Forbidden. You cant see private users posts that are not your friend . [key: "nonFriendPrivateAccList" ]' })
     @ApiException(() => NotFoundException, { description: 'Post is not found . [key: "userNotFound" ]' })
     @ApiResponse({ status: HttpStatus.OK, description: 'Successfully retrived user account posts.', type: GetUserPostsRes })
-    getUserPosts(@Query() query: PaginationDto, @Param('userId') userId: number, @Query('postCommentsLimit') postCommentsLimit?: number) {
+    async getUserPosts(@Query() query: PaginationDto, @Param('userId') userId: number, @Query('postCommentsLimit') postCommentsLimit?: number) {
         const { postsByPage, page } = query;
-        return this.PostService.getUserPosts(postsByPage, page, userId, postCommentsLimit);
+        return await this.PostService.getUserPosts(postsByPage, page, userId, postCommentsLimit);
     }
 
 

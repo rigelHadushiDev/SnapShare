@@ -28,36 +28,6 @@ export class FeedService {
         this.UserID = this.userProvider.getCurrentUser()?.userId;
     }
 
-    async getMedia(hashedUser: string, type: string, filename: string, mediaId: number = 0, res: Response) {
-
-        const filePath: string = `${path.join(process.cwd(), 'media', 'users', hashedUser, `${type}`, `${filename}`)}`;
-
-        if (type === 'story') {
-
-            if (!mediaId) {
-                throw new InternalServerErrorException('issueInOpeningTheFile')
-            }
-
-            const existingRecord = await this.entityManager.createQueryBuilder(StoryViews, 'storyViews')
-                .where('storyViews.userId = :userId', { userId: this.UserID })
-                .andWhere('storyViews.storyId = :storyId', { storyId: mediaId })
-                .getOne();
-
-            if (!existingRecord) {
-                await this.entityManager.createQueryBuilder()
-                    .insert()
-                    .into(StoryViews)
-                    .values({
-                        user: { userId: this.UserID },
-                        story: { storyId: mediaId }
-                    })
-                    .execute();
-            }
-        }
-
-        res.sendFile(filePath);
-    }
-
 
     async getPostsFeed(postsByPage: number = 10, page: number = 1, postCommentsLimit: number = 3, reload: boolean) {
 
@@ -128,11 +98,11 @@ export class FeedService {
                 offset = offset - getDataForAlgOffset;
 
                 result = await this.getPostsToFeedAlgorithm(cond, unSeenByUser, standartLimit, getDataForAlgOffset);
-                let topNewPosts = await this.feedAlgorithm(result, postsByPage, offset);
+                let topNewPosts = await this.feedPostsAlgorithm(result, postsByPage, offset);
 
                 await this.cacheManager.set(`unSeenByUser${this.UserID}`, unSeenByUser);
 
-                if (topNewPosts?.length > 0) {
+                if (topNewPosts?.length > 0 && topNewPosts) {
                     resp.push(topNewPosts);
                 }
 
@@ -151,7 +121,7 @@ export class FeedService {
 
                     limit = postsByPage - topNewPosts?.length;
 
-                    let topOldPosts = await this.feedAlgorithm(result, limit, offset);
+                    let topOldPosts = await this.feedPostsAlgorithm(result, limit, offset);
                     resp.push(topOldPosts);
 
                 }
@@ -166,7 +136,7 @@ export class FeedService {
                 cond = '';
 
                 result = await this.getPostsToFeedAlgorithm(cond, unSeenByUser, standartLimit);
-                let oldPostsOrder = await this.feedAlgorithm(result, postsByPage, offset);
+                let oldPostsOrder = await this.feedPostsAlgorithm(result, postsByPage, offset);
                 resp.push(oldPostsOrder);
             }
             resp = resp.flat();
@@ -189,7 +159,6 @@ export class FeedService {
 
             let oldPostIds = await this.cacheManager.get(`oldPostID${this.UserID}`);
             let previousOffset: number = await this.cacheManager.get(`previousOffset${this.UserID}`);
-            console.log(previousOffset)
 
             if (previousOffset >= offset || offset == 0) {
                 if (time && oldPostIds)
@@ -201,7 +170,7 @@ export class FeedService {
 
 
             result = await this.getPostsToFeedAlgorithm(cond, unSeenByUser, standartLimit, getDataForAlgOffset);
-            let oldPostsOrder = await this.feedAlgorithm(result, postsByPage, offset);
+            let oldPostsOrder = await this.feedPostsAlgorithm(result, postsByPage, offset);
             resp.push(oldPostsOrder);
             resp = resp.flat();
         }
@@ -291,12 +260,11 @@ export class FeedService {
        ${limit}
        ${offset}`;
 
-        console.log(feedPostsQuery);
         let resp = await this.entityManager.query(feedPostsQuery);
         return resp;
     }
 
-    async feedAlgorithm(posts, postsByPage: number, offset: number = 0) {
+    async feedPostsAlgorithm(posts, postsByPage: number, offset: number = 0) {
 
         let resp: any;
         const rankedPosts: any[] = [];
@@ -360,11 +328,22 @@ export class FeedService {
 
         let result: any[] = [];
 
-        //check if there are at least one unseen story
-        let unseenStories = await this.getStoriesToFeedAlgorithm(cond, 1);
+        let lastSeenTimestamp = await this.entityManager
+            .createQueryBuilder(UserFeed, 'uf')
+            .select('uf.lastSeenTimestamp', 'timestamp')
+            .where('uf.userId = :userId', { userId: this.UserID })
+            .getRawOne();
+
+
+        let time: string;
+        if (lastSeenTimestamp)
+            time = format(new Date(lastSeenTimestamp.timestamp), "yyyy-MM-dd HH:mm:ss");
 
         if (reload) {
-            if (unseenStories) {
+
+            if (lastSeenTimestamp) {
+
+                cond += ` AND st."createdAt" >= '${time}' `;
 
                 let getDataForAlgOffset: number = 0;
                 if (standartLimit === offset) {
@@ -377,18 +356,17 @@ export class FeedService {
                 offset = offset - getDataForAlgOffset;
 
                 result = await this.getStoriesToFeedAlgorithm(cond, standartLimit, getDataForAlgOffset);
-                // TODO
-                // change the method to storyFeedAlgorithm and the old to postFeedAlgorithm
-                let topNewStories = await this.feedAlgorithm(result, postsByPage, offset);
 
-                if (topNewStories?.length > 0) {
+                let topNewStories = await this.feedStoriesAlgorithm(result, postsByPage, offset);
+
+                if (topNewStories?.length > 0 && topNewStories)
                     resp.push(topNewStories);
-                }
+
 
                 if (topNewStories?.length < postsByPage) {
 
                     // take the ones that are older
-                    cond = ` AND sv."storyViewsId" IS NOT NULL `;
+                    cond = ` AND sv."storyViewsId" IS NULL AND st."createdAt" < '${time}'  `;
 
                     // this will happpen only once
                     result = await this.getStoriesToFeedAlgorithm(cond, standartLimit);
@@ -396,16 +374,29 @@ export class FeedService {
                     offset = 0
                     limit = postsByPage - topNewStories?.length;
 
-                    let topOldPosts = await this.feedAlgorithm(result, limit, offset);
-                    resp.push(topOldPosts);
+                    let topOldPosts = await this.feedStoriesAlgorithm(result, limit, offset);
+
+                    if (topOldPosts?.length > 0 && topOldPosts)
+                        resp.push(topOldPosts);
+
+                    if (topOldPosts?.length < limit) {
+                        cond = ` AND sv."storyViewsId" IS NOT NULL AND st."createdAt" < '${time}'  `;
+
+                        // this will happpen only once
+                        result = await this.getStoriesToFeedAlgorithm(cond, standartLimit);
+                        limit = limit - topOldPosts?.length;
+                        topOldPosts = await this.feedStoriesAlgorithm(result, limit, offset);
+                        if (topOldPosts?.length > 0 && topOldPosts)
+                            resp.push(topOldPosts);
+                    }
 
                 }
 
             } else {
-
+                cond = ``;
                 // its the first time ever user opens their feed
                 result = await this.getStoriesToFeedAlgorithm(cond);
-                let oldStoriesOrder = await this.feedAlgorithm(result, postsByPage, offset);
+                let oldStoriesOrder = await this.feedStoriesAlgorithm(result, postsByPage, offset);
                 resp.push(oldStoriesOrder);
             }
             resp = resp.flat();
@@ -426,15 +417,15 @@ export class FeedService {
             let previousOffset: number = await this.cacheManager.get(`previousStoryOffset${this.UserID}`);
 
             if (previousOffset >= offset || offset == 0) {
-                cond = ` AND (st."storyId" IN (${oldStoryIds}) OR sv."storyViewsId" IS NOT NULL )`;
+                cond = ` AND (st."storyId" IN (${oldStoryIds}) OR st."createdAt" < '${time}')`;
             } else {
-                cond = ` AND (st."storyId" NOT IN (${oldStoryIds}) AND  sv."storyViewsId" IS NOT NULL) `;
+                cond = ` AND (st."storyId" NOT IN (${oldStoryIds}) AND st."createdAt" < '${time}') `;
                 offset = offset - postsByPage;
             }
 
 
             result = await this.getStoriesToFeedAlgorithm(cond, standartLimit, getDataForAlgOffset);
-            let oldStoriesOrder = await this.feedAlgorithm(result, postsByPage, offset);
+            let oldStoriesOrder = await this.feedStoriesAlgorithm(result, postsByPage, offset);
             resp.push(oldStoriesOrder);
             resp = resp.flat();
         }
@@ -450,84 +441,89 @@ export class FeedService {
         limit = limit ? ` LIMIT ${limit}` : '';
 
         let feedStoriesQuery: string = `WITH StoryLikers AS (
-            SELECT
-                sl."storyId",
-                l."username",
-                ROW_NUMBER() OVER (PARTITION BY sl."storyId" ORDER BY n."networkId" ASC) AS rn
-            FROM "storyLike" sl
-            INNER JOIN "user" l ON l."userId" = sl."userId"
-            LEFT JOIN "network" n ON n."followeeId" = l."userId" AND n.pending = FALSE AND n.deleted = FALSE AND n."followerId" = ${this.UserID}
-            WHERE sl.deleted = FALSE AND l."userId" <> ${this.UserID}
-        ),
-        EngagementComment AS (
-            SELECT
-                LEAST(CAST(${this.UserID} AS INTEGER), sl."userId") AS "userId1",
-                GREATEST(CAST(${this.UserID} AS INTEGER), sl."userId") AS "userId2",
-                e."engagementNr" AS "engagementCommentNr"
-            FROM "engagement" e
-            INNER JOIN "story" sl ON LEAST(CAST(${this.UserID} AS INTEGER), sl."userId") = e."userId1"
-            AND GREATEST(CAST(${this.UserID} AS INTEGER), sl."userId") = e."userId2"
-            WHERE e."engagementTypeId" = (
-                SELECT "engagementTypeId" FROM "engagementType" WHERE "type" = 'COMMENT'
-            )
-        ),
-        EngagementLike AS (
-            SELECT
-                LEAST(CAST(${this.UserID} AS INTEGER), sl."userId") AS "userId1",
-                GREATEST(CAST(${this.UserID} AS INTEGER), sl."userId") AS "userId2",
-                e."engagementNr" AS "engagementLikeNr"
-            FROM "engagement" e
-            INNER JOIN "story" sl ON LEAST(CAST(${this.UserID} AS INTEGER), sl."userId") = e."userId1"
-            AND GREATEST(CAST(${this.UserID} AS INTEGER), sl."userId") = e."userId2"
-            WHERE e."engagementTypeId" = (
-                SELECT "engagementTypeId" FROM "engagementType" WHERE "type" = 'LIKE'
-            )
-        )
-        SELECT 
-            st."storyId",
-            st."likesNr" AS "storyLikesNr",
-            st.media AS "storyMedia",
-            st."userId" AS "storytUserId",
-            st."createdAt" AS "storyCreatedAt",
-            u."profileImg" AS "storyProfileImg",
-            u.username AS "storyLikersUsername",
-            CONCAT(u."firstName", ' ', u."lastName") AS "AccFullName",
-            CASE
-                WHEN sl."likeId" IS NOT NULL THEN 'true'
-                ELSE 'false'
-            END AS "storyLikedByUser",
-            STRING_AGG(sls."username", ', ') AS "storyLikersUsernames",
-            COALESCE(ec."engagementCommentNr", 0) AS "engagementCommentNr",
-            COALESCE(el."engagementLikeNr", 0) AS "engagementLikeNr",
-            CASE
-                WHEN sv."storyViewsId" IS NOT NULL THEN 'true'
-                ELSE 'false'
-            END AS "seenByUser"
-        FROM "story" st
-        INNER JOIN "user" u ON u."userId" = st."userId" AND u.archive = false
-        LEFT JOIN "network" n ON n."followeeId" = st."userId" AND n.pending = FALSE AND n.deleted = FALSE AND n."followerId" = ${this.UserID}
-        LEFT JOIN "storyLike" sl ON sl."userId" = n."followerId" AND sl."storyId" = st."storyId" AND sl.deleted = false
-        LEFT JOIN StoryLikers sls ON sls."storyId" = st."storyId" AND sls.rn <= 3
-        LEFT JOIN EngagementComment ec ON ec."userId1" = LEAST(${this.UserID} , st."userId") AND ec."userId2" = GREATEST(${this.UserID} , st."userId")
-        LEFT JOIN EngagementLike el ON el."userId1" = LEAST(${this.UserID} , st."userId") AND el."userId2" = GREATEST(${this.UserID} , st."userId")
-        LEFT JOIN "storyViews" sv ON sv."storyId" = st."storyId" AND sv."userId" = ${this.UserID}
-        WHERE st.archive = FALSE
-        AND n."networkId" IS NOT NULL ${seenCond}
-        GROUP BY
-            st."storyId",
-            u."profileImg",
-            u.username,
-            u."firstName",
-            u."lastName",
-            sl."likeId",
-            ec."engagementCommentNr",
-            el."engagementLikeNr",
-            sv."storyViewsId"
-        ORDER BY st."createdAt" DESC
-            ${limit}
-            ${offset}`;
+    SELECT
+        sl."storyId",
+        l."username",
+        ROW_NUMBER() OVER (PARTITION BY sl."storyId" ORDER BY n."networkId" ASC) AS rn
+    FROM "storyLike" sl
+    INNER JOIN "user" l ON l."userId" = sl."userId"
+    LEFT JOIN "network" n ON n."followeeId" = l."userId" AND n.pending = FALSE AND n.deleted = FALSE AND n."followerId" = ${this.UserID}
+    WHERE sl.deleted = FALSE AND l."userId" <> ${this.UserID}
+),
+EngagementComment AS (
+    SELECT
+        LEAST(CAST(${this.UserID} AS INTEGER), sl."userId") AS "userId1",
+        GREATEST(CAST(${this.UserID} AS INTEGER), sl."userId") AS "userId2",
+        e."engagementNr" AS "engagementCommentNr"
+    FROM "engagement" e
+    INNER JOIN "story" sl ON LEAST(CAST(${this.UserID} AS INTEGER), sl."userId") = e."userId1"
+    AND GREATEST(CAST(${this.UserID} AS INTEGER), sl."userId") = e."userId2"
+    WHERE e."engagementTypeId" = (
+        SELECT "engagementTypeId" FROM "engagementType" WHERE "type" = 'COMMENT'
+    )
+),
+EngagementLike AS (
+    SELECT
+        LEAST(CAST(${this.UserID} AS INTEGER), sl."userId") AS "userId1",
+        GREATEST(CAST(${this.UserID} AS INTEGER), sl."userId") AS "userId2",
+        e."engagementNr" AS "engagementLikeNr"
+    FROM "engagement" e
+    INNER JOIN "story" sl ON LEAST(CAST(${this.UserID} AS INTEGER), sl."userId") = e."userId1"
+    AND GREATEST(CAST(${this.UserID} AS INTEGER), sl."userId") = e."userId2"
+    WHERE e."engagementTypeId" = (
+        SELECT "engagementTypeId" FROM "engagementType" WHERE "type" = 'LIKE'
+    )
+)
+SELECT 
+    st."storyId",
+    st."likesNr" AS "storyLikesNr",
+    st.media AS "storyMedia",
+    st."userId" AS "storytUserId",
+    st."createdAt" AS "storyCreatedAt",
+    u."profileImg" AS "storyProfileImg",
+    u.username AS "storyLikersUsername",
+    CONCAT(u."firstName", ' ', u."lastName") AS "AccFullName",
+    CASE
+        WHEN sl."likeId" IS NOT NULL THEN 'true'
+        ELSE 'false'
+    END AS "storyLikedByUser",
+    STRING_AGG(sls."username", ', ') AS "storyLikersUsernames",
+    COALESCE(ec."engagementCommentNr", 0) AS "engagementCommentNr",
+    COALESCE(el."engagementLikeNr", 0) AS "engagementLikeNr",
+    CASE
+        WHEN sv."storyViewsId" IS NOT NULL THEN 'true'
+        ELSE 'false'
+    END AS "seenByUser"
+FROM "story" st
+INNER JOIN "user" u ON u."userId" = st."userId" AND u.archive = false
+LEFT JOIN "network" n ON n."followeeId" = st."userId" AND n.pending = FALSE AND n.deleted = FALSE AND n."followerId" = ${this.UserID}
+LEFT JOIN "storyLike" sl ON sl."userId" = n."followerId" AND sl."storyId" = st."storyId" AND sl.deleted = false
+LEFT JOIN StoryLikers sls ON sls."storyId" = st."storyId" AND sls.rn <= 3
+LEFT JOIN EngagementComment ec ON ec."userId1" = LEAST(${this.UserID} , st."userId") AND ec."userId2" = GREATEST(${this.UserID} , st."userId")
+LEFT JOIN EngagementLike el ON el."userId1" = LEAST(${this.UserID} , st."userId") AND el."userId2" = GREATEST(${this.UserID} , st."userId")
+LEFT JOIN "storyViews" sv ON sv."storyId" = st."storyId" AND sv."userId" = ${this.UserID}
+WHERE st.archive = FALSE
+  AND n."networkId" IS NOT NULL  
+	${seenCond}
+GROUP BY
+    st."storyId",
+    u."profileImg",
+    u.username,
+    u."firstName",
+    u."lastName",
+    sl."likeId",
+    ec."engagementCommentNr",
+    el."engagementLikeNr",
+    sv."storyViewsId"
+ORDER BY 
+    CASE
+        WHEN sv."storyViewsId" IS NULL THEN 0  -- Unseen stories first
+        ELSE 1  -- Seen stories second
+    END,
+    st."createdAt" DESC
+    ${limit}
+    ${offset}`;
 
-        console.log(feedStoriesQuery)
         let resp = await this.entityManager.query(feedStoriesQuery);
         return resp;
 
@@ -558,5 +554,34 @@ export class FeedService {
 
         resp = storyfeedContainer;
         return storyfeedContainer;
+    }
+
+    async feedStoriesAlgorithm(stories, postsByPage: number, offset: number = 0) {
+
+
+        let resp: any;
+        const rankedStories: any[] = [];
+        for (const story of stories) {
+
+            const score = (
+                (story.engagementCommentNr * 0.5) +
+                (story.engagementLikeNr * 0.25) +
+                (story.postCommentsNr * 0.16) +
+                (story.postLikesNr * 0.9)
+            );
+
+            rankedStories.push({ story, score });
+        }
+
+        // Step 5: Sort the rankedPosts list by score in descending order
+        const sortedStories = rankedStories.sort((a, b) => b.score - a.score);
+
+        // Step 6: Extract the top posts withmost points. The number of posts theat should be send it is set by the value of variable postsByPage
+        const topStories = sortedStories.slice(offset, offset + postsByPage);
+
+        // Step 7: Return the top posts
+        resp = topStories.map(rankedStories => rankedStories.story);
+
+        return resp;
     }
 }

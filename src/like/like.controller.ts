@@ -28,8 +28,8 @@ export class LikeController {
     @ApiOperation({ summary: 'API for story like toggle.', description: 'Like or unlike a story.' })
     @Post('story/:storyId')
     @HttpCode(HttpStatus.OK)
-    likeStory(@Param('storyId') storyId: number) {
-        return this.likeService.toggleStoryLike(storyId);
+    async likeStory(@Param('storyId') storyId: number) {
+        return await this.likeService.toggleStoryLike(storyId);
     }
 
     @UseGuards(PostAccessGuard)
@@ -43,8 +43,8 @@ export class LikeController {
     @Post('post/:postId')
     @ApiOperation({ summary: 'API for post like toggle.', description: 'Like or unlike a post.' })
     @HttpCode(HttpStatus.OK)
-    likePost(@Param('postId') postId: number) {
-        return this.likeService.togglePostLike(postId);
+    async likePost(@Param('postId') postId: number) {
+        return await this.likeService.togglePostLike(postId);
     }
 
     @ApiException(() => NotFoundException, { description: 'Comment is not found . [key: "commentNotFound" ]' })
@@ -55,8 +55,8 @@ export class LikeController {
     @Post('comment/:commentId')
     @ApiOperation({ summary: 'API for comment like toggle.', description: 'Like or unlike a comment of a post.' })
     @HttpCode(HttpStatus.OK)
-    likeComment(@Param('commentId') commentId: number) {
-        return this.likeService.toggleCommentLike(commentId);
+    async likeComment(@Param('commentId') commentId: number) {
+        return await this.likeService.toggleCommentLike(commentId);
     }
 
     @UseGuards(PostAccessGuard)
@@ -67,9 +67,9 @@ export class LikeController {
     @ApiResponse({ status: HttpStatus.OK, description: 'Successfully viewed the users accounts which liked the post.', type: UserListRes })
     @Get(':postId/getPostLikers')
     @ApiOperation({ summary: 'API for getting the accounts which liked the post.', description: 'API for getting the accounts which liked the post, and also if they are in the current user network , their profile Img and their username.' })
-    getPostLikers(@Param('postId') postId: number, @Query() query: PaginationDto) {
+    async getPostLikers(@Param('postId') postId: number, @Query() query: PaginationDto) {
         const { postsByPage, page } = query;
-        return this.likeService.getPostLikers(postId, postsByPage, page);
+        return await this.likeService.getPostLikers(postId, postsByPage, page);
     }
 
     @ApiException(() => NotFoundException, { description: 'Story is not found . [key: "storyNotFound" ]' })
@@ -78,8 +78,8 @@ export class LikeController {
     @ApiResponse({ status: HttpStatus.OK, description: 'Successfully viewed the users accounts which liked the post.', type: UserListRes })
     @Get(':storyId/getStoryLikers')
     @ApiOperation({ summary: 'API for getting the accounts which liked the story, in which only the story owner has access.', description: 'API for getting the accounts which liked the story, and also if they are in the current user network , their profile Img and their username.' })
-    getStoryLikers(@Param('storyId') storyId: number, @Query() query: PaginationDto) {
+    async getStoryLikers(@Param('storyId') storyId: number, @Query() query: PaginationDto) {
         const { postsByPage, page } = query;
-        return this.likeService.getStoryLikers(storyId, postsByPage, page);
+        return await this.likeService.getStoryLikers(storyId, postsByPage, page);
     }
 }
