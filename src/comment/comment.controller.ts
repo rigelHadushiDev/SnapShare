@@ -7,7 +7,7 @@ import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator
 import { CommentEditDto } from './dtos/commentEdit.dto';
 import { PaginationDto } from 'src/user/dtos/GetUserPosts.dto';
 import { GetCommentRes } from './dtos/getComments.dto';
-import { CommentDto } from 'src/post/dtos/getFeed.dto';
+import { CommentDto } from 'src/feed/dtos/getFeed.dto';
 import { GetCommentRepliesRes } from './dtos/getCommentReplies.dto';
 import { PostAccessGuard } from 'src/like/guards/PostAccess.guard';
 
@@ -34,8 +34,8 @@ export class CommentController {
     @ApiException(() => NotFoundException, { description: 'Post Id where the user wants to comment was not found. [key: "postNotFound" ]' })
     @ApiException(() => NotFoundException, { description: 'Comment ID of the comment which user wants to reply was not found. [key: "parentCommentNotFound" ]' })
     @ApiBody({ type: CommentPostDto, required: true })
-    commentPost(@Body() postData: CommentPostDto) {
-        return this.commentService.commentPost(postData);
+    async commentPost(@Body() postData: CommentPostDto) {
+        return await this.commentService.commentPost(postData);
     }
 
     @Post('edit')
@@ -46,8 +46,8 @@ export class CommentController {
     @HttpCode(HttpStatus.OK)
     @ApiBody({ type: CommentEditDto, required: true })
     @ApiResponse({ status: HttpStatus.OK, description: 'Comment was successfully edited', type: CommentEditDto })
-    editPostComment(@Body() postData: CommentEditDto) {
-        return this.commentService.editComment(postData);
+    async editPostComment(@Body() postData: CommentEditDto) {
+        return await this.commentService.editComment(postData);
     }
 
 
@@ -60,17 +60,17 @@ export class CommentController {
     @ApiException(() => NotFoundException, { description: 'Post is not found. [key: "postNotFound" ]' })
     @ApiException(() => NotFoundException, { description: 'Comment with that comment Is is not found. [key: "commentNotFound" ]' })
     @ApiException(() => ForbiddenException, { description: 'This exception is thrown when the user which wants to delete the post in neither the post owner or the comment owner. [key: "cannotDeleteComment" ]' })
-    deleteComment(@Param('commentId') commentId: number) {
-        return this.commentService.deleteComment(commentId)
+    async deleteComment(@Param('commentId') commentId: number) {
+        return await this.commentService.deleteComment(commentId)
     }
 
     @Get('getComments')
     @ApiOperation({ summary: 'Retrieve the comments of a post' })
     @ApiResponse({ status: HttpStatus.OK, description: " Post comments got recieved successfully", type: [CommentDto] })
     @ApiQuery({ name: 'postId', required: true, description: 'Post Id that you want to recieve comments off.', type: Number })
-    getComments(@Query('postId') postId: number, @Query() query: PaginationDto) {
+    async getComments(@Query('postId') postId: number, @Query() query: PaginationDto) {
         const { postsByPage, page } = query;
-        return this.commentService.getComments(postId, postsByPage, page);
+        return await this.commentService.getComments(postId, postsByPage, page);
     }
 
 
@@ -82,8 +82,8 @@ export class CommentController {
     })
     @ApiQuery({ name: 'commentId', required: true, description: 'Comment Id that you want to recieve other reply comments off.', type: Number })
     @ApiException(() => ForbiddenException, { description: 'Parent comment Id was not found . [key: "commentIdNotFound" ]' })
-    getCommentReplies(@Query('commentId') comentId: number, @Query() query: PaginationDto) {
+    async getCommentReplies(@Query('commentId') comentId: number, @Query() query: PaginationDto) {
         const { postsByPage, page } = query;
-        return this.commentService.getCommentReplies(comentId, postsByPage, page);
+        return await this.commentService.getCommentReplies(comentId, postsByPage, page);
     }
 }

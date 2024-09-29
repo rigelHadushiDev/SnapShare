@@ -17,9 +17,9 @@ export class ExploreController {
     @ApiOperation({ summary: 'Search bar to explore SnapShare accounts. ' })
     @ApiParam({ name: 'username', required: true, description: 'Username of a Snap Share accounts.', type: String })
     @ApiResponse({ status: HttpStatus.OK, description: " Snap Share user accounts that match that username are retrived successfully.", type: [ExploreSearchBarDto] })
-    exploreSearchBar(@Param('username') username: string, @Query() query: PaginationDto,) {
+    async exploreSearchBar(@Param('username') username: string, @Query() query: PaginationDto,) {
         const { postsByPage, page } = query;
-        return this.exploreService.exploreSearchBar(username, postsByPage, page);
+        return await this.exploreService.exploreSearchBar(username, postsByPage, page);
     }
 
 

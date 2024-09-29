@@ -24,9 +24,9 @@ export class ContentMediaService {
 
         if (type === 'story') {
 
-            if (!mediaId) {
+            if (!mediaId)
                 throw new InternalServerErrorException('issueInOpeningTheFile')
-            }
+
 
             const existingRecord = await this.entityManager.createQueryBuilder(StoryViews, 'storyViews')
                 .where('storyViews.userId = :userId', { userId: this.UserID })

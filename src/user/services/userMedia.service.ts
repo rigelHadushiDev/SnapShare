@@ -4,7 +4,7 @@ import { User } from '../user.entity';
 import { Post } from 'src/post/post.entity';
 import { UserProvider } from './user.provider';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
-import { GetFeedResp } from 'src/post/dtos/getFeed.dto';
+import { GetFeedResp } from 'src/feed/dtos/getFeed.dto';
 import { CommentService } from 'src/comment/comment.service';
 const fs = require('fs');
 

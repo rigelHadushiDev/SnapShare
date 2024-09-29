@@ -22,7 +22,7 @@ export class ContentMediaController {
     @ApiResponse({
         status: HttpStatus.OK, description: 'The media file has been successfully retrieved.', content: { 'application/octet-stream': {} }
     })
-    getMedia(@Param('userName') userName: string, @Param('type') type: string, @Param('filename') filename: string, @Param('mediaId') mediaId: number, @Res() res: Response,) {
-        return this.ContentMediaService.getMedia(userName, type, filename, mediaId, res);
+    async getMedia(@Param('userName') userName: string, @Param('type') type: string, @Param('filename') filename: string, @Param('mediaId') mediaId: number, @Res() res: Response,) {
+        return await this.ContentMediaService.getMedia(userName, type, filename, mediaId, res);
     }
 }

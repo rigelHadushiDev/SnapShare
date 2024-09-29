@@ -19,8 +19,8 @@ export class AuthController {
     @ApiException(() => NotFoundException, { description: 'No User is found with this Username. [key: "noUserWithThisUsername" ]' })
     @ApiException(() => NotFoundException, { description: 'Invalid Password or Username. [key: "invalidPasswordOrUsername" ]' })
     @ApiException(() => InternalServerErrorException, { description: 'Failed creating access token. [key: "failedCreatingAccessToken" ]' })
-    logIn(@Body() logIn: LogInReq) {
-        return this.authService.login(logIn.username, logIn.password);
+    async logIn(@Body() logIn: LogInReq) {
+        return await this.authService.login(logIn.username, logIn.password);
     }
 
 }

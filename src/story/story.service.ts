@@ -28,7 +28,7 @@ export class StoryService {
 
         const filePath: string = file.path;
 
-        let story = new Story;
+        let story = new Story();
 
         await this.entityManager.transaction(async transactionalEntityManager => {
 

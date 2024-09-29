@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { CommentDto } from "src/post/dtos/getFeed.dto";
+import { CommentDto } from "src/feed/dtos/getFeed.dto";
 
 export class GetCommentRes {
     @ApiPropertyOptional({ type: CommentDto })

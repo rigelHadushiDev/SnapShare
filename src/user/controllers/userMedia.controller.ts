@@ -17,7 +17,7 @@ import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator
 import { ProfileImgReq, ProfileImgRes } from '../dtos/UploadProfileImg.dto';
 import { PaginationDto } from '../dtos/GetUserPosts.dto';
 import { UserMediaService } from '../services/userMedia.service';
-import { GetFeedResp } from 'src/post/dtos/getFeed.dto';
+import { GetFeedResp } from 'src/feed/dtos/getFeed.dto';
 
 @ApiBearerAuth()
 @ApiTags("User Media APIs")
@@ -36,7 +36,7 @@ export class UserMediaController {
     @ApiResponse({ status: HttpStatus.OK, description: 'The profile picture has been uploaded successfully.', type: ProfileImgRes })
     @ApiException(() => BadRequestException, { description: 'User has not uploaded the profile Image [key: "pleaseUploadImg" ]' })
     async postProfilePic(@UploadedFile() file: Express.Multer.File) {
-        return this.userMediaService.postProfilePic(file);
+        return await this.userMediaService.postProfilePic(file);
     }
 
     // this need to get finished after finisheing the comments and likes as a module
@@ -59,7 +59,7 @@ export class UserMediaController {
     @ApiException(() => NotFoundException, { description: 'No archived posts were found. [key: "noArchivedPosts" ]' })
     async getArchivedPosts(@Query() query: PaginationDto, @Query('postCommentsLimit') postCommentsLimit?: number) {
         const { postsByPage, page } = query;
-        return this.userMediaService.getArchivedPosts(postsByPage, page, postCommentsLimit);
+        return await this.userMediaService.getArchivedPosts(postsByPage, page, postCommentsLimit);
     }
 
 

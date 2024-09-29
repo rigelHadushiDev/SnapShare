@@ -9,7 +9,7 @@ import { CommentEditDto } from './dtos/commentEdit.dto';
 import { EditPostDto } from 'src/post/dtos/EditPost.dto';
 import { Network } from 'src/network/entities/network.entity';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
-import { CommentDto } from 'src/post/dtos/getFeed.dto';
+import { CommentDto } from 'src/feed/dtos/getFeed.dto';
 import { GetCommentRes } from './dtos/getComments.dto';
 import { GetCommentRepliesRes } from './dtos/getCommentReplies.dto';
 import { Engagement } from 'src/feed/entities/engagement.entity';
