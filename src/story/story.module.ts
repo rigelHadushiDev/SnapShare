@@ -9,10 +9,13 @@ import { StoryViews } from './StoryViews.entity';
 import { NetworkService } from 'src/network/network.service';
 import { NetworkModule } from 'src/network/network.module';
 import { GetUserStoriesAccessGuard } from './guards/GetUserStoriesAccess.guard';
+import { LikeModule } from 'src/like/like.module';
+import { StoryAcessGuard } from 'src/like/guards/StoryAcess.guard';
+import { PostAccessGuard } from 'src/like/guards/PostAccess.guard';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Story, StoryViews]), UsersModule, NetworkModule],
-  providers: [StoryService, UserProvider, NetworkService, GetUserStoriesAccessGuard],
+  imports: [TypeOrmModule.forFeature([Story, StoryViews]), UsersModule, NetworkModule, LikeModule],
+  providers: [StoryService, UserProvider, NetworkService, GetUserStoriesAccessGuard, StoryAcessGuard],
   controllers: [StoryController],
   exports: [StoryService]
 })

@@ -11,7 +11,8 @@ import { GeneralResponse } from 'src/post/dtos/GeneralResponse';
 import { StoryAcessGuard } from 'src/like/guards/StoryAcess.guard';
 import { PaginationDto } from 'src/user/dtos/GetUserPosts.dto';
 import { GetUserStoriesAccessGuard } from './guards/GetUserStoriesAccess.guard';
-import { GetUserStoriesResDto } from './dtos/GetUserStoriesRes.dto';
+import { GetUserStoriesResDto, UserStoryDto } from './dtos/GetUserStoriesRes.dto';
+import { StoryFeedDto } from 'src/feed/dtos/getStoriesdto';
 
 @ApiBearerAuth()
 @ApiTags('Story APIs')
@@ -58,5 +59,16 @@ export class StoryController {
         return await this.StoryService.getUserStories(postsByPage, page, userId);
     }
 
-
+    @UseGuards(StoryAcessGuard)
+    @Get('getStoryById/:storyId')
+    @ApiOperation({ summary: 'Get the story based on the storyId.' })
+    @ApiParam({ name: 'userId', description: 'ID of the user that owns these stories.' })
+    @ApiException(() => NotFoundException, { description: 'The owner of this story Id was not found . [key: "userNotFound" ]' })
+    @ApiException(() => ForbiddenException, { description: 'Forbidden. You cant see private users stories that are not your friend . [key: "nonFriendPrivateAccList" ]' })
+    @ApiException(() => ForbiddenException, { description: 'Story Id was not provided or the current loged in user can not be found . [key: "Unauthorized access" ]' })
+    @ApiException(() => NotFoundException, { description: 'Story Id was not found . [key: "storyNotFound" ]' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Successfully retrived user account stories.', type: GetUserStoriesResDto })
+    async getStoryById(@Param('storyId') storyId: number) {
+        return await this.StoryService.getStoryById(storyId);
+    }
 }

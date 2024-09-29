@@ -22,7 +22,7 @@ export class GetUserStoriesAccessGuard implements CanActivate {
         }
 
         const currUserId = user.userId;
-        const userId = params.userId;
+        const userId = Number(params.userId);
 
 
         let userFromParam = await this.entityManager.findOne(User, {

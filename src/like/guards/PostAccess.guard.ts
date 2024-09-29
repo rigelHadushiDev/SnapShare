@@ -35,7 +35,7 @@ export class PostAccessGuard implements CanActivate {
         if (!post)
             throw new NotFoundException(`postNotFound`)
 
-        const postUserId = post.userId;
+        const postUserId = Number(post.userId);
 
         const postUser = await this.entityManager.findOne(User, {
             where: {

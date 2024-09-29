@@ -13,6 +13,7 @@ import { StoryAcessGuard } from './guards/StoryAcess.guard';
 @Module({
   imports: [TypeOrmModule.forFeature([PostLike]), UsersModule, NetworkModule,],
   controllers: [LikeController],
-  providers: [LikeService, UserProvider, NetworkService, PostAccessGuard, StoryAcessGuard]
+  providers: [LikeService, UserProvider, NetworkService, PostAccessGuard, StoryAcessGuard],
+  exports: [StoryAcessGuard, PostAccessGuard]
 })
 export class LikeModule { }

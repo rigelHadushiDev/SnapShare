@@ -96,5 +96,18 @@ export class PostController {
         return await this.PostService.getUserPosts(postsByPage, page, userId, postCommentsLimit);
     }
 
+    @UseGuards(PostAccessGuard)
+    @Get('getPosyById/:postId')
+    @ApiOperation({ summary: 'Get all posts of an user account.' })
+    @ApiParam({ name: 'userId', description: 'ID of the user that owns these posts.' })
+    @ApiQuery({ name: 'postCommentsLimit', required: false, description: 'Number of the comments that you want to recieve together with the the posts.', type: Number })
+    @ApiException(() => NotFoundException, { description: 'The owner of this post Id was not found . [key: "userNotFound" ]' })
+    @ApiException(() => ForbiddenException, { description: 'Forbidden. You cant see private users posts that are not your friend . [key: "nonFriendPrivateAccList" ]' })
+    @ApiException(() => ForbiddenException, { description: 'Post Id was not provided or the current loged in user can not be found . [key: "Unauthorized access" ]' })
+    @ApiException(() => NotFoundException, { description: 'Post Id was not found . [key: "postNotFound" ]' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Successfully retrived user account posts.', type: GetUserPostsRes })
+    async getPosyById(@Param('postId') postId: number, @Query('postCommentsLimit') postCommentsLimit?: number) {
+        return await this.PostService.getPostById(postId, postCommentsLimit);
+    }
 
 }

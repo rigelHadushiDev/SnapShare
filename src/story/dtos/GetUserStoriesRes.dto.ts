@@ -52,6 +52,12 @@ export class UserStoryDto {
     storyLikedByStoryOwner: string;
 
     @ApiProperty({
+        description: 'Indicates if the story is liked by the current user',
+        example: 'true',
+    })
+    storyLikedByCurrentUser: string;
+
+    @ApiProperty({
         description: 'Indicates if the current user has seen the story',
         example: 'false',
     })

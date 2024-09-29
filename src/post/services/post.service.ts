@@ -11,6 +11,7 @@ import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 import { GetFeedResp } from '../../feed/dtos/getFeed.dto';
 import { CommentService } from 'src/comment/comment.service';
 import { GetUserPostsRes } from '../dtos/getUsersPosts.dto';
+import { GetPostIdRes } from '../dtos/getPostIdRes.dto';
 const fs = require('fs');
 
 @Injectable()
@@ -167,8 +168,6 @@ export class PostService {
         return post;
     }
 
-
-
     async getUserPosts(postsByPage: number = 10, page: number = 1, userId: number, postCommentsLimit: number = 3) {
 
 
@@ -177,51 +176,57 @@ export class PostService {
         let offset = (page - 1) * postsByPage;
 
         let userPostsQuery = `WITH PostLikers AS (
-                    SELECT
-                        pl."postId",
-                        l."username",
-                        ROW_NUMBER() OVER (PARTITION BY pl."postId" ORDER BY n."networkId" ASC) AS rn
-                    FROM "postLike" pl
-                    INNER JOIN "user" l ON l."userId" = pl."userId"
-                    LEFT JOIN "network" n ON n."followeeId" = pl."userId" 
-                        AND n.pending = FALSE AND n.deleted = FALSE 
-                        AND n."followerId" = ${this.UserID}
-                    LEFT JOIN "post" pt ON pt."postId" = pl."postId" 
-                        AND pt.archive = FALSE
-                    WHERE pl.deleted = FALSE and l.archive = FALSE
-                    AND pt."userId" != pl."userId"
-                )
-                SELECT 
-                    po."postId",
-                    po."postDescription",
-                    po."commentsNr" AS "postCommentsNr",
-                    po."likesNr" AS "postLikesNr",
-                    po.media AS "postMedia",
-                    po."userId" AS "postUserId",
-                    po."createdAt" AS "postCreatedAt",
-                    u."profileImg" AS "postProfileImg",
-                    CONCAT(u."firstName", ' ', u."lastName") AS "AccFullName",
-                    CASE 
-                        WHEN pl."likeId" IS NOT NULL THEN 'true'
-                        ELSE 'false'
-                    END AS "postLikedByUser",
-                    STRING_AGG(pls."username", ', ') AS "postLikersUsernames"
-                FROM "post" po
-                INNER JOIN "user" u ON u."userId" = po."userId" AND u.archive = false
-                LEFT JOIN "postLike" pl ON pl."postId" = po."postId" AND pl."userId" = ${userId} AND pl.deleted = FALSE 
-                LEFT JOIN PostLikers pls ON pls."postId" = po."postId" AND pls.rn <= ${postCommentsLimit}
-                WHERE po."userId" = ${userId}  And po.archive = FALSE
-                AND po.archive = FALSE
-                GROUP BY 
-                    po."postId",
-                    u."profileImg",
-                    u.username,
-                    u."firstName",
-                    u."lastName",
-                    pl."likeId"
-                ORDER BY po."createdAt" DESC
-                LIMIT ${postsByPage}
-                OFFSET ${offset};`
+            SELECT
+                pl."postId",
+                l."username",
+                ROW_NUMBER() OVER (PARTITION BY pl."postId" ORDER BY n."networkId" ASC) AS rn
+            FROM "postLike" pl
+            INNER JOIN "user" l ON l."userId" = pl."userId"
+            LEFT JOIN "network" n ON n."followeeId" = pl."userId"
+                AND n.pending = FALSE 
+                AND n.deleted = FALSE
+                AND n."followerId" =  ${this.UserID}
+            LEFT JOIN "post" pt ON pt."postId" = pl."postId"
+                AND pt.archive = FALSE
+            WHERE pl.deleted = FALSE 
+            AND l.archive = FALSE 
+            AND pt."userId" != pl."userId"
+        )
+        SELECT
+            po."postId",
+            po."postDescription",
+            po."commentsNr" AS "postCommentsNr",
+            po."likesNr" AS "postLikesNr",
+            po.media AS "postMedia",
+            po."userId" AS "postUserId",
+            po."createdAt" AS "postCreatedAt",
+            u."profileImg" AS "postProfileImg",
+            CONCAT(u."firstName", ' ', u."lastName") AS "AccFullName",
+            CASE
+                WHEN pl."likeId" IS NOT NULL THEN 'true' -- This checks if the current user (userId = 2) has liked the post
+                ELSE 'false'
+            END AS "postLikedByCurrUser",
+            STRING_AGG(pls."username", ', ') AS "postLikersUsernames"
+        FROM "post" po
+        INNER JOIN "user" u ON u."userId" = po."userId" 
+            AND u.archive = FALSE
+        LEFT JOIN "postLike" pl ON pl."postId" = po."postId" 
+            AND pl."userId" = ${this.UserID}
+            AND pl.deleted = FALSE
+        LEFT JOIN PostLikers pls ON pls."postId" = po."postId" 
+            AND pls.rn <=${postCommentsLimit}
+        WHERE po."userId" = ${userId} 
+        AND po.archive = FALSE
+        GROUP BY
+            po."postId",
+            u."profileImg",
+            u.username,
+            u."firstName",
+            u."lastName",
+            pl."likeId"
+        ORDER BY po."createdAt" DESC
+        LIMIT ${postsByPage}
+        OFFSET ${offset};`
 
         let posts = await this.entityManager.query(userPostsQuery)
 
@@ -243,6 +248,85 @@ export class PostService {
             }
         }
         resp = { userPostsContainer };
+        return resp;
+    }
+
+    async getPostById(postId: number, postCommentsLimit: number = 3) {
+
+
+        let resp = new GetPostIdRes();
+
+        let userPostsQuery = `WITH PostLikers AS (
+                    SELECT
+                        pl."postId",
+                        l."username",
+                        ROW_NUMBER() OVER (PARTITION BY pl."postId" ORDER BY n."networkId" ASC) AS rn
+                    FROM "postLike" pl
+                    INNER JOIN "user" l ON l."userId" = pl."userId"
+                    LEFT JOIN "network" n ON n."followeeId" = pl."userId"
+                        AND n.pending = FALSE
+                        AND n.deleted = FALSE
+                        AND n."followerId" =  ${this.UserID}
+                    LEFT JOIN "post" pt ON pt."postId" = pl."postId"
+                        AND pt.archive = FALSE
+                    WHERE pl.deleted = FALSE
+                    AND l.archive = FALSE
+                    AND pt."userId" != pl."userId"
+                )
+                SELECT
+                    po."postId",
+                    po."postDescription",
+                    po."commentsNr" AS "postCommentsNr",
+                    po."likesNr" AS "postLikesNr",
+                    po.media AS "postMedia",
+                    po."userId" AS "postUserId",
+                    po."createdAt" AS "postCreatedAt",
+                    u."profileImg" AS "postProfileImg",
+                    CONCAT(u."firstName", ' ', u."lastName") AS "AccFullName",
+                    CASE
+                        WHEN pl."likeId" IS NOT NULL THEN 'true' 
+                        ELSE 'false'
+                    END AS "postLikedByCurrUser",
+                    STRING_AGG(pls."username", ', ') AS "postLikersUsernames"
+                FROM "post" po
+                INNER JOIN "user" u ON u."userId" = po."userId"
+                    AND u.archive = FALSE
+                LEFT JOIN "postLike" pl ON pl."postId" = po."postId"
+                    AND pl."userId" = ${this.UserID}
+                    AND pl.deleted = FALSE
+                LEFT JOIN PostLikers pls ON pls."postId" = po."postId"
+                    AND pls.rn <= ${postCommentsLimit}
+                WHERE po."postId" = ${postId} 
+                AND po.archive = FALSE
+                GROUP BY
+                    po."postId",
+                    u."profileImg",
+                    u.username,
+                    u."firstName",
+                    u."lastName",
+                    pl."likeId"
+                ORDER BY po."createdAt" DESC;`
+
+        let posts = await this.entityManager.query(userPostsQuery)
+
+        let postIdContainer = [];
+        if (posts?.length !== 0) {
+            for (let post of posts) {
+                let postContainer = [];
+
+                if (post?.postMedia)
+                    post.postMedia = SnapShareUtility.urlConverter(post.postMedia);
+
+                if (post?.postProfileImg)
+                    post.postProfileImg = SnapShareUtility.urlConverter(post.postProfileImg);
+
+                let comment = await this.commentService.getComments(post.postId, postCommentsLimit)
+
+                postContainer.push(post, comment)
+                postIdContainer.push(postContainer);
+            }
+        }
+        resp = { postIdContainer };
         return resp;
     }
 
