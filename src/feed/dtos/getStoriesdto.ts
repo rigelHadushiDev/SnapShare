@@ -38,10 +38,10 @@ export class StoryFeedDto {
     storyProfileImg: string;
 
     @ApiProperty({
-        description: 'Username of the user who liked the story',
+        description: 'Username of the story owner',
         example: 'username_example',
     })
-    storyLikersUsername: string;
+    storyOwnerUsername: string;
 
     @ApiProperty({
         description: 'Full name of the account',

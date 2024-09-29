@@ -481,7 +481,7 @@ SELECT
     st."userId" AS "storytUserId",
     st."createdAt" AS "storyCreatedAt",
     u."profileImg" AS "storyProfileImg",
-    u.username AS "storyLikersUsername",
+    u.username AS "storyOwnerUsername",
     CONCAT(u."firstName", ' ', u."lastName") AS "AccFullName",
     CASE
         WHEN sl."likeId" IS NOT NULL THEN 'true'

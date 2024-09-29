@@ -100,7 +100,7 @@ export class PostDto {
         description: 'Username of the user who liked the post',
         example: 'rigel22111',
     })
-    postLikersUsername?: string;
+    storyOwnerUsername?: string;
 
     @ApiPropertyOptional({
         description: 'Full name of the user who created the post',
