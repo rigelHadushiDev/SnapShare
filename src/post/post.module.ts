@@ -16,9 +16,11 @@ import { NetworkModule } from 'src/network/network.module';
 import { GetUserPostsAccessGuard } from './guards/GetUserPostsAccess.guard';
 import { LikeModule } from 'src/like/like.module';
 import { PostAccessGuard } from 'src/like/guards/PostAccess.guard';
+import { NotificationService } from 'src/notification/notification.service';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Post, StoryViews]), UsersModule, CommentModule, NetworkModule, LikeModule],
+  imports: [TypeOrmModule.forFeature([Post, StoryViews]), UsersModule, CommentModule, NetworkModule, LikeModule, NotificationModule],
   providers: [PostService, UserProvider, UsersService, IsCreatorGuard, ContentMediaService, CommentService, GetUserPostsAccessGuard, PostAccessGuard],
   controllers: [PostController, ContentMediaController],
   exports: [PostService]

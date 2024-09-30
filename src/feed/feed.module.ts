@@ -14,10 +14,12 @@ import { FeedController } from './feed.controller';
 import { FeedService } from './feed.service';
 import { Story } from 'src/story/story.entity';
 import { UserFeed } from './entities/userFeed.entity';
+import { NotificationService } from 'src/notification/notification.service';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Post, StoryViews, Story, UserFeed]), UsersModule, CommentModule],
-    providers: [PostService, UserProvider, UsersService, IsCreatorGuard, FeedService, CommentService],
+    imports: [TypeOrmModule.forFeature([Post, StoryViews, Story, UserFeed]), UsersModule, CommentModule, NotificationModule],
+    providers: [PostService, UserProvider, UsersService, IsCreatorGuard, FeedService, CommentService, NotificationService],
     controllers: [FeedController],
 })
 export class FeedModule { }

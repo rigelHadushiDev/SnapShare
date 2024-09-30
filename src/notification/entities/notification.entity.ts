@@ -24,6 +24,12 @@ export class Notification {
     @Column({ name: 'createdBy', type: 'integer' })
     createdBy: number;
 
+    @Column({ name: 'seen', type: 'boolean', default: false })
+    seen: boolean;
+
+    @Column({ name: 'contentId', type: 'integer', nullable: true })
+    contentId: number;
+
     @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
     createdAt: Date;
 

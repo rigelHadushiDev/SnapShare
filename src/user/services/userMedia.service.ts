@@ -128,12 +128,4 @@ WITH PostLikers AS (
         return resp;
     }
 
-
-
-    async getUserPosts(postsByPage: number = 10, page: number = 1) {
-    }
-
-    async getArchievedStories(postsByPage: number = 10, page: number = 1) {
-    }
-
 }

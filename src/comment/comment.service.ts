@@ -15,12 +15,13 @@ import { GetCommentRepliesRes } from './dtos/getCommentReplies.dto';
 import { Engagement } from 'src/feed/entities/engagement.entity';
 import { EngagementType } from 'src/feed/entities/engagementType.entity';
 import { User } from 'src/user/user.entity';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class CommentService {
 
     public currUserId: number;
-    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) {
+    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider, private readonly notificationService: NotificationService) {
         this.currUserId = this.userProvider.getCurrentUser()?.userId;
     }
 

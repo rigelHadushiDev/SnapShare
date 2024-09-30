@@ -12,13 +12,14 @@ import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 import { UserListRes } from 'src/network/responses/UserListRes';
 import { Engagement } from 'src/feed/entities/engagement.entity';
 import { EngagementType } from 'src/feed/entities/engagementType.entity';
+import { NotificationService } from 'src/notification/notification.service';
 
 
 @Injectable()
 export class LikeService {
 
     public currUserId: number;
-    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) {
+    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider, private readonly notificationService: NotificationService) {
         this.currUserId = this.userProvider.getCurrentUser()?.userId;
     }
 
@@ -98,6 +99,8 @@ export class LikeService {
                     .set({ likesNr: () => 'likesNr + 1' })
                     .where('postId = :postId', { postId: postId })
                     .execute();
+
+                await this.notificationService.createNotification(this.currUserId, post.userId, 1, postId);
 
                 const engagementQuery = `
                           WITH engagement_type AS (
@@ -197,6 +200,8 @@ export class LikeService {
                     })
                     .execute();
 
+                await this.notificationService.createNotification(this.currUserId, story.userId, 2, storyId);
+
                 await transactionalEntityManager
                     .createQueryBuilder()
                     .update(Story)
@@ -251,6 +256,8 @@ export class LikeService {
             .andWhere('commentlike.userId = :userId', { userId })
             .andWhere('commentlike.deleted = :deleted', { deleted: false })
             .getRawOne();
+
+        await this.notificationService.createNotification(this.currUserId, commmentExist.userId, 2, commentId);
 
         const engagement = await this.entityManager
             .createQueryBuilder(Engagement, 'e')
@@ -311,7 +318,6 @@ export class LikeService {
                     .where('commentId = :commentId', { commentId: commmentExist?.commentId })
                     .execute();
 
-
                 const engagementQuery = `
                     WITH engagement_type AS (
                         SELECT "engagementTypeId"
@@ -329,7 +335,7 @@ export class LikeService {
                     SET "engagementNr" = "engagement"."engagementNr" + 1`;
 
                 await transactionalEntityManager.query(engagementQuery, [this.currUserId, commmentExist.userId]);
-
+                resp.message = 'commentLikeAdded';
             }
         });
 
