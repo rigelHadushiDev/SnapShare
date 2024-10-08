@@ -33,6 +33,9 @@ export class Notification {
     @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
     createdAt: Date;
 
+    @Column({ name: 'entity', type: 'varchar', length: 255 })
+    entity: string;
+
     @ManyToOne(() => User, user => user.receivedNotifications, { nullable: true, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'receivedUserId', referencedColumnName: 'userId' })
     receivedUser: User;
@@ -44,4 +47,5 @@ export class Notification {
     @ManyToOne(() => NotificationType, notification => notification.typeId, { nullable: true, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'typeId', referencedColumnName: 'notificationTypeId' })
     receivedNotifications: NotificationType;
+
 }
