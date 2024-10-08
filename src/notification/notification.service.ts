@@ -20,7 +20,7 @@ export class NotificationService {
     async createNotification(createdBy: number, receivedUserId: number, typeId: number, contentId: number) {
 
         let notification;
-        if (createdBy != receivedUserId) {
+        if (createdBy != receivedUserId && contentId) {
             notification = await this.entityManager
                 .createQueryBuilder()
                 .insert()

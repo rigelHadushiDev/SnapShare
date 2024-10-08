@@ -53,7 +53,7 @@ export class LikeService {
                 { userId1: this.currUserId, userId2: post.userId }
             )
             .getRawOne();
-
+        let postLike;
         await this.entityManager.transaction(async transactionalEntityManager => {
             if (isLiked) {
                 await transactionalEntityManager
@@ -83,15 +83,11 @@ export class LikeService {
 
                 resp.message = 'postLikeRemoved';
             } else {
-                await transactionalEntityManager
-                    .createQueryBuilder()
-                    .insert()
-                    .into(PostLike)
-                    .values({
-                        userId,
-                        postId
-                    })
-                    .execute();
+
+                let postLike = new PostLike();
+                postLike.userId = userId;
+                postLike.postId = postId;
+                postLike = await transactionalEntityManager.save(PostLike, postLike)
 
                 await transactionalEntityManager
                     .createQueryBuilder()
@@ -99,8 +95,6 @@ export class LikeService {
                     .set({ likesNr: () => 'likesNr + 1' })
                     .where('postId = :postId', { postId: postId })
                     .execute();
-
-                await this.notificationService.createNotification(this.currUserId, post.userId, 1, postId);
 
                 const engagementQuery = `
                           WITH engagement_type AS (
@@ -123,6 +117,8 @@ export class LikeService {
                 resp.message = 'postLikeAdded';
             }
         });
+
+        await this.notificationService.createNotification(this.currUserId, post.userId, 1, postLike.likeId);
 
         resp.status = HttpStatus.OK;
         return resp;
@@ -160,6 +156,7 @@ export class LikeService {
             )
             .getRawOne();
 
+        let storyLike;
         await this.entityManager.transaction(async transactionalEntityManager => {
             if (isLiked) {
                 await transactionalEntityManager
@@ -190,17 +187,10 @@ export class LikeService {
 
             } else {
 
-                await transactionalEntityManager
-                    .createQueryBuilder()
-                    .insert()
-                    .into(StoryLike)
-                    .values({
-                        userId,
-                        storyId
-                    })
-                    .execute();
-
-                await this.notificationService.createNotification(this.currUserId, story.userId, 2, storyId);
+                let storyLike = new StoryLike();
+                storyLike.userId = userId;
+                storyLike.storyId = storyId;
+                storyLike = await transactionalEntityManager.save(StoryLike, storyLike);
 
                 await transactionalEntityManager
                     .createQueryBuilder()
@@ -230,6 +220,8 @@ export class LikeService {
                 resp.message = 'storyLikeAdded';
             }
         });
+
+        await this.notificationService.createNotification(this.currUserId, story.userId, 2, storyLike.likeId);
 
         resp.status = HttpStatus.OK;
         return resp;
@@ -270,6 +262,7 @@ export class LikeService {
             )
             .getRawOne();
 
+        let commentLike;
         await this.entityManager.transaction(async transactionalEntityManager => {
             if (isLiked) {
                 await transactionalEntityManager
@@ -301,15 +294,11 @@ export class LikeService {
 
             } else {
 
-                await transactionalEntityManager
-                    .createQueryBuilder()
-                    .insert()
-                    .into(CommentLike)
-                    .values({
-                        userId,
-                        commentId
-                    })
-                    .execute();
+                commentLike = new CommentLike();
+                commentLike.userId = userId;
+                commentLike.commentId = commentId;
+
+                commentLike = await transactionalEntityManager.save(CommentLike, commentLike)
 
                 await transactionalEntityManager
                     .createQueryBuilder()
@@ -338,6 +327,8 @@ export class LikeService {
                 resp.message = 'commentLikeAdded';
             }
         });
+
+        await this.notificationService.createNotification(this.currUserId, commmentExist.userId, 9, commentLike.commentId);
 
         resp.status = HttpStatus.OK;
         return resp;
