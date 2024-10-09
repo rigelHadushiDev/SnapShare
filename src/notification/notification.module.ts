@@ -5,6 +5,7 @@ import { Notification } from './entities/notification.entity';
 import { UsersModule } from 'src/user/user.module';
 import { NotificationService } from './notification.service';
 import { UserProvider } from 'src/user/services/user.provider';
+import { NotificationController } from './notification.controller';
 
 @Module({
     imports: [
@@ -12,6 +13,7 @@ import { UserProvider } from 'src/user/services/user.provider';
         forwardRef(() => UsersModule), // Use forwardRef for UsersModule
     ],
     providers: [UserProvider, NotificationService],
+    controllers: [NotificationController],
     exports: [NotificationService],
 })
 export class NotificationModule { }

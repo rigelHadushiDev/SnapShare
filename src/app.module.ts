@@ -53,8 +53,8 @@ dotenv.config();
       entities: [Engagement, User, Post, Comment, PostLike, Network,
         Notification, NotificationType, Story, StoryLike, CommentLike,
         StoryViews, EngagementType, UserFeed],
-      synchronize: false,
-      autoLoadEntities: false
+      synchronize: true,
+      autoLoadEntities: true
     }),
     UsersModule,
     AuthModule,

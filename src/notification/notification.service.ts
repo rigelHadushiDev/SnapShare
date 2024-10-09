@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, UnauthorizedException, InternalServerErr
 import { UserProvider } from 'src/user/services/user.provider';
 import { EntityManager } from 'typeorm';
 import { Notification } from './entities/notification.entity';
+import { GetCountDto } from './dtos/GetCount.dto';
 
 
 @Injectable()
@@ -17,21 +18,21 @@ export class NotificationService {
 
     // helper method which will be injected in other services;
 
-    async createNotification(createdBy: number, receivedUserId: number, typeId: number, contentId: number) {
+    async createNotification(createdBy: number, receivedUserId: number, typeId: number, originId: number, targetId: number, content?: string) {
 
         let notification;
-        if (createdBy != receivedUserId && contentId) {
-            notification = await this.entityManager
-                .createQueryBuilder()
-                .insert()
-                .into(Notification)
-                .values({
-                    createdBy: createdBy,
-                    receivedUserId: receivedUserId,
-                    typeId: typeId,
-                    contentId: contentId
-                })
-                .execute();
+        if (createdBy != receivedUserId && targetId) {
+            notification = new Notification();
+            notification.createdBy = createdBy;
+            notification.receivedUserId = receivedUserId;
+            notification.typeId = typeId;
+            notification.targetId = targetId;
+            notification.actionId = originId;
+
+            if (content)
+                notification.content = content;
+
+            notification = await this.entityManager.save(notification, Notification)
         }
 
         return notification;
@@ -48,21 +49,25 @@ export class NotificationService {
         // and also takes userID, profileImg and username
         // order by created at
 
-        // at the ned of the api the notifications that were retrived by the query should be set seen to true
+        // join with notificationType
+        // join with the users to get their basic information, profileIMg turn itt to url 
+        // join it with notification type
 
-        // a switch  1  postId and postmedia and postdescription 
-        // a switch  2  storyId and storymedia and storydescription 
-        // switch  7 8  comment description 
+        // make a get call which doesnt need any guard just get the comment details
 
     }
 
     async unseenNotificationsCnt() {
 
+        let resp = new GetCountDto();
 
-        // simple the count of the notifications that arent seen by the user 
-        // notification.seen = FALSE where notification."recievedUserId" = ${this.currUserID}
+        resp.counter = await this.entityManager.count(Notification, {
+            where: {
+                seen: false,
+                receivedUserId: this.currUserID
+            }
+        });
 
+        return resp;
     }
-
-
 }

@@ -33,8 +33,14 @@ export class Notification {
     @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
     createdAt: Date;
 
-    @Column({ name: 'entity', type: 'varchar', length: 255 })
-    entity: string;
+    @Column({ name: 'originId', type: 'integer', nullable: true })
+    originId: number;
+
+    @Column({ name: 'targetId', type: 'integer', nullable: true })
+    targetId: number;
+
+    @Column({ name: 'content', type: 'varchar', nullable: true })
+    content: string;
 
     @ManyToOne(() => User, user => user.receivedNotifications, { nullable: true, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'receivedUserId', referencedColumnName: 'userId' })

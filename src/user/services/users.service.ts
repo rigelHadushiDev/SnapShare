@@ -124,7 +124,6 @@ export class UsersService {
             }
         }
 
-
         if (userInfo?.profileImg)
             userInfo.profileImg = SnapShareUtility.urlConverter(userInfo.profileImg);
 

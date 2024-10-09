@@ -118,7 +118,7 @@ export class LikeService {
             }
         });
 
-        await this.notificationService.createNotification(this.currUserId, post.userId, 1, postLike.likeId);
+        await this.notificationService.createNotification(this.currUserId, post.userId, 1, postLike.likeId, postLike.postId);
 
         resp.status = HttpStatus.OK;
         return resp;
@@ -221,7 +221,7 @@ export class LikeService {
             }
         });
 
-        await this.notificationService.createNotification(this.currUserId, story.userId, 2, storyLike.likeId);
+        await this.notificationService.createNotification(this.currUserId, story.userId, 2, storyLike.likeId, storyLike.storyId);
 
         resp.status = HttpStatus.OK;
         return resp;
@@ -248,8 +248,6 @@ export class LikeService {
             .andWhere('commentlike.userId = :userId', { userId })
             .andWhere('commentlike.deleted = :deleted', { deleted: false })
             .getRawOne();
-
-        await this.notificationService.createNotification(this.currUserId, commmentExist.userId, 2, commentId);
 
         const engagement = await this.entityManager
             .createQueryBuilder(Engagement, 'e')
@@ -328,7 +326,7 @@ export class LikeService {
             }
         });
 
-        await this.notificationService.createNotification(this.currUserId, commmentExist.userId, 9, commentLike.commentId);
+        await this.notificationService.createNotification(this.currUserId, commmentExist.userId, 9, commentLike.likeId, commentLike.commentId);
 
         resp.status = HttpStatus.OK;
         return resp;
