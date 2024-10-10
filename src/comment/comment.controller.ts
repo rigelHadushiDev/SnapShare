@@ -10,6 +10,7 @@ import { GetCommentRes } from './dtos/getComments.dto';
 import { CommentDto } from 'src/feed/dtos/getFeed.dto';
 import { GetCommentRepliesRes } from './dtos/getCommentReplies.dto';
 import { PostAccessGuard } from 'src/like/guards/PostAccess.guard';
+import { GetCommentResp } from './dtos/getCommentResp.dto';
 
 
 
@@ -89,12 +90,10 @@ export class CommentController {
 
 
 
-    @Get('comment/:commentId')
+    @Get(':commentId')
     @ApiOperation({ summary: 'Retrieve the comment based on a commentId' })
     @ApiResponse({
-        status: HttpStatus.OK, description: "Successfully retrived the comment based on its Id.",
-        // add another resp obj
-        // type: [GetCommentRepliesRes]
+        status: HttpStatus.OK, description: "Successfully retrived the comment based on its Id.", type: [GetCommentResp]
     })
     @ApiParam({ name: 'commentId', required: true, description: 'Comment Id that you want to recieve other reply comments off.', type: Number })
     @ApiException(() => ForbiddenException, { description: 'Parent comment Id was not found . [key: "commentIdNotFound" ]' })

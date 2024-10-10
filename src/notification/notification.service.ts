@@ -16,8 +16,6 @@ export class NotificationService {
         this.currUserName = this.userProvider.getCurrentUser()?.username;
     }
 
-    // helper method which will be injected in other services;
-
     async createNotification(createdBy: number, receivedUserId: number, typeId: number, originId: number, targetId: number, content?: string) {
 
         let notification;
@@ -27,7 +25,7 @@ export class NotificationService {
             notification.receivedUserId = receivedUserId;
             notification.typeId = typeId;
             notification.targetId = targetId;
-            notification.actionId = originId;
+            notification.originId = originId;
 
             if (content)
                 notification.content = content;
@@ -40,20 +38,30 @@ export class NotificationService {
 
     async getNotifications(postsByPage: number = 10, page: number = 1) {
 
+        let skip: number = (page - 1) * postsByPage;
 
-        // pagination of seeing the notification;
-        // should contain the content, userId, username, post.media or comment.description , user.profileImg
+        let userNotificationsQuery = `        
+        SELECT 
+            n.*,
+            u1."profileImg" AS "receivedUserProfile",
+            u2."profileImg" AS "createdByUserProfile",
+            u1."username" AS "receivedUserUsername",
+            u2."username" AS "createdByUserUsername",
+            nt.*
+        FROM 
+            notification n
+        INNER JOIN "user" u1 ON n."receivedUserId" = u1."userId"
+        INNER JOIN "user" u2 ON n."createdBy" = u2."userId"
+        Inner JOIN "notificationType" nt ON n."typeId" = nt."notificationTypeId"
+        Where n."receivedUserId" = $1
+        LIMIT $2 OFFSET $3; `
 
+        let notificationResult = await this.entityManager.query(userNotificationsQuery, [this.currUserID, postsByPage, skip])
 
-        // here should be a query which gets the notifications with pagination 
-        // and also takes userID, profileImg and username
-        // order by created at
-
-        // join with notificationType
-        // join with the users to get their basic information, profileIMg turn itt to url 
-        // join it with notification type
-
-        // make a get call which doesnt need any guard just get the comment details
+        // add a loop and this here
+        // if (notificationResult?.profileImg)
+        //     commentOwner.profileImg = SnapShareUtility.urlConverter(commentOwner.profileImg);
+        return notificationResult;
 
     }
 

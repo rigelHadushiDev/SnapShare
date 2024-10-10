@@ -115,10 +115,11 @@ export class LikeService {
                 await transactionalEntityManager.query(engagementQuery, [this.currUserId, post.userId]);
 
                 resp.message = 'postLikeAdded';
+
+                await this.notificationService.createNotification(this.currUserId, post.userId, 1, postLike.likeId, postLike.postId);
             }
         });
 
-        await this.notificationService.createNotification(this.currUserId, post.userId, 1, postLike.likeId, postLike.postId);
 
         resp.status = HttpStatus.OK;
         return resp;
@@ -218,10 +219,12 @@ export class LikeService {
 
                 await transactionalEntityManager.query(engagementQuery, [this.currUserId, story.userId]);
                 resp.message = 'storyLikeAdded';
+
+                await this.notificationService.createNotification(this.currUserId, story.userId, 2, storyLike.likeId, storyLike.storyId);
             }
         });
 
-        await this.notificationService.createNotification(this.currUserId, story.userId, 2, storyLike.likeId, storyLike.storyId);
+
 
         resp.status = HttpStatus.OK;
         return resp;
@@ -298,6 +301,8 @@ export class LikeService {
 
                 commentLike = await transactionalEntityManager.save(CommentLike, commentLike)
 
+                await this.notificationService.createNotification(this.currUserId, commmentExist.userId, 9, commentLike.likeId, commentLike.commentId);
+
                 await transactionalEntityManager
                     .createQueryBuilder()
                     .update(Comment)
@@ -326,7 +331,6 @@ export class LikeService {
             }
         });
 
-        await this.notificationService.createNotification(this.currUserId, commmentExist.userId, 9, commentLike.likeId, commentLike.commentId);
 
         resp.status = HttpStatus.OK;
         return resp;

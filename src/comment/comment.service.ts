@@ -1,4 +1,4 @@
-import { ForbiddenException, HttpCode, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, HttpCode, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { CommentPostDto } from './dtos/commentPost.dto';
 import { UserProvider } from 'src/user/services/user.provider';
@@ -16,12 +16,14 @@ import { Engagement } from 'src/feed/entities/engagement.entity';
 import { EngagementType } from 'src/feed/entities/engagementType.entity';
 import { User } from 'src/user/user.entity';
 import { NotificationService } from 'src/notification/notification.service';
+import { GetCommentResp } from './dtos/getCommentResp.dto';
 
 @Injectable()
 export class CommentService {
 
     public currUserId: number;
-    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider, private readonly notificationService: NotificationService) {
+    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider,
+        private readonly notificationService: NotificationService) {
         this.currUserId = this.userProvider.getCurrentUser()?.userId;
     }
 
@@ -475,11 +477,7 @@ export class CommentService {
 
     async getCommentById(commentId: number) {
 
-
-
-        // a e ke follow userin qe ka postin a e ke network ky ehste guardi i vetem. 
-
-
+        let resp = new GetCommentResp();
 
         const comment = await this.entityManager.findOne(Comment, {
             where: [{ commentId }],
@@ -487,12 +485,45 @@ export class CommentService {
 
         let post = await this.entityManager.findOne(Post, {
             where: [{ postId: comment.postId }],
-        }); comment.postId
+        });
 
         let postOwnerId: number = post.userId;
 
+        let user = await this.entityManager.findOne(User, {
+            where: [{ userId: postOwnerId }],
+        });
+
+        if (user.isPrivate) {
+
+            const isUserNetwork = await this.entityManager
+                .createQueryBuilder()
+                .from(Network, 'network')
+                .select('*')
+                .where('network.followerId = :followerId', { followerId: this.currUserId })
+                .andWhere('network.followeeId = :followeeId', { followeeId: postOwnerId })
+                .andWhere('network.deleted = :deleted', { deleted: false })
+                .andWhere('network.pending = :pending', { pending: false })
+                .getRawOne();
+
+            if (!isUserNetwork)
+                throw new ForbiddenException('nonFriendPrivateAccList');
+
+        }
+
+        let commentOwner = await this.entityManager.findOne(User, {
+            where: [{ userId: comment.userId }]
+        });
+
+        if (commentOwner?.profileImg)
+            commentOwner.profileImg = SnapShareUtility.urlConverter(commentOwner.profileImg);
 
 
+        Object.assign(resp, comment);
+
+        resp.username = commentOwner?.username;
+        resp.profileImg = commentOwner?.profileImg;
+
+        return resp;
     }
 }
 
