@@ -3,6 +3,8 @@ import { UserProvider } from 'src/user/services/user.provider';
 import { EntityManager } from 'typeorm';
 import { Notification } from './entities/notification.entity';
 import { GetCountDto } from './dtos/GetCount.dto';
+import { GetNotificationResDto } from './dtos/GetNotificationsRes.dto';
+import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 
 
 @Injectable()
@@ -38,6 +40,8 @@ export class NotificationService {
 
     async getNotifications(postsByPage: number = 10, page: number = 1) {
 
+        let resp: GetNotificationResDto[] = [];
+
         let skip: number = (page - 1) * postsByPage;
 
         let userNotificationsQuery = `        
@@ -56,12 +60,30 @@ export class NotificationService {
         Where n."receivedUserId" = $1
         LIMIT $2 OFFSET $3; `
 
-        let notificationResult = await this.entityManager.query(userNotificationsQuery, [this.currUserID, postsByPage, skip])
+        resp = await this.entityManager.query(userNotificationsQuery, [this.currUserID, postsByPage, skip])
 
-        // add a loop and this here
-        // if (notificationResult?.profileImg)
-        //     commentOwner.profileImg = SnapShareUtility.urlConverter(commentOwner.profileImg);
-        return notificationResult;
+        if (resp?.length > 0) {
+
+            const notificationsIds: number[] = resp.map((notification: any) => notification.notificationId);
+
+            for (let notification of resp) {
+
+                if (notification?.receivedUserProfile)
+                    notification.receivedUserProfile = SnapShareUtility.urlConverter(notification.receivedUserProfile);
+
+                if (notification?.createdByUserProfile)
+                    notification.createdByUserProfile = SnapShareUtility.urlConverter(notification.createdByUserProfile);
+            }
+
+            await this.entityManager
+                .createQueryBuilder()
+                .update(Notification)
+                .set({ seen: true })
+                .where('notificationId IN (:...ids)', { ids: notificationsIds })
+                .execute();
+
+        }
+        return resp;
 
     }
 
