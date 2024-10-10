@@ -8,12 +8,13 @@ import { GetUserStatsRes } from './responses/getUserStatsRes';
 import { Post } from 'src/post/post.entity';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 import { UserListRes } from './responses/UserListRes';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class NetworkService {
     public UserID: number;
 
-    constructor(private readonly userProvider: UserProvider, private readonly entityManager: EntityManager) {
+    constructor(private readonly userProvider: UserProvider, private readonly entityManager: EntityManager, private readonly notificationService: NotificationService) {
         this.UserID = this.userProvider.getCurrentUser()?.userId;
     }
 
@@ -45,6 +46,7 @@ export class NetworkService {
         if (sentFriendRequest?.length > 0)
             throw new BadRequestException(`followRequestAlreadySent`)
 
+        let network = new Network();
         if (user?.isPrivate) {
 
             await this.entityManager
@@ -75,6 +77,9 @@ export class NetworkService {
 
             resp.message = "userSuccessfullyFollowed";
         }
+
+        // await this.notificationService.createNotification(this.currUserId, userId2, typeId, createdComment.commentId, targetId, commentDescription)
+
 
         resp.status = HttpStatus.OK;
         return resp;

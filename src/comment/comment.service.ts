@@ -55,7 +55,8 @@ export class CommentService {
             comment.commentDescription = commentDescription;
 
             let userId2 = post.userId;
-
+            let typeId: number = 7;
+            let targetId: number = postId;
             // If replying to a parent comment
             if (parentCommentId) {
                 const parentComment = await this.entityManager
@@ -72,11 +73,15 @@ export class CommentService {
                 userId2 = parentComment.userId;
                 comment.parentCommentId = parentCommentId;
                 resp.message = 'Comment reply successfully added';
+                typeId = 8;
+                targetId = parentCommentId;
+
+
             } else {
                 resp.message = 'Post comment successfully added';
             }
-
-            await transactionalEntityManager.save(Comment, comment);
+            let createdComment = await transactionalEntityManager.save(Comment, comment);
+            await this.notificationService.createNotification(this.currUserId, userId2, typeId, createdComment.commentId, targetId, commentDescription)
 
             // Handle engagements with the comment user
             const engagementQuery = `
