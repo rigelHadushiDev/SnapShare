@@ -60,3 +60,4 @@ media/
 
 #logs
 logs/
+.vercel
