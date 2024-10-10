@@ -10,6 +10,7 @@ import { GetCommentRes } from './dtos/getComments.dto';
 import { CommentDto } from 'src/feed/dtos/getFeed.dto';
 import { GetCommentRepliesRes } from './dtos/getCommentReplies.dto';
 import { PostAccessGuard } from 'src/like/guards/PostAccess.guard';
+import { GetCommentResp } from './dtos/getCommentResp.dto';
 
 
 
@@ -85,5 +86,18 @@ export class CommentController {
     async getCommentReplies(@Query('commentId') comentId: number, @Query() query: PaginationDto) {
         const { postsByPage, page } = query;
         return await this.commentService.getCommentReplies(comentId, postsByPage, page);
+    }
+
+
+
+    @Get(':commentId')
+    @ApiOperation({ summary: 'Retrieve the comment based on a commentId' })
+    @ApiResponse({
+        status: HttpStatus.OK, description: "Successfully retrived the comment based on its Id.", type: [GetCommentResp]
+    })
+    @ApiParam({ name: 'commentId', required: true, description: 'Comment Id that you want to recieve other reply comments off.', type: Number })
+    @ApiException(() => ForbiddenException, { description: 'Parent comment Id was not found . [key: "commentIdNotFound" ]' })
+    async getCommentById(@Param('commentId') comentId: number) {
+        return await this.commentService.getCommentById(comentId);
     }
 }

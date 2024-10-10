@@ -4,7 +4,7 @@ import { Post } from "src/post/post.entity";
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, OneToOne } from 'typeorm';
 import { Comment } from "src/comment/comment.entity";
 import { ApiProperty } from "@nestjs/swagger";
-import { Notification } from "src/network/entities/notification.entity";
+import { Notification } from "src/notification/entities/notification.entity";
 import { Story } from "src/story/story.entity";
 import { StoryViews } from "src/story/StoryViews.entity";
 import { Engagement } from "src/feed/entities/engagement.entity";

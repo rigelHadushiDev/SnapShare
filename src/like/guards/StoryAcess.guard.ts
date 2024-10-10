@@ -23,14 +23,14 @@ export class StoryAcessGuard implements CanActivate {
         }
 
         const userId = user.userId;
-        const storyId = params.storyId;
+        const storyId = Number(params.storyId);
 
         const story = await this.entityManager.findOne(Story, { where: { storyId: storyId, archive: false } })
 
         if (!story)
             throw new NotFoundException(`storyNotFound`);
 
-        const storyUserId = story.userId;
+        const storyUserId = Number(story.userId);
 
         const currentUser = await this.entityManager.findOne(User, {
             where: {

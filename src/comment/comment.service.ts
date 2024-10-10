@@ -1,4 +1,4 @@
-import { ForbiddenException, HttpCode, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, HttpCode, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { CommentPostDto } from './dtos/commentPost.dto';
 import { UserProvider } from 'src/user/services/user.provider';
@@ -15,15 +15,17 @@ import { GetCommentRepliesRes } from './dtos/getCommentReplies.dto';
 import { Engagement } from 'src/feed/entities/engagement.entity';
 import { EngagementType } from 'src/feed/entities/engagementType.entity';
 import { User } from 'src/user/user.entity';
+import { NotificationService } from 'src/notification/notification.service';
+import { GetCommentResp } from './dtos/getCommentResp.dto';
 
 @Injectable()
 export class CommentService {
 
     public currUserId: number;
-    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider) {
+    constructor(private readonly entityManager: EntityManager, private readonly userProvider: UserProvider,
+        private readonly notificationService: NotificationService) {
         this.currUserId = this.userProvider.getCurrentUser()?.userId;
     }
-
 
     async commentPost(postData: CommentPostDto) {
         let resp = new GeneralResponse();
@@ -54,7 +56,8 @@ export class CommentService {
             comment.commentDescription = commentDescription;
 
             let userId2 = post.userId;
-
+            let typeId: number = 7;
+            let targetId: number = postId;
             // If replying to a parent comment
             if (parentCommentId) {
                 const parentComment = await this.entityManager
@@ -71,11 +74,15 @@ export class CommentService {
                 userId2 = parentComment.userId;
                 comment.parentCommentId = parentCommentId;
                 resp.message = 'Comment reply successfully added';
+                typeId = 8;
+                targetId = parentCommentId;
+
+
             } else {
                 resp.message = 'Post comment successfully added';
             }
-
-            await transactionalEntityManager.save(Comment, comment);
+            let createdComment = await transactionalEntityManager.save(Comment, comment);
+            await this.notificationService.createNotification(this.currUserId, userId2, typeId, createdComment.commentId, targetId, commentDescription)
 
             // Handle engagements with the comment user
             const engagementQuery = `
@@ -106,7 +113,6 @@ export class CommentService {
         resp.status = HttpStatus.OK;
         return resp;
     }
-
 
     async deleteComment(commentId: number) {
 
@@ -204,7 +210,6 @@ export class CommentService {
 
         return resp;
     }
-
 
     async editComment(postData: CommentEditDto) {
 
@@ -466,6 +471,57 @@ export class CommentService {
         OFFSET ${offset};`)
 
         resp = commentReplies;
+
+        return resp;
+    }
+
+    async getCommentById(commentId: number) {
+
+        let resp = new GetCommentResp();
+
+        const comment = await this.entityManager.findOne(Comment, {
+            where: [{ commentId }],
+        });
+
+        let post = await this.entityManager.findOne(Post, {
+            where: [{ postId: comment.postId }],
+        });
+
+        let postOwnerId: number = post.userId;
+
+        let user = await this.entityManager.findOne(User, {
+            where: [{ userId: postOwnerId }],
+        });
+
+        if (user.isPrivate) {
+
+            const isUserNetwork = await this.entityManager
+                .createQueryBuilder()
+                .from(Network, 'network')
+                .select('*')
+                .where('network.followerId = :followerId', { followerId: this.currUserId })
+                .andWhere('network.followeeId = :followeeId', { followeeId: postOwnerId })
+                .andWhere('network.deleted = :deleted', { deleted: false })
+                .andWhere('network.pending = :pending', { pending: false })
+                .getRawOne();
+
+            if (!isUserNetwork)
+                throw new ForbiddenException('nonFriendPrivateAccList');
+
+        }
+
+        let commentOwner = await this.entityManager.findOne(User, {
+            where: [{ userId: comment.userId }]
+        });
+
+        if (commentOwner?.profileImg)
+            commentOwner.profileImg = SnapShareUtility.urlConverter(commentOwner.profileImg);
+
+
+        Object.assign(resp, comment);
+
+        resp.username = commentOwner?.username;
+        resp.profileImg = commentOwner?.profileImg;
 
         return resp;
     }

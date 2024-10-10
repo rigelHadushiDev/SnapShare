@@ -24,8 +24,20 @@ export class Notification {
     @Column({ name: 'createdBy', type: 'integer' })
     createdBy: number;
 
+    @Column({ name: 'seen', type: 'boolean', default: false })
+    seen: boolean;
+
     @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
     createdAt: Date;
+
+    @Column({ name: 'originId', type: 'integer', nullable: true })
+    originId: number;
+
+    @Column({ name: 'targetId', type: 'integer', nullable: true })
+    targetId: number;
+
+    @Column({ name: 'content', type: 'varchar', nullable: true })
+    content: string;
 
     @ManyToOne(() => User, user => user.receivedNotifications, { nullable: true, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'receivedUserId', referencedColumnName: 'userId' })
@@ -38,4 +50,5 @@ export class Notification {
     @ManyToOne(() => NotificationType, notification => notification.typeId, { nullable: true, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'typeId', referencedColumnName: 'notificationTypeId' })
     receivedNotifications: NotificationType;
+
 }

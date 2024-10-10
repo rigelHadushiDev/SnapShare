@@ -13,6 +13,12 @@ export class NotificationType {
     @Column({ name: 'description', type: 'varchar', nullable: true })
     description: string;
 
+    @Column({ name: 'originType', type: 'varchar', nullable: true })
+    originType: string;
+
+    @Column({ name: 'targetType', type: 'varchar', nullable: true })
+    targetType: string;
+
     @OneToMany(() => Notification, notification => notification.receivedNotifications, { nullable: true })
     @JoinColumn({ name: 'notificationTypeId', referencedColumnName: 'notificationId' })
     typeId: Notification;
