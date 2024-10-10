@@ -25,7 +25,6 @@ export class CommentService {
         this.currUserId = this.userProvider.getCurrentUser()?.userId;
     }
 
-
     async commentPost(postData: CommentPostDto) {
         let resp = new GeneralResponse();
         const { postId, commentDescription, parentCommentId } = postData;
@@ -209,7 +208,6 @@ export class CommentService {
 
         return resp;
     }
-
 
     async editComment(postData: CommentEditDto) {
 
@@ -473,6 +471,28 @@ export class CommentService {
         resp = commentReplies;
 
         return resp;
+    }
+
+    async getCommentById(commentId: number) {
+
+
+
+        // a e ke follow userin qe ka postin a e ke network ky ehste guardi i vetem. 
+
+
+
+        const comment = await this.entityManager.findOne(Comment, {
+            where: [{ commentId }],
+        });
+
+        let post = await this.entityManager.findOne(Post, {
+            where: [{ postId: comment.postId }],
+        }); comment.postId
+
+        let postOwnerId: number = post.userId;
+
+
+
     }
 }
 

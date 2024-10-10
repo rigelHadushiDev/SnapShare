@@ -86,4 +86,19 @@ export class CommentController {
         const { postsByPage, page } = query;
         return await this.commentService.getCommentReplies(comentId, postsByPage, page);
     }
+
+
+
+    @Get('comment/:commentId')
+    @ApiOperation({ summary: 'Retrieve the comment based on a commentId' })
+    @ApiResponse({
+        status: HttpStatus.OK, description: "Successfully retrived the comment based on its Id.",
+        // add another resp obj
+        // type: [GetCommentRepliesRes]
+    })
+    @ApiParam({ name: 'commentId', required: true, description: 'Comment Id that you want to recieve other reply comments off.', type: Number })
+    @ApiException(() => ForbiddenException, { description: 'Parent comment Id was not found . [key: "commentIdNotFound" ]' })
+    async getCommentById(@Param('commentId') comentId: number) {
+        return await this.commentService.getCommentById(comentId);
+    }
 }

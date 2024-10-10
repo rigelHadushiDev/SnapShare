@@ -12,9 +12,10 @@ import { GetUserStoriesAccessGuard } from './guards/GetUserStoriesAccess.guard';
 import { LikeModule } from 'src/like/like.module';
 import { StoryAcessGuard } from 'src/like/guards/StoryAcess.guard';
 import { PostAccessGuard } from 'src/like/guards/PostAccess.guard';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Story, StoryViews]), UsersModule, NetworkModule, LikeModule],
+  imports: [TypeOrmModule.forFeature([Story, StoryViews]), UsersModule, NetworkModule, LikeModule, NotificationModule],
   providers: [StoryService, UserProvider, NetworkService, GetUserStoriesAccessGuard, StoryAcessGuard],
   controllers: [StoryController],
   exports: [StoryService]

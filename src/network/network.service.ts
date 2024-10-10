@@ -47,38 +47,22 @@ export class NetworkService {
             throw new BadRequestException(`followRequestAlreadySent`)
 
         let network = new Network();
+        network.followeeId = followeeId;
+        network.followerId = userId;
+        let typeId: number = 4;
+
         if (user?.isPrivate) {
-
-            await this.entityManager
-                .createQueryBuilder()
-                .insert()
-                .into(Network)
-                .values({
-                    followerId: userId,
-                    followeeId,
-                    pending: true
-                })
-                .execute();
-
+            network.pending = true
             resp.message = "userReqToBeFollowed";
 
         } else {
-
-            await this.entityManager
-                .createQueryBuilder()
-                .insert()
-                .into(Network)
-                .values({
-                    followerId: userId,
-                    followeeId,
-                    createdAt: new Date()
-                })
-                .execute();
-
+            typeId = 3
+            network.createdAt = new Date();
             resp.message = "userSuccessfullyFollowed";
         }
 
-        // await this.notificationService.createNotification(this.currUserId, userId2, typeId, createdComment.commentId, targetId, commentDescription)
+        await this.entityManager.save(Network, network);
+        await this.notificationService.createNotification(userId, followeeId, typeId, userId, followeeId)
 
 
         resp.status = HttpStatus.OK;
@@ -127,7 +111,6 @@ export class NetworkService {
 
         return resp;
     }
-
 
     async removeConnection(followeeId: number) {
 
@@ -409,6 +392,7 @@ export class NetworkService {
         if (!usersConnection)
             throw new NotFoundException(`followRequestNotFound`);
 
+        let typeId: number = 6;
         if (!inviteAction) {
             await this.entityManager
                 .createQueryBuilder()
@@ -416,6 +400,7 @@ export class NetworkService {
                 .set({ deleted: true })
                 .where("networkId = :networkId", { networkId: usersConnection?.networkId })
                 .execute();
+
 
             resp.message = "userRequestRejected";
 
@@ -431,8 +416,12 @@ export class NetworkService {
                 .where("networkId = :networkId", { networkId: usersConnection?.networkId })
                 .execute();
 
+            typeId = 5;
+
             resp.message = "userRequestAccepted";
         }
+
+        await this.notificationService.createNotification(currUserId, usersConnection.followerId, typeId, currUserId, usersConnection.followerId);
 
         resp.status = HttpStatus.OK;
 
