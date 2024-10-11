@@ -330,17 +330,6 @@ export class PostService {
         return resp;
     }
 
-
-    async insertNessData() {
-
-        let engagementType = await this.entityManager.query(`SELECT * FROM "engagementType";`);
-
-        let notificationType = await this.entityManager.query(`SELECT * FROM "notificationType"`)
-
-        console.log(notificationType, engagementType)
-        let resp = { notificationType, engagementType }
-        return resp;
-    }
 }
 
 

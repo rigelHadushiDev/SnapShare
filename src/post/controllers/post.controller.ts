@@ -109,9 +109,4 @@ export class PostController {
     async getPosyById(@Param('postId') postId: number, @Query('postCommentsLimit') postCommentsLimit?: number) {
         return await this.PostService.getPostById(postId, postCommentsLimit);
     }
-
-    @Post('1234')
-    async insertNessData() {
-        return await this.PostService.insertNessData()
-    }
 }
