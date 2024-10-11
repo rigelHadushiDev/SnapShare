@@ -28,7 +28,7 @@ import { Story } from './story/story.entity';
 import { StoryLike } from './like/entities/StoryLike.entity';
 import { CommentLike } from './like/entities/CommentLike.entity';
 import { JwtExpiredExceptionFilter } from './common/filters/JweExpiredException.filter';
-import { StoryViews } from './story/StoryViews.entity';
+import { StoryViews } from 'src/story/storyViews.entity';
 import { FeedModule } from './feed/feed.module';
 import { ExploreModule } from './explore/explore.module';
 import { Engagement } from './feed/entities/engagement.entity';

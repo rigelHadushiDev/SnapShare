@@ -9,7 +9,7 @@ import { UsersService } from 'src/user/services/users.service';
 import { IsCreatorGuard } from 'src/post/guards/IsCreator.guard';
 import { CommentModule } from 'src/comment/comment.module';
 import { CommentService } from 'src/comment/comment.service';
-import { StoryViews } from 'src/story/StoryViews.entity';
+import { StoryViews } from 'src/story/storyViews.entity';
 import { FeedController } from './feed.controller';
 import { FeedService } from './feed.service';
 import { Story } from 'src/story/story.entity';

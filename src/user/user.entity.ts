@@ -6,7 +6,7 @@ import { Comment } from "src/comment/comment.entity";
 import { ApiProperty } from "@nestjs/swagger";
 import { Notification } from "src/notification/entities/notification.entity";
 import { Story } from "src/story/story.entity";
-import { StoryViews } from "src/story/StoryViews.entity";
+import { StoryViews } from 'src/story/storyViews.entity';
 import { Engagement } from "src/feed/entities/engagement.entity";
 import { UserFeed } from "src/feed/entities/userFeed.entity";
 

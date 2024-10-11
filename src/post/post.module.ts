@@ -11,7 +11,7 @@ import { ContentMediaController } from './controllers/contentMedia.controller';
 import { ContentMediaService } from './services/contentMedia.service';
 import { CommentModule } from 'src/comment/comment.module';
 import { CommentService } from 'src/comment/comment.service';
-import { StoryViews } from 'src/story/StoryViews.entity';
+import { StoryViews } from 'src/story/storyViews.entity';
 import { NetworkModule } from 'src/network/network.module';
 import { GetUserPostsAccessGuard } from './guards/GetUserPostsAccess.guard';
 import { LikeModule } from 'src/like/like.module';

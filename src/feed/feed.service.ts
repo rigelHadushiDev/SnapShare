@@ -8,7 +8,7 @@ import { DescriptionDto } from 'src/post/dtos/CreatePost.dto';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 import { CommentService } from 'src/comment/comment.service';
 import { GetFeedResp } from './dtos/getFeed.dto';
-import { StoryViews } from 'src/story/StoryViews.entity';
+import { StoryViews } from 'src/story/storyViews.entity';
 import { UserFeed } from './entities/userFeed.entity';
 import { off } from 'process';
 import { format } from 'date-fns';

@@ -5,7 +5,7 @@ import { EntityManager } from 'typeorm';
 import * as path from 'path';
 import { Response } from 'express';
 import { CommentService } from 'src/comment/comment.service';
-import { StoryViews } from 'src/story/StoryViews.entity';
+import { StoryViews } from 'src/story/storyViews.entity';
 const fs = require('fs');
 
 @Injectable()

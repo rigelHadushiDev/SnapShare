@@ -2,7 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 import { User } from 'src/user/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { StoryLike } from 'src/like/entities/StoryLike.entity';
-import { StoryViews } from './StoryViews.entity';
+import { StoryViews } from 'src/story/storyViews.entity';
 
 
 @Entity('story')
