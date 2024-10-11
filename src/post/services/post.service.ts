@@ -333,22 +333,16 @@ export class PostService {
 
     async insertNessData() {
 
-        await this.entityManager.query(`INSERT INTO "engagementType" (type)
+        let engagementType = await this.entityManager.query(`INSERT INTO "engagementType" (type)
         VALUES
             ('LIKE'),
             ('COMMENT');`);
 
-        await this.entityManager.query(`INSERT INTO "notificationType" ("notificationKey", description, "originType", "targetType")
-        VALUES
-            ('postLike', 'A user has liked your post.', 'postLike', 'post'),
-            ('storyLike', 'A user has liked your story.', 'storyLike', 'story'),
-            ('startedFollowingYou', 'A user started following you.', 'user', 'user'),
-            ('friendRequest', 'A user sent you a friend request.', 'user', 'user'),
-            ('acceptedFriendRequest', 'A user accepted your friend request.', 'user', 'user'),
-            ('rejectedFriendRequest', 'The user which you sent a friend request rejected it.', 'user', 'user'),
-            ('postComment', 'A user commented on your post.', 'comment', 'post'),
-            ('commentReply', 'A user replied to your comment.', 'comment', 'comment'),
-            ('commentLike', 'A user liked your comment.', 'commentLike', 'comment');`)
+        let notificationType = await this.entityManager.query(`SELECT * FROM "notificationType"`)
+
+        console.log(notificationType, engagementType)
+        let resp = { notificationType, engagementType }
+        return resp;
     }
 }
 
