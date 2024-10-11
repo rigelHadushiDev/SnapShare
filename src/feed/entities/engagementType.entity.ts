@@ -1,14 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Engagement } from './engagement.entity';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity('engagementType')
-export class EngagementType {
-    @PrimaryGeneratedColumn({ type: 'integer', name: 'engagementTypeId' })
-    engagementTypeId: number;
+@Entity('notificationType')
+export class NotificationType {
+    @PrimaryGeneratedColumn({ type: 'integer', name: 'notificationTypeId' })
+    notificationTypeId: number;
 
     @Column({ type: 'varchar', length: 50 })
-    type: string;
+    notificationKey: string;
 
-    @OneToMany(() => Engagement, engagement => engagement.type)
-    engagements: Engagement[];
+    @Column({ type: 'varchar', length: 255 })
+    description: string;
+
+    @Column({ type: 'varchar', length: 50, nullable: true })
+    originType: string;
+
+    @Column({ type: 'varchar', length: 50, nullable: true })
+    targetType: string;
 }
