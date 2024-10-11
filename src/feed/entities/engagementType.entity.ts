@@ -3,21 +3,11 @@ import { Engagement } from './engagement.entity';
 
 @Entity('engagementType')
 export class EngagementType {
-    @PrimaryGeneratedColumn({ type: 'integer', name: 'notificationTypeId' })
-    notificationTypeId: number;
+    @PrimaryGeneratedColumn({ type: 'integer', name: 'engagementTypeId' })
+    engagementTypeId: number;
 
     @Column({ type: 'varchar', length: 50 })
-    notificationKey: string;
-
-    @Column({ type: 'varchar', length: 255 })
-    description: string;
-
-    @Column({ type: 'varchar', length: 50, nullable: true })
-    originType: string;
-
-    @Column({ type: 'varchar', length: 50, nullable: true })
-    targetType: string;
-
+    type: string;
 
     @OneToMany(() => Engagement, engagement => engagement.type)
     engagements: Engagement[];
