@@ -4,14 +4,14 @@ import { EntityManager, Transaction } from 'typeorm';
 import { Post } from '../post.entity';
 import * as path from 'path';
 import { Response, response } from 'express';
-import { EditPostDto } from '../dtos/EditPost.dto';
 import { Observable } from 'rxjs';
 import { DescriptionDto } from '../dtos/CreatePost.dto';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 import { GetFeedResp } from '../../feed/dtos/getFeed.dto';
 import { CommentService } from 'src/comment/comment.service';
 import { GetUserPostsRes } from '../dtos/getUsersPosts.dto';
-import { GetPostIdRes } from '../dtos/getPostIdRes.dto';
+import { GetPostIdRes } from '../dtos/GetPostIdRes.dto';
+import { EditPostDto } from '../dtos/EditPost.dto';
 const fs = require('fs');
 
 @Injectable()

@@ -6,7 +6,6 @@ import { Post } from 'src/post/post.entity';
 import { Comment } from './comment.entity';
 import { GeneralResponse } from 'src/post/dtos/GeneralResponse';
 import { CommentEditDto } from './dtos/commentEdit.dto';
-import { EditPostDto } from 'src/post/dtos/EditPost.dto';
 import { Network } from 'src/network/entities/network.entity';
 import { SnapShareUtility } from 'src/common/utilities/snapShareUtility.utils';
 import { CommentDto } from 'src/feed/dtos/getFeed.dto';
