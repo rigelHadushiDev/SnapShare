@@ -11,7 +11,7 @@ import { GetFeedResp } from '../../feed/dtos/getFeed.dto';
 import { CommentService } from 'src/comment/comment.service';
 import { GetUserPostsRes } from '../dtos/getUsersPosts.dto';
 import { GetPostIdRes } from '../dtos/GetPostIdRes.dto';
-import { EditPostDto } from '../dtos/EditPost.dto';
+import { EditPostDto } from 'src/post/dtos/editPost.dto'
 const fs = require('fs');
 
 @Injectable()

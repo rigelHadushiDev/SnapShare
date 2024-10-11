@@ -5,7 +5,7 @@ import { PostService } from '../services/post.service';
 const fs = require('fs');
 import { configureStorageOptions, fileStorage, imgVideoFilters } from 'src/user/fileStorage.config';
 import { Response } from 'express';
-import { EditPostDto } from '../dtos/EditPost.dto';
+import { EditPostDto } from 'src/post/dtos/editPost.dto'
 import { HttpExceptionFilter } from 'src/common/filters/httpException.filter';
 import { Observable } from 'rxjs';
 import { Post as PostEntity } from '../post.entity';
