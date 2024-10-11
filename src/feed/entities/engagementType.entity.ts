@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Engagement } from './engagement.entity';
 
-@Entity('notificationType')
-export class NotificationType {
+@Entity('engagementType')
+export class EngagementType {
     @PrimaryGeneratedColumn({ type: 'integer', name: 'notificationTypeId' })
     notificationTypeId: number;
 
@@ -16,4 +17,8 @@ export class NotificationType {
 
     @Column({ type: 'varchar', length: 50, nullable: true })
     targetType: string;
+
+
+    @OneToMany(() => Engagement, engagement => engagement.type)
+    engagements: Engagement[];
 }
