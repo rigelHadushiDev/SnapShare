@@ -20,7 +20,6 @@ import * as dotenv from 'dotenv';
 import { Network } from './network/entities/network.entity';
 import { FetchUserMiddleware } from './auth/fetchUser.middleware';
 import { HttpExceptionFilter } from './common/filters/httpException.filter';
-import { SSEModule } from './sse/sse.module';
 import { Notification } from './notification/entities/notification.entity';
 import { NotificationType } from './notification/entities/notificationType.entity';
 import { StoryModule } from './story/story.module';
@@ -62,7 +61,6 @@ dotenv.config();
     NetworkModule,
     CommentModule,
     LikeModule,
-    SSEModule,
     CacheModule.register({
       isGlobal: true,
       ttl: 0,
