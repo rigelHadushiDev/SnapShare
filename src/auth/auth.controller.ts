@@ -1,7 +1,11 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, InternalServerErrorException, NotFoundException, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Public } from 'src/decorators/public.decorator';
+import { Public } from 'src/common/decorators/public.decorator';
+import { LogInReq, LogInRes } from './dtos/LogIn.dto';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
 
+@ApiTags("Auth Module")
 @Controller('auth')
 export class AuthController {
     constructor(private authService: AuthService) { }
@@ -9,7 +13,14 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     @Public()
     @Post('login')
-    signIn(@Body() LogInDto: Record<string, any>) {
-        return this.authService.login(LogInDto.username, LogInDto.password);
+    @ApiOperation({ summary: 'User login', description: 'Authenticate user credentials and return access token.' })
+    @ApiBody({ type: LogInReq, required: true })
+    @ApiResponse({ status: HttpStatus.OK, description: 'User has signed in succesfully', type: LogInRes })
+    @ApiException(() => NotFoundException, { description: 'No User is found with this Username. [key: "noUserWithThisUsername" ]' })
+    @ApiException(() => NotFoundException, { description: 'Invalid Password or Username. [key: "invalidPasswordOrUsername" ]' })
+    @ApiException(() => InternalServerErrorException, { description: 'Failed creating access token. [key: "failedCreatingAccessToken" ]' })
+    async logIn(@Body() logIn: LogInReq) {
+        return await this.authService.login(logIn.username, logIn.password);
     }
+
 }

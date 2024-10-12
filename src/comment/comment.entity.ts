@@ -1,32 +1,43 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, UpdateDateColumn, CreateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, UpdateDateColumn, CreateDateColumn, OneToMany } from 'typeorm';
 import { Post } from 'src/post/post.entity';
 import { User } from 'src/user/user.entity';
+import { CommentLike } from 'src/like/entities/CommentLike.entity';
 
 @Entity('comment')
 export class Comment {
-    @PrimaryGeneratedColumn({ name: 'id', type: "integer" })
-    id: number;
+    @PrimaryGeneratedColumn({ name: 'commentId', type: "integer" })
+    commentId: number;
 
-    @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+    @CreateDateColumn({ name: 'createdAt', type: 'timestamp' })
     createdAt: Date;
 
-    @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
+    @UpdateDateColumn({ name: 'updatedAt', type: 'timestamp' })
     updatedAt: Date;
 
-    @Column({ name: 'comment_description', type: "text" })
+    @Column({ name: 'commentDescription', type: "text" })
     commentDescription: string;
 
-    @Column({ name: 'post_id', type: "integer" })
+    @Column({ name: 'postId', type: "integer" })
     postId: number;
 
-    @Column({ name: 'user_id', type: "integer" })
+    @Column({ name: 'userId', type: "integer" })
     userId: number;
 
-    @ManyToOne(() => Post, post => post.comments)
-    @JoinColumn({ name: 'post_id', referencedColumnName: 'postId' })
+    @Column({ name: 'likeNr', type: "integer", default: 0 })
+    likesNr: number;
+
+    @Column({ name: 'parentCommentId', type: "integer", default: null })
+    parentCommentId: number;
+
+    @ManyToOne(() => Post, post => post.comments, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'postId', referencedColumnName: 'postId' })
     post: Post;
 
-    @ManyToOne(() => User, user => user.comments)
-    @JoinColumn({ name: 'user_id', referencedColumnName: 'userId' })
+    @ManyToOne(() => User, user => user.comments, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
     user: User;
+
+    @OneToMany(() => CommentLike, commentLike => commentLike.comment)
+    commentLikes: CommentLike[];
+
 }

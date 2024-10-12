@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { IS_PUBLIC_KEY } from 'src/decorators/public.decorator';
+import { IS_PUBLIC_KEY } from 'src/common/decorators/public.decorator';
 
 import { Request } from 'express';
 
@@ -39,7 +39,6 @@ export class AuthGuard implements CanActivate {
 
             request['user'] = payload;
         } catch (error) {
-            console.log(error);
             throw new UnauthorizedException();
         }
         return true;
