@@ -44,15 +44,16 @@ dotenv.config();
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      url: process.env.DATABASE_URL,
+      host: 'localhost',
+      port: 5432,
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSW,
+      database: process.env.DB_NAME,
       entities: [Engagement, User, Post, Comment, PostLike, Network,
         Notification, NotificationType, Story, StoryLike, CommentLike,
         StoryViews, EngagementType, UserFeed],
       synchronize: false,
-      autoLoadEntities: false,
-      ssl: {
-        rejectUnauthorized: false
-      }
+      autoLoadEntities: false
     }),
     UsersModule,
     AuthModule,
