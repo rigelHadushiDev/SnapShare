@@ -1,73 +1,89 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# SnapShare
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+SnapShare is a live-hosted social media backend web application built using NestJS and Express, inspired by Instagram but with enhanced functionalities. The project focuses on providing a seamless social networking experience by implementing custom algorithms that prioritize user interactions in unique ways.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Features
 
-## Installation
+- Authentication System
 
-```bash
-$ npm install
-```
+Secure login and sign-up processes using JWT (JSON Web Tokens) for authentication, ensuring robust user verification and session management.
 
-## Running the app
+- User Profiles
 
-```bash
-# development
-$ npm run start
+Manage personal information and privacy settings, and view others’ profiles. Profiles can be either private or public. For private profiles, users must be part of the owner’s network to view their posts and stories.
 
-# watch mode
-$ npm run start:dev
+- Posts and Stories
 
-# production mode
-$ npm run start:prod
-```
+Create and interact with posts and stories, including liking and commenting. SnapShare also provides APIs for retrieving post data, with options to archive posts to remove them from your public profile layout. Most GET methods implement pagination to handle large data sets efficiently.
 
-## Test
+- Feed
 
-```bash
-# unit tests
-$ npm run test
+The user feed is personalized using a custom algorithm that prioritizes key aspects of user interaction. Factors include the user’s personal engagement with posts/stories, the total engagement with the wider SnapShare community and the content's recency. The feed is paginated to ensure smooth performance and better user experience.
 
-# e2e tests
-$ npm run test:e2e
+- User Networking
 
-# test coverage
-$ npm run test:cov
-```
+Request, accept, or reject friend requests. Manage your network by following/unfollowing users or removing friends from your network.
 
-## Support
+- Search and Discover
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Search for users and posts using an optimized search bar, ensuring fast and accurate results. Search results are paginated for efficient data handling.
 
-## Stay in touch
+- Comments and Likes
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+SnapShare provides APIs for liking and commenting on various types of content, enabling seamless interaction with posts and stories. Comment and like data retrieval is also paginated.
 
-## License
+- Notification System
 
-Nest is [MIT licensed](LICENSE).
+An API that tracks and returns the count of unseen notifications. Another API delivers notifications related to engagement with the user’s content and interactions within their friends' network.
+
+## Technologies Used
+
+- Database: PostgreSQL
+- Backend Framework: NestJS / Express
+- Authentication: JWT (JSON Web Tokens)
+- API Documentation: Swagger
+- ORM/Database Interaction: TypeORM
+- Caching: CacheManager
+- Deployment: Render
+- Version Control: Git / GitHub
+- Task Runner: npm 
+## Documentation
+
+The public domain name for the SnapShare application is:
+https://snapshare-zw9v.onrender.com
+
+All project APIs are documented using Swagger. You can access the complete API documentation by visiting:
+https://snapshare-zw9v.onrender.com/api
+
+
+## Usage and  Setup
+
+To use the SnapShare APIs, the Swagger API documentation is available at:  
+**[SnapShare Documentation](https://snapshare-zw9v.onrender.com/api#/)**
+
+You can access the live-hosted web application at:  
+**[SnapShare](https://snapshare-zw9v.onrender.com/)**
+
+To set up SnapShare locally, follow these commands:
+
+1. *Clone the repository from the development branch*:
+   ```bash
+   git clone -b development https://github.com/rigelHadushiDev/SnapShare.git
+
+2. *Run npm Install*:
+   ```bash
+   npm install
+
+3. *Run the Application*:
+   ```bash
+   npm run satrt:dev
+
+   
+## Contact Information
+
+If you have any questions or would like to connect, feel free to reach out:
+
+- **LinkedIn**: [rigelhadushi](www.linkedin.com/in/rigel-hadushi)  
+- **Email**: rigelhadushi4@gmail.com
