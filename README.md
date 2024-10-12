@@ -83,8 +83,6 @@ To set up SnapShare locally, follow these commands:
    
 ## Contact Information
 
-Contact Information
-
 If you have any questions or would like to connect, feel free to reach out:
 
 - **LinkedIn**: [rigelhadushi](www.linkedin.com/in/rigel-hadushi)  
