@@ -49,6 +49,7 @@ An API that tracks and returns the count of unseen notifications. Another API de
 - Deployment: Render
 - Version Control: Git / GitHub
 - Task Runner: npm 
+
 ## Documentation
 
 The public domain name for the SnapShare application is:
@@ -57,6 +58,11 @@ https://snapshare-zw9v.onrender.com
 All project APIs are documented using Swagger. You can access the complete API documentation by visiting:
 https://snapshare-zw9v.onrender.com/api
 
+## Custom Post Feed Algorithm
+
+Below is a flowchart that illustrates the complete algorithm for the post feed in SnapShare application. This visual representation provides a clear understanding of the processes involved in generating a personalized feed for users.
+
+![Posts Feed Flowchart](https://github.com/rigelHadushiDev/SnapShare/blob/master/Posts%20Feed%20Flowchart.png)
 
 ## Usage and  Setup
 
