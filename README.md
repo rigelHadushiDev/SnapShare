@@ -62,7 +62,7 @@ https://snapshare-zw9v.onrender.com/api
 
 Below is a flowchart that illustrates the complete algorithm for the post feed in SnapShare application. This visual representation provides a clear understanding of the processes involved in generating a personalized feed for users.
 
-For further details, you can access the flowchart directly through the following link: ![Posts Feed Flowchart](https://github.com/rigelHadushiDev/repo-name/blob/master/Posts%20Feed%20Flowchart.png)
+For further details, you can access the flowchart directly through the following link: ![Posts Feed Flowchart](https://github.com/rigelHadushiDev/SnapShare/blob/master/Posts%20Feed%20Flowchart.png)
 
 ## Usage and  Setup
 
