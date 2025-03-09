@@ -84,7 +84,7 @@ To set up SnapShare locally, follow these commands:
 
 3. *Run the Application*:
    ```bash
-   npm run satrt:dev
+   npm run start:dev
 
    
 ## Contact Information
