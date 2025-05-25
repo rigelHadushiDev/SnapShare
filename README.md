@@ -86,10 +86,11 @@ To set up SnapShare locally, follow these commands:
    ```bash
    npm run satrt:dev
 
-   
-## Contact Information
 
-If you have any questions or would like to connect, feel free to reach out:
+## Author
 
-- **LinkedIn**: [rigelhadushi](www.linkedin.com/in/rigel-hadushi)  
+This project was developed by **Rigel Hadushi** as part of a personal initiative.
+
+- **GitHub**: [rigelHadushiDev](https://github.com/rigelHadushiDev)
+- **LinkedIn**: [rigelhadushi](https://www.linkedin.com/in/rigel-hadushi)
 - **Email**: rigelhadushi4@gmail.com
