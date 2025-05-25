@@ -87,9 +87,10 @@ To set up SnapShare locally, follow these commands:
    npm run start:dev
 
    
-## Contact Information
+## Author
 
-If you have any questions or would like to connect, feel free to reach out:
+This project was developed by **Rigel Hadushi** as part of a personal initiative.
 
-- **LinkedIn**: [rigelhadushi](www.linkedin.com/in/rigel-hadushi)  
+- **GitHub**: [rigelHadushiDev](https://github.com/rigelHadushiDev)
+- **LinkedIn**: [rigelhadushi](https://www.linkedin.com/in/rigel-hadushi)
 - **Email**: rigelhadushi4@gmail.com
